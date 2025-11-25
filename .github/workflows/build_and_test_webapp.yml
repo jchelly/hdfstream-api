@@ -13,6 +13,18 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install compiler toolchain
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake pkg-config
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        cache: 'maven'
+
     - name: Set up Miniconda
       uses: conda-incubator/setup-miniconda@v3
       with:
@@ -21,11 +33,6 @@ jobs:
         channels: conda-forge
         activate-environment: test-env
         use-mamba: true
-
-    - name: Install compiler toolchain
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake pkg-config
 
     - name: Install dependencies with conda
       run: |
