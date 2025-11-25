@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Context workDir="work/hdfstream" path="/hdfstream" displayName="hdfstream" preemptiveAuthentication="true">
+  <CookieProcessor sameSiteCookies="strict" />
+</Context>

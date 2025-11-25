@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+  <head></head>
+
+  <body>
+
+    <h1>Python client module</h1>
+
+    The python module allows remote access to HDF5 datasets using an interface
+    similar to h5py.
+
+    <h2>Installation</h2>
+    <p>
+      The module can be installed using pip:
+    </p>
+    <pre class="python"><code>pip install hdfstream</code></pre>
+    <p>
+      This will install the module and its dependencies (currently requests,
+      msgpack, msgpack-numpy and numpy).
+    </p>
+
+    <h2>Connecting to the server</h2>
+    <p>You can connect to the service as follows:</p>
+    <pre class="python"><code>import hdfstream
+root = hdfstream.RemoteDirectory("__SERVER_URL__", "EAGLE")</code></pre>
+    <p>
+      Here, the first parameter is the server URL and the second is the name of the
+      directory to open. The first time you connect in each python session you will
+      be prompted for your username and password.
+    </p>
+
+    <h2>Directory objects</h2>
+    <p>
+      The command above returns a RemoteDirectory object. This behaves like a
+      python dictionary where the keys are the names of files and subdirectories
+      within the directory. We can list the contents with:
+    </p>
+    <pre class="python"><code>print(list(root))</code></pre>
+    <p>
+      A file or subdirectory can be opened by indexing the
+      RemoteDirectory. E.g. to open the directory containing the z=0
+      snapshot of the EAGLE RefL0012N0188 simulation:
+    </p>
+    <pre class="python"><code># Open a subdirectory
+subdir = root["Fiducial_models/RefL0012N0188/snapshot_028_z000p000"]</code></pre>
+    <p>
+      which returns another RemoteDirectory, or
+    </p>
+    <pre class="python"><code># Open a HDF5 file
+snap_file = root["Fiducial_models/RefL0012N0188/snapshot_028_z000p000/snap_028_z000p000.0.hdf5"]</code></pre>
+    <p>
+      which opens the specified file and returns a RemoteFile object.
+    </p>
+
+    <h2>Reading HDF5 groups and datasets</h2>
+    <p>
+      Files are opened by indexing the directory object with the path to the file:
+    </p>
+    <pre class="python"><code>snap_file = root["Fiducial_models/RefL0012N0188/snapshot_028_z000p000/snap_028_z000p000.0.hdf5"]</code></pre>
+    <p>
+      This returns a RemoteFile object which behaves like a h5py.File.
+      We can read a dataset by indexing the file:
+    </p>
+    <pre class="python"><code># Read all dark matter particle positions in the file
+dm_pos = snap_file["PartType1/Coordinates"][...]</code></pre>
+    <p>
+      or if we only want to download part of the dataset:
+    </p>
+    <pre class="python"><code># Read the first 100 dark matter particle positions
+dm_pos = snap_file["PartType1/Coordinates"][:100,:]</code></pre>
+    <p>
+      HDF5 attributes can be accessed using the attrs field of group and dataset objects:
+    </p>
+    <pre class="python"><code>print(snap_file["Header"].attrs)</code></pre>
+    <p>
+      And we can list the contents of a group:
+    </p>
+    <pre class="python"><code>print(list(snap_file["PartType0"]))</code></pre>
+
+    <h2>Requesting multiple dataset slices</h2>
+    <p>
+      When working with simulation data it can be useful to be able to
+      efficiently read multiple non-contiguous chunks of a dataset (e.g.
+      particles in some region of a SWIFT snapshot). Requesting each chunk
+      separately can be slow because a round trip to the server is required
+      for each one.
+    </p>
+    <p>
+      The python module provides a mechanism to fetch multiple slices with one
+      http request. Remote datasets have a request_slices() method which takes
+      a sequence of slice objects as input and returns a single array with the
+      slices concatenated along the first axis. Slice objects can be created
+      by indexing numpy's built in np.s_ object. For example:
+    </p>
+    <pre class="python"><code>slices = []
+slices.append(np.s_[10:20,:])
+slices.append(np.s_[50:60,:])
+data = dm_pos.request_slices(slices)</code></pre>
+    <p>
+      This would return the coordinates of particles 10 to 19 and 50 to 59 in a
+      single array of shape (20,3). There are some restrictions on the slices:
+      <ul>
+        <li>Slice starting indexes in the first dimension must be in ascending order</li>
+        <li>Slice indexes in dimensions other than the first must not differ between slices</li>
+        <li>Slices must not overlap</li>
+        <li>Slices can only concatenated along the first dimension</li>
+      </ul>
+    </p>
+
+    <h2>Limitations</h2>
+
+    <h3>Supported data types</h3>
+    <p>
+      Not all HDF5 data types are supported. In particular, the service
+      cannot encode structs which contain variable length components.
+      Other variable length data types are supported but are encoded
+      as messagepack arrays, which will incur more overhead than the
+      binary objects used for fixed size types.
+    </p>
+
+    <h3>Large arrays of variable length types</h3>
+    <p>
+      Datasets containing variable length types are encoded as
+      messagepack array objects, which have a size limit of about 4
+      billion elements. Since the encoding scheme for variable length
+      types is not particularly efficent for huge numbers of small
+      elements, the service does not attempt to work around this
+      limitation.
+    </p>
+    <p>
+      None of the datasets currently available through the service
+      contain this type of data.
+    </p>
+    <h3>Large arrays of fixed length types</h3>
+    <p>
+      The service is capable of encoding arbitrarily large datasets
+      containing fixed length types such as ints or floats. In this
+      case the body of the dataset is encoded as an array of
+      messagepack binary objects of up to 4GB each. The python module
+      includes a memory efficient streaming decoder for this type of
+      dataset.
+    </p>
+
+  </body>
+</html>

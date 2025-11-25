@@ -1,0 +1,2 @@
+tests/soft_links/test_data.hdf5,    @CMAKE_CURRENT_SOURCE_DIR@/test_data.hdf5,    @TEST_DATA_SIZE@,    0, application/x-hdf5
+tests/soft_links/broken_link.hdf5,  @CMAKE_CURRENT_SOURCE_DIR@/broken_link.hdf5,  @BROKEN_LINK_SIZE@,  0, application/x-hdf5

@@ -1,0 +1,97 @@
+#ifndef HDFSTREAM_H
+#define HDFSTREAM_H
+
+#include <hdf5.h>
+
+#include "process_pool.h"
+#include "worker_process.h"
+#include "file_cache.h"
+#include "shared_memory.h"
+#include "slice_limits.h"
+
+#define HDFSTREAM_EXECUTABLE "${CMAKE_INSTALL_PREFIX}/bin/hdfstream_reader"
+
+/* Maximum size of the stream buffer (bytes) */
+#define HDFSTREAM_MAX_BUFFER_SIZE (64*1024*1024)
+
+struct hdfstream {
+  char *executable;
+  struct process_pool *pool;
+  int max_open_files;
+  int max_open_datasets;
+};
+
+struct data_stream {
+  size_t buffer_size;
+  struct process_pool *pool;
+  struct worker_process *worker;
+  char *shared_data;
+  int next_buffer;
+  int ended;
+  struct shared_reader_data *srd;
+};
+
+/*
+  Initialise HDF5 reader process pool, return 0 on success
+*/
+struct hdfstream *hdfstream_new_with_executable(const int nr_processes, const char *executable,
+                                                const int max_open_files, const int max_open_datasets,
+                                                const int file_cache_check_interval,
+                                                const int file_cache_expiry_interval);
+#define hdfstream_new(n, max_open_files, max_open_datasets, file_cache_check_interval, file_cache_expiry_interval) \
+  hdfstream_new_with_executable(n, NULL, max_open_files, max_open_datasets, file_cache_check_interval, file_cache_expiry_interval)
+
+/*
+  Open multiple dataset slices to read
+*/
+struct data_stream *hdfstream_dataset_multi_slice_open(struct hdfstream *hs, const char *file_name,
+                                                       const char *dataset_name, const int nr_slices,
+                                                       const int rank, const hsize_t *start,
+                                                       const hsize_t *count, size_t buffer_size);
+/*
+  Open a single dataset slice to read
+*/
+#define hdfstream_dataset_slice_open(hs, file_name, dataset_name, rank, start, count, buffer_size) \
+  hdfstream_dataset_multi_slice_open(hs, file_name, dataset_name, 1, rank, start, count, buffer_size)
+
+/*
+  Open an object to read
+*/
+struct data_stream *hdfstream_object_open(struct hdfstream *hs, const char *file_name,
+                                          const char *object_name, const int max_depth,
+                                          const size_t buffer_size, const size_t data_size_limit);
+
+/*
+  Read the next chunk of a data stream into the supplied buffer.
+
+  Repeated calls may be needed if the total is larger than the buffer. Returns
+  the number of bytes written to the buffer. Returns 0 when there is no more
+  data. At the end of the stream status will contain a status code which is
+  zero for success and non-zero otherwise.
+
+  Data is returned in a format compatible with msgpack-numpy when all chunks
+  are concatenated.
+*/
+size_t hdfstream_read_chunk(struct data_stream *stream, void *buffer, int *status);
+
+/*
+  Deallocate a data stream and return the worker process to the pool
+*/
+void hdfstream_close_stream(struct data_stream *stream);
+
+/*
+  Get cache stats etc from the worker processes
+*/
+struct cache_info {
+  int process_state;
+  int nr_file_cache_hits;
+  int nr_file_cache_misses;
+};
+struct cache_info hdfstream_cache_info(struct hdfstream *hs, const int worker_nr);
+
+/*
+  Shut down and terminate all reader processes
+*/
+void hdfstream_free(struct hdfstream *hs);
+
+#endif

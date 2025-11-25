@@ -1,0 +1,8 @@
+*~
+*.o
+#*
+build
+__pycache__
+python/client/dist
+python/client/hdfstream.egg-info
+python/tests/logs

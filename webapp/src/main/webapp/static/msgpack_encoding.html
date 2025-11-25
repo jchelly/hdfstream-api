@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+  <head></head>
+
+  <body>
+
+    <h1>Messagepack encoding scheme</h1>
+    <p>
+      This page describes how the service encodes directory information and HDF5
+      groups, datasets and attributes as a messagepack data stream.
+      Objects returned by the msgpack endpoint are represented as messagepack maps
+      where the keys are messagepack strings.
+    </p>
+    <p>
+      For messagepack implementations in various languages see <a href="https://msgpack.org">msgpack.org</a>.
+    </p>
+
+    <h2 id='directories'>Directories</h2>
+    <p>
+      A directory is encoded as a messagepack map with the following entries:
+      <ul>
+        <li>directories: a map where the keys are subdirectory names and the values are recursively encoded subdirectories</li>
+        <li>files: a map where the keys are file names and the values contain file metadata (see below)</li>
+        <li>size: the sum of the sizes of the files in this directory and all subdirectories, in bytes</li>
+      </ul>
+      Subdirectories may have a value of nil if they were not loaded because the
+      recursion limit was reached.
+    </p>
+
+    <h2 id='files'>Files</h2>
+    <p>
+      A file is encoded as a messagepack map with the following entries:
+      <ul>
+        <li>size: size of the file in bytes</li>
+        <li>last_modified: last modification time (in millisec)</li>
+        <li>media_type: media type (aka MIME type) of the file </li>
+      </ul>
+    <p>
+      File types supported by the server are listed below:
+    <p>
+      <table class="data_table">
+        <tr>
+          <th>File type</th>
+          <th>Media type name</th>
+          <th>Supported operations</th>
+        </tr>
+        <tr>
+          <td>HDF5</td>
+          <td>application/x-hdf5</td>
+          <td>Msgpack streaming, browsing contents, downloading</td>
+        </tr>
+        <tr>
+          <td>Yaml</td>
+          <td>application/yaml</td>
+          <td>Displaying contents as text, downloading</td>
+        </tr>
+        <tr>
+          <td>Text</td>
+          <td>text/plain</td>
+          <td>Displaying contents as text, downloading</td>
+        </tr>
+        <tr>
+          <td>Binary</td>
+          <td>application/octet-stream</td>
+          <td>Downloading</td>
+        </tr>
+      </table>
+    </p>
+
+    <h2 id='groups'>HDF5 Groups</h2>
+    <p>
+      A HDF5 group is encoded as a messagepack map with the following entries:
+      <ul>
+        <li>hdf5_object: the string "group", which identifies this object as a group</li>
+        <li>attributes: a map where the keys are attribute names and the values are encoded ndarrays with the attribute values (see below)</li>
+        <li>members: a map where the keys are the names of the objects in this group and the values are recursively encoded HDF5 objects
+      </ul>
+      As with directories, members may have a value of nil if the recursion limit is reached.
+    </p>
+
+    <h2 id='datasets'>HDF5 Datasets </h2>
+    <p>
+      A HDF5 dataset is encoded as a messagepack map with the following entries:
+      <ul>
+        <li>hdf5_object: the string "dataset", which identifies this object as a dataset</li>
+        <li>attributes: a map where the keys are attribute names and the values are encoded ndarrays with the attribute values (see below)</li>
+        <li>type: a numpy style type string which describes the type of this dataset</li>
+        <li>shape: an array of integers with the size of the dataset in each dimension</li>
+        <li>data: a messagepack encoded ndarray with the dataset contents (see below)</li>
+      </ul>
+      The data entry may be nil if it would be larger than the maximum data size
+      in a recursive group request.
+    </p>
+
+    <h2 id='ndarrays'>NDArrays: dataset and attribute contents</h2>
+    <p>
+      Dataset slices, the "data" entry in an encoded dataset and attribute
+      values are all encoded ndarrays, as described below:
+    </p>
+    <h3>Arrays of fixed size data types</h3>
+    <p>
+      For fixed size data types the service uses an encoding scheme
+      inspired by, but not full compatible with,
+      the <a href="https://github.com/lebedov/msgpack-numpy">msgpack-numpy</a>
+      python module. The contents of datasets and attributes of fixed
+      size types are represented as a messagepack map with the
+      following entries:
+      <ul>
+        <li>nd : true identifies this as an encoded ndarray</li>
+        <li>type: a numpy style type string which describes the type of this array</li>
+        <li>kind: an empty string for scalar elements, or "V" for array or compound types</li>
+        <li>shape: an array of integers with the size of the array in each dimension</li>
+        <li>nbytes: the total number of bytes in the body of the array</li>
+        <li>data: a messagepack array of binary objects with the raw data</li>
+      </ul>
+    </p>
+    <p>
+      The encoding differs from msgpack-numpy in that the map keys are
+      strings instead of binary objects and the "data" field is an
+      array of binary objects to allow the encoding of arrays larger
+      than 4GB.
+    </p>
+    <h3>Arrays of variable length data types</h3>
+    <p>
+      To encode variable length types (such as HDF5 vlen strings) an alternate
+      encoding is used. Vlen data is represented as a map with the following entries:
+      <ul>
+        <li>vlen: true identifies this as an encoded array of vlen data</li>
+        <li>shape: an array of integers with the size of the array in each dimension</li>
+        <li>data: a messagepack array with one entry for each element in the flattened ndarray</li>
+      </ul>
+      The elements in the data array are messagepack strings if this is an array of
+      vlen strings or encoded ndarrays if this is an array of some other variable
+      length type.
+    </p>
+
+  </body>
+</html>

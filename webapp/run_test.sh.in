@@ -1,0 +1,6 @@
+#!/bin/bash
+#
+# Run a single unit test specified by its class name
+# Add -Dmaven.surefire.debug to wait for debugger to attach.
+#
+@MVN_EXECUTABLE@ -f @CMAKE_CURRENT_SOURCE_DIR@ @MVN_REPO_DIR@ -Dcmake.build.dir=@CMAKE_CURRENT_BINARY_DIR@/target -P@MVN_PROFILE@ -Dtest="${1}" test

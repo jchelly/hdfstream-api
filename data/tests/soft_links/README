@@ -1,0 +1,10 @@
+Configure a HDF5 file which contains some soft links. Cases to test:
+
+A soft link to a group
+A soft link to a dataset
+A soft link with an invalid target
+A group which can be accessed via a link to a parent group
+A dataset which can be accessed via a link to a parent group
+
+Absolute and relative links?
+

@@ -1,0 +1,115 @@
+package uk.ac.dur.cosma.hdfstream;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import uk.ac.dur.cosma.virtual_directory.VirtualDirectory;
+import uk.ac.dur.cosma.virtual_directory.VirtualDirectoryException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.zip.GZIPInputStream;
+
+import uk.ac.dur.cosma.libhdfstream.*;
+
+public class HDFStreamContextListener implements ServletContextListener{
+
+    ServletContext context;
+
+    // Split a string on ';', trimming any whitespace
+    public static String[] split(String s) {
+        String[] fields = s.split(";");
+        int n = fields.length;
+        String[] result = new String[n];
+        for(int i=0; i<n; i+=1) {
+            result[i] = fields[i].trim();
+        }
+        return result;
+    }
+
+    // During unit tests this is overridden to read from the build directory.
+    // When fully installed and running it reads resources from the .war package.
+    protected InputStream getResource(ServletContext context, String name) throws IOException {
+        return context.getResourceAsStream(name);
+    }
+
+    // During unit tests this is overriden to use the hdfstream_reader executable from the build directory.
+    // When fully installed and running the executable is picked up from the library install path.
+    protected HDFStream startHDFStream(int nr_processes, int max_open_files, int max_open_datasets,
+                                       int file_cache_check_interval, int file_cache_expiry_interval) {
+        return new HDFStream(nr_processes, max_open_files, max_open_datasets, file_cache_check_interval, file_cache_expiry_interval);
+    }
+
+    public void contextInitialized(ServletContextEvent contextEvent) {
+
+        /* Store reference to the servlet context */
+	context = contextEvent.getServletContext();
+
+        /* Get cache parameters from web.xml */
+        int nr_processes = Integer.valueOf(context.getInitParameter("nr_processes"));
+        int max_open_files = Integer.valueOf(context.getInitParameter("max_open_files"));
+        int max_open_datasets = Integer.valueOf(context.getInitParameter("max_open_datasets"));
+        String[] directory_configs = split(context.getInitParameter("directory_config"));
+        int buffer_size = Integer.valueOf(context.getInitParameter("buffer_size"));
+        int max_hdf5_name_length = Integer.valueOf(context.getInitParameter("max_hdf5_name_length"));
+        int file_cache_check_interval = Integer.valueOf(context.getInitParameter("file_cache_check_interval"));
+        int file_cache_expiry_interval = Integer.valueOf(context.getInitParameter("file_cache_expiry_interval"));
+        int max_requests_per_user = Integer.valueOf(context.getInitParameter("max_requests_per_user"));
+
+        /* Store HDF5 name length limit */
+        context.setAttribute("max_hdf5_name_length", max_hdf5_name_length);
+
+        /* Store number of processes */
+        context.setAttribute("nr_processes", nr_processes);
+
+        /* Initialize hdfstream library on startup. Starts the reader processes. */
+        HDFStream hs = startHDFStream(nr_processes, max_open_files, max_open_datasets, file_cache_check_interval, file_cache_expiry_interval);
+        if(hs == null)throw new RuntimeException("HDFStream process pool failed to start!");
+	context.setAttribute("hdfstream", hs);
+	context.setAttribute("buffer_size", buffer_size);
+
+        /*
+          Read virtual directory configuration
+
+          Note that we have to be sure to close the config file immediately
+          after reading it to avoid problems when reloading the web app, so
+          we use a try() block to ensure it gets auto-closed. This prevents
+          "WEB-INF could not be completely deleted" errors in catalina.out.
+
+          directory_configs may contain multiple filenames separated by
+          semicolons, in which case we read all of the specified files.
+        */
+        VirtualDirectory vdir = new VirtualDirectory();
+        for(String directory_config : directory_configs) {
+            if(directory_config.endsWith(".gz")) {
+                /* Assume config file is gzipped if it has a .gz extension */
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(getResource(context, directory_config))))) {
+                    vdir.addFromReader(reader);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to read gzipped virtual directory configuration: " + directory_config + " : " + e.getMessage());
+                }
+            } else {
+                /* Uncompressed config file */
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(getResource(context, directory_config)))) {
+                    vdir.addFromReader(reader);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to read virtual directory configuration: " + directory_config + " : " + e.getMessage());
+                }
+            }
+        }
+	context.setAttribute("virtual_directory", vdir);
+
+        /* Set up object to limit concurrent requests per user */
+        ConcurrentRequestCount crc = new ConcurrentRequestCount(max_requests_per_user);
+	context.setAttribute("concurrent_request_count", crc);
+    }
+
+    public void contextDestroyed(ServletContextEvent contextEvent) {
+        /*
+          Stop reader processes on shutdown.
+        */
+        HDFStream hs = (HDFStream) context.getAttribute("hdfstream");
+        if(hs != null)hs.free();
+    }
+}

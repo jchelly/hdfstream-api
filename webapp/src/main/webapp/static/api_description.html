@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+  <head></head>
+
+  <body>
+
+    <h1>Web API description</h1>
+
+    <h2>Full file and directory downloads</h2>
+    <p>
+      Files and directories can be downloaded using a http get request of the form:
+    </p>
+    <pre class="plaintext"><code>__SERVER_URL__download/&lt;virtual_path&gt;</code></pre>
+    <p>
+      Here, if the virtual path refers to a directory the response will be a
+      .tar file containing the directory and its contents. If the path
+      refers to a file then the file will be downloaded.
+    </p>
+
+    <h2>Directory and file listings</h2>
+    <p>
+      A messagepack encoded directory listing can be obtained with a get request
+      to a URL of the form:
+    </p>
+    <pre class="plaintext"><code>__SERVER_URL__msgpack/&lt;virtual_path&gt?max_depth=...;</code></pre>
+    <p>
+      where the virtual path refers to a directory. The response will be a
+      <a href="viewer?page=msgpack_encoding#directories">messagepack encoded directory</a>.
+      The optional integer max depth parameter determines the maximum recursion
+      depth to return subdirectories.
+    </p>
+    <p>
+      If the virtual path specifies a file then the response is a
+      <a href="viewer?page=msgpack_encoding#file">messagepack encoded file</a>.
+    </p>
+
+    <h2>HDF5 groups and datasets</h2>
+    <p>
+      HDF5 objects within a file can be requested with a get request to a URL of the form:
+    </p>
+    <pre class="plaintext"><code>__SERVER_URL__msgpack/&lt;virtual_path&gt;?object=&lt;object_name&gt;</code></pre>
+    <p>
+      Here the object name parameter specifies the name of the HDF5 object to download.
+      The response will be a <a href="viewer?page=msgpack_encoding#groups">messagepack encoded
+        group</a> or <a href="viewer?page=msgpack_encoding#datasets">dataset</a>.
+    </p>
+
+    <h3>Requesting a dataset slice</h3>
+    <p>
+      If the requested object is a dataset then the parameter <code>slice</code>
+      can be used to specify a range of elements to read in each dimension. The
+      syntax is similar to numpy slicing. The range of elements to read in each
+      dimension is specified as <code>start:stop</code>, with commas separating
+      dimensions.
+    </p>
+    <p>
+      Multiple slices can be requested by separating with semicolons. For example,
+      to read two slices from an Nx3 array the slice parameter would be:
+      <pre class="plaintext"><code>slice=0:10,0:3;30:40,0:3</code></pre>
+      This would read elements 0-9 and 30-39 inclusive in the first
+      dimension and all three elements in the second dimension. This
+      type of request will return all slices concatenated along the
+      first dimension as a single ndarray.
+    </p>
+
+    <h3>Recursive group downloads</h3>
+    <p>
+      If the requested object is a group then the following optional parameters may be used:
+      <ul>
+        <li><code>max_depth</code>: the maximum recursion depth for downloading group members</li>
+        <li><code>max_data_size</code>: when downloading recursively, if the body of a dataset is larger than this size in bytes then only metadata will be downloaded.</li>
+      </ul>
+      These parameters are primarily used to implement lazy loading in the python client module.
+      In this case the response will be a <a href="viewer?page=msgpack_encoding#groups">messagepack encoded group</a>
+    </p>
+
+  </body>
+</html>

@@ -1,0 +1,75 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>uk.ac.dur.cosma</groupId>
+  <artifactId>virtual_directory</artifactId>
+  <packaging>jar</packaging>
+  <version>1.0-SNAPSHOT</version>
+  <name>virtual_directory</name>
+  <url>https://github.com/jchelly/hdfstream</url>
+
+  <dependencies>
+
+    <!-- Junit for unit tests -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.13.3</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>5.13.3</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-compress -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.27.1</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.19.0</version>
+    </dependency>
+
+  </dependencies>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>11</maven.compiler.release>
+  </properties>
+
+  <!-- Use a newer than default compiler plugin to avoid java version issue -->
+  <build>
+    <plugins>
+      <plugin>
+	<groupId>org.apache.maven.plugins</groupId>
+	<artifactId>maven-compiler-plugin</artifactId>
+	<version>3.10.1</version>
+      </plugin>
+    </plugins>
+  </build>
+
+  <!-- When run by cmake we'd like to put all generated files under the cmake binary dir -->
+  <profiles>
+    <profile>
+      <id>cmakeBuildDir</id>
+      <activation>
+        <property>
+          <name>cmake.build.dir</name>
+        </property>
+      </activation>
+      <build>
+        <directory>${cmake.build.dir}</directory>
+      </build>
+    </profile>
+  </profiles>
+
+</project>

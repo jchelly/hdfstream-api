@@ -1,0 +1,103 @@
+
+/*
+  Text font and size
+*/
+body {
+    margin:0em;
+    font-size:11pt;
+}
+body {
+    font-family:Helvetica, FreeSans, Verdana, sans-serif;
+    color:#272727;
+}
+
+/*
+  Headers
+*/
+
+.headers {
+    text-align:center;
+    font-size:3em;
+    font-family:Helvetica, FreeSans, Verdana, sans-serif;
+    background-position:top;
+    color:white;
+    padding:0;
+    border-bottom:1px solid #808080;
+}
+
+/*
+  Links (suppress underlining)
+*/
+a {
+    text-decoration:none;
+}
+
+/*
+  Sidebar position and colour
+*/
+.sidebar {
+    height: 100%;
+    width: 15%;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background-color: #f1f1f1;
+    padding-left: 10px;
+    padding-right: 10px;
+    box-sizing: border-box;
+}
+.sidebar div {
+    display: block;
+}
+.sidebar ul {
+    list-style: none;
+    padding-inline-start: 1em;
+}
+
+/*
+  Body text style
+*/
+.body-text {
+    margin-left: 15%;
+    padding-left: 10px;
+    padding-right: 10px;
+    box-sizing: border-box;
+}
+
+/*
+  Dataset contents table
+*/
+.data_table table th {
+    text-align: left;
+}
+.data_table td {
+    padding-left: 1em;
+    padding-right: 1em;    
+}
+.data_table tr:nth-child(odd) { background-color: #d1d6ff; }
+.data_table tr:nth-child(even) { background-color: #ffffff; }
+
+/*
+  HDF5 file contents listing
+*/
+.hdf5_listing ul {
+    list-style: none;
+}
+
+.hdf5_listing li + li {
+    margin-top: 0.1em;
+}
+
+/*
+  Directory listing
+*/
+.directory_listing ul {
+}
+
+.directory_listing li + li {
+    margin-top: 0.1em;
+}
+
+.directory_listing td {
+    padding-right: 1em;
+}

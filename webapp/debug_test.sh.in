@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# Start the test in the background
+@MVN_EXECUTABLE@ -f @CMAKE_CURRENT_SOURCE_DIR@ @MVN_REPO_DIR@ -Dcmake.build.dir=@CMAKE_CURRENT_BINARY_DIR@/target -P@MVN_PROFILE@ -Dtest="${1}" -Dmaven.surefire.debug test &
+
+# Wait for it to start
+sleep 5
+
+# Start the java debugger
+jdb -attach 5005 -sourcepath @CMAKE_CURRENT_SOURCE_DIR@/src/test/java/:@CMAKE_CURRENT_SOURCE_DIR@/src/main/java/:@CMAKE_SOURCE_DIR@/jni/

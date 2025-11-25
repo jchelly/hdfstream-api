@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+
+  <head></head>
+  
+  <body>
+    
+    <h1>Web interface</h1>
+    <h2>Directory listings</h2>
+    <p>
+      This web interface can be used to browse the available files. Use
+      the links in the Collections list on the left side of the page to
+      view the root directory of each project. Each directory page
+      contains links to any sub-directories and files it contains.  You
+      can navigate back to the parent directory from a sub-directory by
+      clicking on the parent directory name in the path shown at the top
+      of the page.
+    </p>
+    <p>
+      <a href="viewer/EAGLE/Fiducial_models/RefL0012N0188/snapshot_028_z000p000">Example directory listing for an EAGLE snapshot</a>
+    </p>
+    <h2>Full file downloads</h2>
+    <p>
+      Clicking on a file on the directory listing page displays a page
+      describing the contents of the file and a link which can be used to
+      download the complete file.
+    </p>
+    <h2>
+      <h2>Directory downloads</h2>
+      <p>
+        Each directory listing page includes a link to download the directory and
+        its contents as a tar file. Note that these downloads can be extremely large!
+        Smaller downloads can be found by navigating to subdirectories. The service
+        does not attempt to limit download sizes since it's hard to know how much
+        network bandwidth, disk space and patience any particular user will have.
+      </p>
+      <p>
+        Paths in the tar files are set such that when unpacked they reproduce the
+        directory structure shown in the web interface. This is to help prevent
+        confusion when several simulations contain files with the same name. If
+        several tar files are downloaded it is recommended to untar them all in the
+        same directory.
+      </p>
+
+      <h2>File contents</h2>
+      <h3>HDF5</h3>
+      <p>
+        Clicking on a HDF5 file on the directory listing page will display
+        the internal structure of the file, showing groups, datasets and
+        attributes. The web interface is capable of displaying the contents
+        of some datasets and attributes, although compound data types and arrays
+        with more than two dimensions are not supported. This page also shows
+        how to open the file in python.
+      </p>
+      <p>
+        <a href="viewer/EAGLE/Fiducial_models/RefL0012N0188/snapshot_028_z000p000/snap_028_z000p000.0.hdf5">Example listing the contents of an EAGLE snapshot file</a>
+      </p>
+      <p>
+        Opening files with many datasets can take a moment, especially if the file
+        system hosting the data is busy.
+      </p>
+
+      <h3>Text</h3>
+      <p>
+        Following a link to a text file on the directory listing page will download
+        and display the file in your browser.
+      </p>
+
+      <h3>Binary</h3>
+      <p>
+        Other file types cannot be displayed. In this case just a download link is
+        provided.
+      </p>
+
+  </body>
+</html>

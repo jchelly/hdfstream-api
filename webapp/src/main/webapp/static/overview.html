@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+  <head></head>
+
+  <body>
+
+    <h1>Overview of service</h1>
+    <p>
+      This service provides web based remote access to collections of data stored in HDF5 format on the COSMA system in Durham.
+      Access is possible at several levels of granularity:
+      <ul>
+        <li>Recursive download of a full directory (e.g. a complete simulation snapshot) in tar format</li>
+        <li>Download of individual files in HDF5 format</li>
+        <li>Access to HDF5 groups, datasets and attributes within a file via streaming
+          in <a href="https://msgpack.org/index.html">messagepack</a> format</li>
+      </ul>
+    </p>
+    <p>
+      A <a href="viewer?page=python_module">python client module</a> which
+      implements a similar interface to h5py is provided. This can be used
+      to <a href="viewer?page=python_examples">download dataset slices as
+        numpy arrays</a>, for example.
+    </p>
+    <p>
+      The web interface can be used to browse the available files and
+      their contents. It also provides links for file and directory
+      downloads and the ability to preview the contents of HDF5 files.
+    </p>
+    <p>
+      Currently no authentication is required, although there is a
+      (fairly high) rate limit on requests.
+    </p>
+
+  </body>
+</html>

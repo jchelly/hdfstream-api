@@ -1,0 +1,2 @@
+tests/basic/test_data.hdf5,    @CMAKE_CURRENT_SOURCE_DIR@/test_data.hdf5,    @TEST_DATA_SIZE@,    0, application/x-hdf5
+tests/basic/test_data_2d.hdf5, @CMAKE_CURRENT_SOURCE_DIR@/test_data_2d.hdf5, @TEST_DATA_2D_SIZE@, 0, application/x-hdf5

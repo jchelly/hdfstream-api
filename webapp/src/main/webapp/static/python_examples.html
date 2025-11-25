@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+  <head></head>
+
+  <body>
+
+    <h1>Python examples</h1>
+
+    <h2>Plotting star particles in EAGLE</h2>
+    <p>
+      Here we download the positions of star particles in one of the EAGLE
+      simulations and make a dotplot. First, we connect to the server and
+      open the EAGLE root directory:
+    </p>
+    <pre class="python"><code>import hdfstream
+root = hdfstream.RemoteDirectory("__SERVER_URL__","EAGLE")</code></pre>
+    <p>
+      This returns a RemoteDirectory object which can be indexed to access
+      subdirectories and files.
+    </p>
+
+    <h3>Opening a file</h3>
+    <p>
+      We index the root directory with the path to the file we want to
+      read.  In this case the we're going to read the star particles from
+      a simulation snapshot.  The snapshot is split over multiple
+      files. The correct file paths can be determined by browsing the file
+      hierarchy in
+      the <a href="viewer/EAGLE/Fiducial_models/RefL0012N0188/snapshot_028_z000p000">web
+        interface</a> and you can see the contents of one of the snapshot
+      files
+      <a href="viewer/EAGLE/Fiducial_models/RefL0012N0188/snapshot_028_z000p000/snap_028_z000p000.0.hdf5">here</a>.
+      To open this file in python:
+    </p>
+    <pre class="python"><code>snap_file = root["Fiducial_models/RefL0012N0188/snapshot_028_z000p000/snap_028_z000p000.0.hdf5"]</code></pre>
+    <p>
+      This returns a RemoteFile object which allows access to HDF5 objects in
+      the file (it behaves similarly to a read only h5py.File or h5py.Group).
+    </p>
+    <h3>Reading a dataset</h3>
+    <p>
+      To read a dataset we can index the file as we would if we were using h5py.
+      To read the star particle positions from one file:
+    </p>
+    <pre class="python"><code>star_pos = snap_file["PartType4/Coordinates"][...]</code></pre>
+    <p>
+      This returns the result as a numpy array. We can also view any metadata
+      attributes on the datasets in order to determine the units. E.g.:
+    </p>
+    <pre class="python"><code>print(snap_file["PartType4/Coordinates"].attrs)</code></pre>
+    <p>
+      And we can determine the number of files in the set by reading an attribute
+      on the Header group:
+    </p>
+    <pre class="python"><code>nr_files = snap_file["Header"].attrs["NumFilesPerSnapshot"]</code></pre>
+
+    <h3>Reading the full snapshot</h3>
+    <p>
+      In order to read the positions of all of the star particles in the
+      snapshot we need to loop over all files in the set and concatenate
+      the particle position datasets.
+    </p>
+    <pre class="python"><code>import numpy as np
+
+# Connect to the server, if we didn't already
+import hdfstream
+root = hdfstream.RemoteDirectory("__SERVER_URL__","EAGLE")
+
+# Format string to generate the filenames
+filenames="Fiducial_models/RefL0012N0188/snapshot_028_z000p000/snap_028_z000p000.{file_nr}.hdf5"
+
+# List to contain the positions from each file
+star_pos = []
+
+# Loop over files and read positions
+nr_files = 1
+file_nr = 0
+while file_nr < nr_files:
+    filename = filenames.format(file_nr=file_nr)
+    snap_file = root[filename]
+    # Find number of files in the set
+    if file_nr == 0:
+        nr_files = snap_file["Header"].attrs["NumFilesPerSnapshot"]
+    # Read positions from this file
+    star_pos.append(snap_file["PartType4/Coordinates"][...])
+    file_nr += 1
+
+# Combine results
+star_pos = np.concatenate(star_pos)</code></pre>
+
+<h3>Plotting the positions</h3>
+    <p>
+      We can then make a plot of stars in a slice through the volume using matplotlib:
+    </p>
+    <pre class="python"><code>import matplotlib.pyplot as plt
+to_plot = star_pos[:,2] < 10.0 # Plot a 10Mpc/h slice in the x-y plane
+plt.plot(star_pos[to_plot,0], star_pos[to_plot,1], "k,", rasterized=True)
+plt.gca().set_aspect("equal")
+plt.xlabel("x [Mpc/h]")
+plt.ylabel("y [Mpc/h]")
+plt.title("Star particles at z=0 in RefL0012N0188")
+plt.show()</code></pre>
+<p>
+  <img src="RefL0012N0188_stars.png" alt="Star particles at z=0 in RefL0012N0188">
+</p>
+
+  </body>
+</html>

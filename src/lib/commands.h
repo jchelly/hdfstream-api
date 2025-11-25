@@ -1,0 +1,16 @@
+#ifndef COMMANDS_H
+#define COMMANDS_H
+
+#define COMMAND_EXIT         1000
+#define COMMAND_OPEN_DATASET 1001
+#define COMMAND_OPEN_OBJECT  1002
+
+#define COMMAND_NEXT_BLOCK   2000
+#define COMMAND_END_STREAM   2001
+
+#define RESULT_FILE_OPENED    (1 << 0)
+#define RESULT_DATASET_OPENED (1 << 1)
+
+#define BLOCK_RECEIVED 3000
+
+#endif

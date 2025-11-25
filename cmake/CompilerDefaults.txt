@@ -1,0 +1,7 @@
+#
+# Override CMake's default flags for certain compilers
+#
+# If we're using gcc, try to enforce maximum pedantry!
+if ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+  set(CMAKE_C_FLAGS_INIT "-Wall -Wextra -Wpedantic -Wmissing-prototypes -Wstrict-prototypes -Wshadow -Werror -std=c17")
+endif()
