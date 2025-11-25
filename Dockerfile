@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     zlib1g \
     zlib1g-dev \
+    maven \
     && rm -rf /var/lib/apt/lists/*
 
 # Build msgpack-c
@@ -57,5 +58,4 @@ COPY --from=builder /hdfstream-api/build/webapp/target/hdfstream.war /usr/local/
 EXPOSE 8080
 
 # Start Tomcat
-USER tomcat
 CMD ["catalina.sh", "run"]
