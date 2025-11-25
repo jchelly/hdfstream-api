@@ -1,4 +1,4 @@
-name: Test C API with sanitizer
+name: Build and test web app
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
       run: mkdir build
 
     - name: Configure
-      run: cmake .. -DBUILD_WEB_APP=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-fsanitize=address -Wall -Wextra -Werror" -DCMAKE_PREFIX_PATH="${CONDA}"
+      run: cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${CONDA}"
       working-directory: build
 
     - name: Build
