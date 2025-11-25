@@ -4,6 +4,15 @@ FROM tomcat:9
 # Maintainer info (optional)
 LABEL maintainer="j.c.helly@durham.ac.uk"
 
+# Install git and other build tools
+RUN apt-get update && apt-get install -y \
+    git \
+    build-essential \
+    cmake \
+    curl \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
 # Build msgpack-c
 RUN git clone https://github.com/msgpack/msgpack-c.git /tmp/msgpack-c \
     && cd /tmp/msgpack-c \
