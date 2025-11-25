@@ -18,14 +18,14 @@ RUN git clone https://github.com/msgpack/msgpack-c.git /tmp/msgpack-c \
     && make install \
     && rm -rf /tmp/msgpack-c
 
-# Build HDF5 >= 1.12
-RUN curl -L https://github.com/HDFGroup/hdf5/releases/download/hdf5-1.12.3/hdf5-1.12.3.tar.gz \
-    | tar xz -C /tmp \
-    && cd /tmp/hdf5-1.12.3 \
-    && ./configure --prefix=/usr/local \
+# Build HDF5 (needs to be >=1.12, so apt package is too old)
+RUN git clone https://github.com/HDFGroup/hdf5.git /tmp/hdf5 \
+    && cd /tmp/hdf5 \
+    && git checkout hdf5_1.14.6 \
+    && cmake . -DCMAKE_INSTALL_PREFIX=/usr/local/ \
     && make -j$(nproc) \
     && make install \
-    && rm -rf /tmp/hdf5-1.12.3
+    && rm -rf /tmp/hdf5
 
 
 # ---- Stage 2: Runtime ----
