@@ -1,3 +1,12 @@
+#
+# Docker commands if not using github actions
+#
+# Build:   docker build --tag "hdfstream-api" .
+# Run:     docker run -d -p 8080:8080 --name hdfstream-api hdfstream-api
+# Log in:  docker exec -it hdfstream-api /bin/bash
+# Stop:    docker stop hdfstream-api
+# Remove:  docker remove hdfstream-api
+#
 # ---- Stage 1: Build dependencies ----
 FROM tomcat:9 AS builder
 
@@ -37,7 +46,7 @@ COPY . /hdfstream-api
 RUN cd /hdfstream-api \
     && mkdir build \
     && cd build \
-    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local/ -DCMAKE_INSTALL_PREFIX=/usr/local \
+    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local/ -DCMAKE_INSTALL_PREFIX=/usr/local -DPYNBODY_DATA_DIR=/usr/local/data \
     && make \
     && make test \
     && make install
