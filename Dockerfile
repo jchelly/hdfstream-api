@@ -55,4 +55,5 @@ COPY --from=builder /hdfstream-api/build/webapp/target/hdfstream.war /usr/local/
 EXPOSE 8080
 
 # Start Tomcat
+USER tomcat
 CMD ["catalina.sh", "run"]
