@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     pkg-config \
+    zlib1g \
+    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Build msgpack-c
