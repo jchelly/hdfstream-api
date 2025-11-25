@@ -13,10 +13,23 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install dependencies
+    - name: Set up Miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        auto-update-conda: true
+        python-version: 3.10
+        channels: conda-forge
+        activate-environment: test-env
+        use-mamba: true
+
+    - name: Install compiler toolchain
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake pkg-config libhdf5-dev libmsgpack-dev
+        sudo apt-get install -y build-essential cmake pkg-config
+
+    - name: Install dependencies with conda
+        run: |
+          conda install -y -c conda-forge hdf5=1.12 msgpack-c
 
     - name: Create build directory
       run: mkdir build
