@@ -49,7 +49,7 @@ RUN rm -rf /usr/local/tomcat/webapps/*
 COPY --from=builder /usr/local /usr/local
 
 # Copy the web app package over
-COPY --from-builder /hdfstream-api/build/webapp/target/hdfstream.war /usr/local/tomcat/webapps/
+COPY --from=builder /hdfstream-api/build/webapp/target/hdfstream.war /usr/local/tomcat/webapps/
 
 # Expose Tomcat’s default port
 EXPOSE 8080
