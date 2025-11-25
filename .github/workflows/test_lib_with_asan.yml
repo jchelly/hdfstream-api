@@ -29,7 +29,7 @@ jobs:
 
     - name: Install dependencies with conda
         run: |
-          conda install -y -c conda-forge hdf5=1.12 msgpack-c
+        conda install -y -c conda-forge hdf5=1.12 msgpack-c
 
     - name: Create build directory
       run: mkdir build
