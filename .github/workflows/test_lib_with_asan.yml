@@ -34,12 +34,6 @@ jobs:
     - name: Create build directory
       run: mkdir build
 
-    - name: Locate HDF5 utils
-      run: which h5ls
-
-    - name: Report conda path
-      run: echo "${CONDA_PREFIX}"
-
     - name: Configure
       run: cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${CONDA_PREFIX}"
       working-directory: build
