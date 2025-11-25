@@ -1,5 +1,5 @@
 set(PYNBODY_DATA_DIR "${CMAKE_CURRENT_BINARY_DIR}/" CACHE FILEPATH "Where to put the pynbody example data")
-if(NOT EXISTS "${PYNBODY_DATA_DIR}/config.csv")
+if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/config.csv")
 
   #
   # Download the pynbody swift test data
@@ -16,12 +16,12 @@ if(NOT EXISTS "${PYNBODY_DATA_DIR}/config.csv")
   #
   # Generate the configuration file for the unpacked files
   #
-  file(WRITE "${PYNBODY_DATA_DIR}/config.csv" "")
+  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/config.csv" "")
   file(GLOB_RECURSE ALL_FILES RELATIVE "${PYNBODY_DATA_DIR}/" "${PYNBODY_DATA_DIR}/*.hdf5")
   foreach(data_file ${ALL_FILES})
     file(SIZE "${PYNBODY_DATA_DIR}/${data_file}" file_size)
     file(TIMESTAMP "${PYNBODY_DATA_DIR}/${data_file}" file_timestamp "%s")
-    file(APPEND "${PYNBODY_DATA_DIR}/config.csv" "Tests/pynbody/testdata/${data_file}, ${PYNBODY_DATA_DIR}/${data_file}, ${file_size}, ${file_timestamp}, application/x-hdf5\n")
+    file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/config.csv" "Tests/pynbody/testdata/${data_file}, ${PYNBODY_DATA_DIR}/${data_file}, ${file_size}, ${file_timestamp}, application/x-hdf5\n")
   endforeach()
 
 endif()
