@@ -96,7 +96,7 @@
   <!-- Location of the directory configuration file(s) -->
   <context-param>
     <param-name>directory_config</param-name>
-    <param-value>WEB-INF/config.csv</param-value>
+    <param-value>WEB-INF/pynbody.csv</param-value>
   </context-param>
 
   <!-- Limit on HDF5 object name lengths -->

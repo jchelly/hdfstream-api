@@ -57,17 +57,20 @@ set(WEBAPP_SOURCES
 # Build the web application with maven
 add_custom_command(
   DEPENDS ${WEBAPP_SOURCES}
-  COMMAND ${MVN_EXECUTABLE} -f ${CMAKE_CURRENT_SOURCE_DIR} ${MVN_REPO_DIR} -Dcmake.build.dir=${CMAKE_CURRENT_BINARY_DIR}/target -Pexample clean package
+  COMMAND ${MVN_EXECUTABLE} -f ${CMAKE_CURRENT_SOURCE_DIR} ${MVN_REPO_DIR} -Dcmake.build.dir=${CMAKE_CURRENT_BINARY_DIR}/target -Pconfig -Dhdfstream.config.dir="${HDFSTREAM_CONFIG}" clean package
   OUTPUT target/hdfstream.war
 )
 add_custom_target(webapp ALL DEPENDS target/hdfstream.war)
 add_dependencies(webapp jni_install virtual_directory_install)
 
 # Make sure we run "mvn test" as part of CMake's "make test" target
-add_test(NAME web_app_tests COMMAND ${MVN_EXECUTABLE} -f ${CMAKE_CURRENT_SOURCE_DIR} ${MVN_REPO_DIR} -Dcmake.build.dir=${CMAKE_CURRENT_BINARY_DIR}/target -Pexample test)
+add_test(NAME web_app_tests COMMAND ${MVN_EXECUTABLE} -f ${CMAKE_CURRENT_SOURCE_DIR} ${MVN_REPO_DIR} -Dcmake.build.dir=${CMAKE_CURRENT_BINARY_DIR}/target -Pconfig -Dhdfstream.config.dir="${HDFSTREAM_CONFIG}" test)
 
 # Make a script to run a specified unit test
 configure_file(run_test.sh.in run_test.sh @ONLY)
 
 # Make a script to run a specified unit test
 configure_file(debug_test.sh.in debug_test.sh @ONLY)
+
+# Copy example config to the build dir
+add_subdirectory(src/main/example)

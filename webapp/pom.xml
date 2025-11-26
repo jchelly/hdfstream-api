@@ -139,9 +139,9 @@
       </build>
     </profile>
 
-    <!-- Profile to use example data files -->
+    <!-- Profile to copy in configuration files -->
     <profile>
-      <id>example</id>
+      <id>config</id>
       <build>
         <plugins>
           <plugin>
@@ -150,21 +150,16 @@
             <configuration>
               <webResources>
                 <resource>
-                  <directory>${cmake.build.dir}/../../data/pynbody/</directory>
-                  <targetPath>WEB-INF</targetPath>
-                  <includes>
-                    <include>config.csv</include>
-                  </includes>
-                </resource>
-                <resource>
-                  <directory>${project.basedir}/src/main/example/</directory>
+                  <directory>${hdfstream.config.dir}</directory>
                   <targetPath>WEB-INF</targetPath>
                   <includes>
                     <include>web.xml</include>
+                    <include>*.csv</include>
+                    <include>*.csv.gz</include>
                   </includes>
                 </resource>
                 <resource>
-                  <directory>${project.basedir}/src/main/example/</directory>
+                  <directory>${hdfstream.config.dir}</directory>
                   <targetPath>META-INF</targetPath>
                   <includes>
                     <include>context.xml</include>
