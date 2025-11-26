@@ -7,6 +7,14 @@ project(hdfstream VERSION 0.0.1)
 enable_language(C)
 include(CTest)
 
+# Specify location of custom configuration, if any
+set(CONFIG_DIR "" CACHE PATH "Location of custom configuration files")
+if(CONFIG_DIR)
+  set(HDFSTREAM_CONFIG "${CONFIG_DIR}")
+else()
+  set(HDFSTREAM_CONFIG "${CMAKE_BINARY_DIR}/webapp/src/main/example/")
+endif()
+
 # Always add runtime library path to executables
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
@@ -36,10 +44,15 @@ add_subdirectory(./src/lib)
 add_subdirectory(./data/tests/basic)
 add_subdirectory(./data/tests/permissions)
 add_subdirectory(./data/tests/soft_links)
-add_subdirectory(./data/pynbody)
 
 set(BUILD_WEB_APP TRUE CACHE BOOL "Whether to build the java libraries and web application")
 if(BUILD_WEB_APP)
+
+  # Set up example data, if necessary
+  if(NOT CONFIG_DIR)
+    add_subdirectory(./data/pynbody)
+    add_subdirectory(./data/swiftsimio)
+  endif()
 
   # Check if we have java and native interface
   find_package(Java COMPONENTS Development)
