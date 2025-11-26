@@ -48,9 +48,10 @@ add_subdirectory(./data/tests/soft_links)
 set(BUILD_WEB_APP TRUE CACHE BOOL "Whether to build the java libraries and web application")
 if(BUILD_WEB_APP)
 
-  # Set up pynbody test data, if necessary
+  # Set up example data, if necessary
   if(NOT CONFIG_DIR)
     add_subdirectory(./data/pynbody)
+    add_subdirectory(./data/swiftsimio)
   endif()
 
   # Check if we have java and native interface
