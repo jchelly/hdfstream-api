@@ -1,9 +1,10 @@
-name: Create and publish a Docker image
+name: Create Docker image serving test data, and push on release
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  release:
+    types: [published]
+  pull_request:
+    branches: [ master ]
 
 env:
   REGISTRY: ghcr.io
@@ -36,10 +37,11 @@ jobs:
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
           context: .
-          push: true
+          push: ${{ github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
       - name: Generate artifact attestation
+        if: github.event_name == 'release'
         uses: actions/attest-build-provenance@v3
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
