@@ -7,9 +7,13 @@
 # Stop:    docker stop hdfstream-api
 # Remove:  docker remove hdfstream-api
 #
-# ---- Stage 1: Build dependencies ----
-FROM tomcat:9 AS builder
+# Build dependencies:
+#
+# Here we use an Ubuntu Noble image with the java JDK installed.
+#
+FROM eclipse-temurin:25-jdk-noble AS builder
 
+# Install various build tools
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
@@ -25,7 +29,7 @@ RUN apt-get update && apt-get install -y \
 RUN git clone https://github.com/msgpack/msgpack-c.git /tmp/msgpack-c \
     && cd /tmp/msgpack-c \
     && git checkout c-6.1.0 \
-    && cmake . -DCMAKE_INSTALL_PREFIX=/usr/local/ \
+    && cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/ \
     && make -j$(nproc) \
     && make install \
     && rm -rf /tmp/msgpack-c
@@ -36,7 +40,7 @@ RUN git clone https://github.com/HDFGroup/hdf5.git /tmp/hdf5 \
     && git checkout hdf5_1.14.6 \
     && mkdir build \
     && cd build \
-    && cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local/ \
+    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/ \
     && make -j$(nproc) \
     && make install \
     && rm -rf /tmp/hdf5
@@ -51,8 +55,14 @@ RUN cd /hdfstream-api \
     && make test \
     && make install
 
-# ---- Stage 2: Runtime ----
-FROM tomcat:9
+#
+# Set up the final image
+#
+# This starts from the same Ubuntu Noble image but with tomcat installed.
+# Need to copy over the libraries and data set up in the builder, and
+# configure tomcat to find the libraries.
+#
+FROM tomcat:9-jdk25-temurin-noble
 
 # Remove default webapps
 RUN rm -rf /usr/local/tomcat/webapps/*
