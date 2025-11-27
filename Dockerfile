@@ -5,7 +5,7 @@
 # Run:     docker run -d -p 8080:8080 --name hdfstream-api hdfstream-api
 # Log in:  docker exec -it hdfstream-api /bin/bash
 # Stop:    docker stop hdfstream-api
-# Remove:  docker remove hdfstream-api
+# Remove:  docker container rm hdfstream-api
 #
 # Build dependencies:
 #
@@ -64,10 +64,13 @@ RUN cd /hdfstream-api \
 #
 FROM tomcat:9-jdk25-temurin-noble
 
+# We need curl to check the service is running
+RUN apt-get update && apt-get install -y curl
+
 # Remove default webapps
 RUN rm -rf /usr/local/tomcat/webapps/*
 
-# Copy the built libraries from the builder
+# Copy the built libraries and example data from the builder
 COPY --from=builder /usr/local /usr/local
 
 # Copy the web app package over
@@ -81,3 +84,7 @@ EXPOSE 8080
 
 # Start Tomcat
 CMD ["catalina.sh", "run"]
+
+# Wait until the server is responding
+HEALTHCHECK --start-period=5s --interval=10s --timeout=5s --retries=5 \
+  CMD curl -f http://localhost:8080/hdfstream/msgpack -o /dev/null || exit 1
