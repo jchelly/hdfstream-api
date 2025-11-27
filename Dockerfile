@@ -50,7 +50,7 @@ COPY . /hdfstream-api
 RUN cd /hdfstream-api \
     && mkdir build \
     && cd build \
-    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local/ -DCMAKE_INSTALL_PREFIX=/usr/local -DPYNBODY_DATA_DIR=/usr/local/data \
+    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local/ -DCMAKE_INSTALL_PREFIX=/usr/local -DEXAMPLE_DATA_DIR=/usr/local/data \
     && make \
     && make test \
     && make install

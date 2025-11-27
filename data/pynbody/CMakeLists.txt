@@ -1,5 +1,5 @@
 # Real filesystem location where the data files will be stored
-set(PYNBODY_DATA_DIR "${CMAKE_CURRENT_BINARY_DIR}/" CACHE FILEPATH "Where to put the pynbody example data")
+set(PYNBODY_DATA_DIR "${EXAMPLE_DATA_DIR}/pynbody/")
 
 # Location to write the CSV config file
 set(PYNBODY_CONFIG_CSV "${CMAKE_BINARY_DIR}/webapp/src/main/example/pynbody.csv")

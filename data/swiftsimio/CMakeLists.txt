@@ -1,5 +1,5 @@
 # Real filesystem location where the data files will be stored
-set(SWIFTSIMIO_DATA_DIR "${CMAKE_CURRENT_BINARY_DIR}/" CACHE FILEPATH "Where to put the swiftsimio example data")
+set(SWIFTSIMIO_DATA_DIR "${EXAMPLE_DATA_DIR}/swiftsimio/")
 
 # Location to write the CSV config file
 set(SWIFTSIMIO_CONFIG_CSV "${CMAKE_BINARY_DIR}/webapp/src/main/example/swiftsimio.csv")
