@@ -15,6 +15,9 @@ else()
   set(HDFSTREAM_CONFIG "${CMAKE_BINARY_DIR}/webapp/src/main/example/")
 endif()
 
+# Specify where to write example data
+set(EXAMPLE_DATA_DIR "${CMAKE_BINARY_DIR}/data/" CACHE PATH "Where to write example data files")
+
 # Always add runtime library path to executables
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
