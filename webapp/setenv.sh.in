@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# Path settings used by tomcat.
+#
+# If using tomcat downloaded from apache.org or from the docker container
+# this can be placed in tomcat's bin directory to ensure it finds the JNI
+# library.
+#
+# Specify path to libhdfstream.so and libhdfstream_jni.so
+export CATALINA_OPTS="-Djava.library.path=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/"
+
+# Specify path to HDFStream.jar
+export CLASSPATH="@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/HDFStream.jar"

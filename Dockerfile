@@ -74,7 +74,7 @@ COPY --from=builder /usr/local /usr/local
 COPY --from=builder /hdfstream-api/build/webapp/target/hdfstream.war /usr/local/tomcat/webapps/
 
 # Copy file with path to libhdfstream for tomcat
-COPY setenv.sh /usr/local/tomcat/bin/
+COPY --from=builder /hdfstream-api/build/webapp/setenv.sh /usr/local/tomcat/bin/
 
 # Expose Tomcat’s default port
 EXPOSE 8080
