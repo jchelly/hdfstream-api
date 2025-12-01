@@ -66,11 +66,14 @@ add_dependencies(webapp jni_install virtual_directory_install)
 # Make sure we run "mvn test" as part of CMake's "make test" target
 add_test(NAME web_app_tests COMMAND ${MVN_EXECUTABLE} -f ${CMAKE_CURRENT_SOURCE_DIR} ${MVN_REPO_DIR} -Dcmake.build.dir=${CMAKE_CURRENT_BINARY_DIR}/target -Pconfig -Dhdfstream.config.dir="${HDFSTREAM_CONFIG}" test)
 
-# Make a script to run a specified unit test
+# Make a script to run a specified unit test separately
 configure_file(run_test.sh.in run_test.sh @ONLY)
 
-# Make a script to run a specified unit test
+# Make a script to run a specified unit test in the java debugger
 configure_file(debug_test.sh.in debug_test.sh @ONLY)
+
+# Make script to set library paths
+configure_file(setenv.sh.in setenv.sh @ONLY)
 
 # Copy example config to the build dir
 add_subdirectory(src/main/example)

@@ -6,6 +6,7 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE ${CMAKE_SOURCE_DIR}/cmake/CompilerDefaults.tx
 project(hdfstream VERSION 0.0.1)
 enable_language(C)
 include(CTest)
+include(GNUInstallDirs)
 
 # Specify location of custom configuration, if any
 set(CONFIG_DIR "" CACHE PATH "Location of custom configuration files")
@@ -21,7 +22,7 @@ set(EXAMPLE_DATA_DIR "${CMAKE_BINARY_DIR}/data/" CACHE PATH "Where to write exam
 # Always add runtime library path to executables
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Find the HDF5 library

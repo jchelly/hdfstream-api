@@ -14,5 +14,5 @@ set_target_properties(hdfstream PROPERTIES VERSION ${CMAKE_PROJECT_VERSION} SOVE
 target_compile_definitions(hdfstream PRIVATE SHADOW_CACHE)
 
 target_link_libraries(hdfstream ${CMAKE_THREAD_LIBS_INIT} rt)
-install(TARGETS hdfstream DESTINATION lib)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/hdfstream.h DESTINATION include)
+install(TARGETS hdfstream DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/hdfstream.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

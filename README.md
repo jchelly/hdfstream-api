@@ -53,7 +53,6 @@ mkdir -p hdfstream/build
 cd hdfstream/build
 cmake .. \
       -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_C_FLAGS="-Wall -Werror" \
       -DCMAKE_INSTALL_PREFIX=<hdfstream_install_prefix> \
       -Dmsgpack-c_DIR=<msgpack_install_prefix>/lib64/cmake/msgpack-c
 make
@@ -62,14 +61,8 @@ make install
 ```
 Here the install step installs the C library and its Java interface.
 
-The test target runs a set of unit tests on the C library. There are
-python scripts to test the web application in `python/tests` but these
-are not run by `make test` because they require a running tomcat
-instance and access to the EAGLE simulation data.
-
-The virtual directory library and the web application also contain
-unit tests but these are run automatically by maven as part of the
-build process. If any of these tests fail the build will not complete.
+The test target runs a set of unit tests on the C library and the web
+application.
 
 ## HDF5 streaming API
 
@@ -100,9 +93,6 @@ The main operations implemented by the library are:
   * jni: Java native interface for the C API
   * virtual_directory: Java code for translating between real and virtual paths
   * webapp: Tomcat web application which uses the virtual directory and HDF5 streaming code to handle requests for data
-  * python/client: python module which provides a simple interface for requesting HDF5 objects
-  * python/tests: various integration tests for the web application
-  * python/config: python scripts to generate configuration files for EAGLE and FLAMINGO
 
 ## Tomcat web application notes
 
@@ -111,9 +101,6 @@ The main operations implemented by the library are:
 The files libhdfstream.so, libhdfstream_jni.so and HDFStream.jar must be
 installed to a location where the server can load them on startup. Native
 libraries cannot be bundled in the .war file.
-
-The java library must be built with a java version which is not newer than
-the version used to run tomcat.
 
 ### Tomcat downloaded from apache.org
 
@@ -144,11 +131,6 @@ are expanded in that case.
 The full path to HDFStream.jar can be added to the shared.loader entry in
 `/usr/share/tomcat/conf/catalina.properties`.
 
-Note that tomcat must have read permission on the files and execute permission
-for all directories in their paths. On Rocky linux the tomcat user does not
-have execute permission for other user directories, which causes potentially
-misleading "not found" errors when tomcat tries to load the libraries.
-
 ### Starting the application
 
 Once Tomcat is running, the web application is deployed by copying the .war
@@ -159,25 +141,18 @@ file to the webapps directory. The web interface can be accessed at
 Various service parameters can be adjusted in webapp/web.xml. The application
 will need to be rebuilt and redeployed for changes to take effect.
 
-## Authentication
+## Configuration
 
-The web application is set up to use http basic authentication with user
-information stored in a database accessed via JDBC. Database connection
-parameters are set in `webapp/context.xml`.
+By default the service is configured to serve example data files for
+swiftsimio and pynbody with no authentication. This can be overridden
+by setting the cmake parameter CONFIG_DIR to a directory which
+contains the following files:
 
-In order to avoid storing database credentials in the git repository the
-`context.xml` file references variables which are assumed to be set in Tomcat's
-`conf/catalina.properties` configuration file:
-
-  * virgodb.user - username to connect to the database
-  * virgodb.password - password used to connect to the database
-  * virgodb.url - database connection URL
-  * virgodb.driver - name of the JDBC driver. The corresponding .jar file needs to be placed in Tomcat's lib directory.
-
-For testing purposes the application can be compiled with
--DTOMCAT_DUMMY_USERS=ON to use user accounts specified in the file
-`dummy_users.xml` in Tomcat's conf directory. There's an example of this file
-in `webapp/dummy_users.xml`.
+  * context.xml: authentication mechanisms (e.g. a database connection)
+    can be configured here
+  * web.xml: sets various service parameters and defines security
+    roles associated with authenticated users
+  * Any CSV config files referred to in web.xml
 
 ## Virtual directories
 
@@ -205,8 +180,8 @@ file to be served. The columns are:
 This directory also contains code to stream a tar file with the contents
 of any directory in the hierarchy.
 
-The name of the configuration file used by the web app is set in
-`webapp/src/main/webapp/WEB-INF/web.xml`.
+The name of the configuration file(s) used by the web app is set in
+web.xml.
 
 ### Access permissions
 
