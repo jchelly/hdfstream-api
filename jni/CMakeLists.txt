@@ -1,6 +1,5 @@
 include(UseJava)
 include_directories(${CMAKE_BINARY_DIR}/src/lib ../src/util/ ../src/hdf5/ ${HDF5_INCLUDE_DIRS})
-include(GNUInstallDirs)
 
 # Java class which loads the JNI library. Also generates C headers.
 add_jar(HDFStream
