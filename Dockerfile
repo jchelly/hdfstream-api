@@ -50,7 +50,7 @@ COPY . /hdfstream-api
 RUN cd /hdfstream-api \
     && mkdir build \
     && cd build \
-    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local/ -DCMAKE_INSTALL_PREFIX=/usr/local -DCONFIG_DIR=./webapp/src/main/docker/ \
+    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local/ -DCMAKE_INSTALL_PREFIX=/usr/local -DCONFIG_DIR=../webapp/src/main/docker/ \
     && make \
     && make test \
     && make install
