@@ -2,7 +2,7 @@
 # Docker commands if not using github actions
 #
 # Build:   docker build --tag "hdfstream-api" .
-# Run:     docker run -d -p 8080:8080 --name hdfstream-api hdfstream-api
+# Run:     docker run -d -p 8080:8080 -v /path/on/host:/opt/hdfstream/data:ro --name hdfstream-api hdfstream-api
 # Log in:  docker exec -it hdfstream-api /bin/bash
 # Stop:    docker stop hdfstream-api
 # Remove:  docker container rm hdfstream-api
@@ -50,7 +50,7 @@ COPY . /hdfstream-api
 RUN cd /hdfstream-api \
     && mkdir build \
     && cd build \
-    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local/ -DCMAKE_INSTALL_PREFIX=/usr/local -DEXAMPLE_DATA_DIR=/usr/local/data \
+    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local/ -DCMAKE_INSTALL_PREFIX=/usr/local -DCONFIG_DIR=../webapp/src/main/docker/ \
     && make \
     && make test \
     && make install
@@ -64,13 +64,13 @@ RUN cd /hdfstream-api \
 #
 FROM tomcat:9-jdk25-temurin-noble
 
-# We need curl to check the service is running
-RUN apt-get update && apt-get install -y curl
+# We need curl to check the service is running and python to generate the config file
+RUN apt-get update && apt-get install -y curl python3
 
 # Remove default webapps
 RUN rm -rf /usr/local/tomcat/webapps/*
 
-# Copy the built libraries and example data from the builder
+# Copy the built libraries from the builder
 COPY --from=builder /usr/local /usr/local
 
 # Copy the web app package over
@@ -79,12 +79,17 @@ COPY --from=builder /hdfstream-api/build/webapp/target/hdfstream.war /usr/local/
 # Copy file with path to libhdfstream for tomcat
 COPY --from=builder /hdfstream-api/build/webapp/setenv.sh /usr/local/tomcat/bin/
 
+# Copy configuration and startup scripts over
+COPY --from=builder /hdfstream-api/webapp/src/main/docker/startup.sh /opt/hdfstream/
+COPY --from=builder /hdfstream-api/webapp/src/main/docker/scan_directory.py /opt/hdfstream/
+
 # Expose Tomcat’s default port
 EXPOSE 8080
 
-# Start Tomcat
-CMD ["catalina.sh", "run"]
+# Generate configuration and start the service.
+# Assumes data files are mounted under /opt/hdfstream/data/.
+CMD ["/opt/hdfstream/startup.sh", "run"]
 
-# Wait until the server is responding
+# This allows docker to check if the service is running
 HEALTHCHECK --start-period=5s --interval=10s --timeout=5s --retries=5 \
   CMD curl -f http://localhost:8080/hdfstream/msgpack -o /dev/null || exit 1

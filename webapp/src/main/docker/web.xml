@@ -96,11 +96,11 @@
   <!-- Location of the directory configuration file(s) -->
   <context-param>
     <param-name>external_config</param-name>
-    <param-value>0</param-value>
+    <param-value>1</param-value>
   </context-param>
   <context-param>
     <param-name>directory_config</param-name>
-    <param-value>WEB-INF/pynbody.csv;WEB-INF/swiftsimio.csv</param-value>
+    <param-value>/opt/hdfstream/config.csv</param-value>
   </context-param>
 
   <!-- Limit on HDF5 object name lengths -->

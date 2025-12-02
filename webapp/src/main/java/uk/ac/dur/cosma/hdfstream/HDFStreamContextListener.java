@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.zip.GZIPInputStream;
 
 import uk.ac.dur.cosma.libhdfstream.*;
@@ -28,10 +30,13 @@ public class HDFStreamContextListener implements ServletContextListener{
         return result;
     }
 
-    // During unit tests this is overridden to read from the build directory.
-    // When fully installed and running it reads resources from the .war package.
-    protected InputStream getResource(ServletContext context, String name) throws IOException {
-        return context.getResourceAsStream(name);
+    // Open a file if external_config!=0, or a resource in the war file otherwise
+    protected InputStream getResource(ServletContext context, String name, int external_config) throws IOException {
+        if(external_config != 0) {
+            return new FileInputStream(new File(name));
+        } else {
+            return context.getResourceAsStream(name);
+        }
     }
 
     // During unit tests this is overriden to use the hdfstream_reader executable from the build directory.
@@ -56,6 +61,7 @@ public class HDFStreamContextListener implements ServletContextListener{
         int file_cache_check_interval = Integer.valueOf(context.getInitParameter("file_cache_check_interval"));
         int file_cache_expiry_interval = Integer.valueOf(context.getInitParameter("file_cache_expiry_interval"));
         int max_requests_per_user = Integer.valueOf(context.getInitParameter("max_requests_per_user"));
+        int external_config = Integer.valueOf(context.getInitParameter("external_config"));
 
         /* Store HDF5 name length limit */
         context.setAttribute("max_hdf5_name_length", max_hdf5_name_length);
@@ -84,14 +90,14 @@ public class HDFStreamContextListener implements ServletContextListener{
         for(String directory_config : directory_configs) {
             if(directory_config.endsWith(".gz")) {
                 /* Assume config file is gzipped if it has a .gz extension */
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(getResource(context, directory_config))))) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(getResource(context, directory_config, external_config))))) {
                     vdir.addFromReader(reader);
                 } catch (Exception e) {
                     throw new RuntimeException("Failed to read gzipped virtual directory configuration: " + directory_config + " : " + e.getMessage());
                 }
             } else {
                 /* Uncompressed config file */
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(getResource(context, directory_config)))) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(getResource(context, directory_config, external_config)))) {
                     vdir.addFromReader(reader);
                 } catch (Exception e) {
                     throw new RuntimeException("Failed to read virtual directory configuration: " + directory_config + " : " + e.getMessage());
