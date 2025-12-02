@@ -64,8 +64,8 @@ RUN cd /hdfstream-api \
 #
 FROM tomcat:9-jdk25-temurin-noble
 
-# We need curl to check the service is running
-RUN apt-get update && apt-get install -y curl
+# We need curl to check the service is running and python to generate the config file
+RUN apt-get update && apt-get install -y curl python3
 
 # Remove default webapps
 RUN rm -rf /usr/local/tomcat/webapps/*
