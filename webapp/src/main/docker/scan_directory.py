@@ -37,20 +37,20 @@ def scan_directory(real_directory, virtual_directory, output_file):
 
         # Loop over all files in the data directory
         for real_filename in Path(real_directory).rglob("*"):
+            if real_filename.is_file():
+                # Get real and virtual paths to this file
+                real_absolute_path = real_filename.absolute()
+                relative_path = real_absolute_path.relative_to(real_directory)
+                virtual_absolute_path = (Path(virtual_directory) / relative_path).relative_to("/")
 
-            # Get real and virtual paths to this file
-            real_absolute_path = real_filename.absolute()
-            relative_path = real_absolute_path.relative_to(real_directory)
-            virtual_absolute_path = (Path(virtual_directory) / relative_path).relative_to("/")
+                # Get size, last modification time and type
+                st = os.stat(real_absolute_path)
+                size = st.st_size
+                modtime = st.st_mtime
+                mtype = media_type(real_absolute_path)
 
-            # Get size, last modification time and type
-            st = os.stat(real_absolute_path)
-            size = st.st_size
-            modtime = st.st_mtime
-            mtype = media_type(real_absolute_path)
-
-            # Write out the config line for this file
-            out.write(f"{virtual_absolute_path}, {real_absolute_path}, {int(size)}, {int(modtime)}, {mtype}\n")
+                # Write out the config line for this file
+                out.write(f"{virtual_absolute_path}, {real_absolute_path}, {int(size)}, {int(modtime)}, {mtype}\n")
 
 
 if __name__ == "__main__":
