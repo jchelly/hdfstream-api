@@ -1,0 +1,130 @@
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+                             http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+
+  <session-config>
+    <tracking-mode>COOKIE</tracking-mode>
+  </session-config>
+
+  <!-- Page returned in case of an error -->
+  <error-page>
+    <location>/WEB-INF/error.jsp</location>
+  </error-page>
+
+  <!-- Default page displayed -->
+  <welcome-file-list>
+    <welcome-file>/WEB-INF/viewer.jsp</welcome-file>
+  </welcome-file-list>
+
+  <!-- The TarFileServlet provides full file and directory downloads -->
+  <servlet>
+    <servlet-name>TarFileServlet</servlet-name>
+    <servlet-class>uk.ac.dur.cosma.hdfstream.TarFileServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>TarFileServlet</servlet-name>
+    <url-pattern>/download/*</url-pattern>
+  </servlet-mapping>
+
+  <!-- The HDFStreamServlet streams HDF5 objects in msgpack format -->
+  <servlet>
+    <servlet-name>HDFStreamServlet</servlet-name>
+    <servlet-class>uk.ac.dur.cosma.hdfstream.HDFStreamServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>HDFStreamServlet</servlet-name>
+    <url-pattern>/msgpack/*</url-pattern>
+  </servlet-mapping>
+
+  <!-- The StatusServlet displays server status info -->
+  <servlet>
+    <servlet-name>StatusServlet</servlet-name>
+    <servlet-class>uk.ac.dur.cosma.hdfstream.StatusServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>StatusServlet</servlet-name>
+    <url-pattern>/status</url-pattern>
+  </servlet-mapping>
+
+  <!-- Javascript viewer page -->
+  <servlet>
+    <servlet-name>viewer_jsp</servlet-name>
+    <jsp-file>/WEB-INF/viewer.jsp</jsp-file>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>viewer_jsp</servlet-name>
+    <url-pattern>/viewer/*</url-pattern>
+  </servlet-mapping>
+
+  <!-- This context listener initializes the service on startup -->
+  <listener>
+    <listener-class>
+      uk.ac.dur.cosma.hdfstream.HDFStreamContextListener
+    </listener-class>
+  </listener>
+
+  <!--
+      Various service parameters are set here
+  -->
+
+  <!-- Size of the process pool used for reading -->
+  <context-param>
+    <param-name>nr_processes</param-name>
+    <param-value>8</param-value>
+  </context-param>
+
+  <!-- Number of HDF5 file IDs cached by each process -->
+  <context-param>
+    <param-name>max_open_files</param-name>
+    <param-value>32</param-value>
+  </context-param>
+
+  <!-- Number of HDF5 dataset IDs cached for each open file -->
+  <context-param>
+    <param-name>max_open_datasets</param-name>
+    <param-value>128</param-value>
+  </context-param>
+
+  <!-- Size in bytes of serialization buffer -->
+  <context-param>
+    <param-name>buffer_size</param-name>
+    <param-value>33554432</param-value>
+  </context-param>
+
+  <!-- Location of the directory configuration file(s) -->
+  <context-param>
+    <param-name>external_config</param-name>
+    <param-value>1</param-value>
+  </context-param>
+  <context-param>
+    <param-name>directory_config</param-name>
+    <param-value>/opt/hdfstream/config.csv</param-value>
+  </context-param>
+
+  <!-- Limit on HDF5 object name lengths -->
+  <context-param>
+    <param-name>max_hdf5_name_length</param-name>
+    <param-value>4096</param-value>
+  </context-param>
+
+  <!-- max concurrent requests per user. Set to zero for no limit -->
+  <context-param>
+    <param-name>max_requests_per_user</param-name>
+    <param-value>6</param-value>
+  </context-param>
+
+  <!-- Interval between checks for expired file cache entries (seconds, 0=never check) -->
+  <context-param>
+    <param-name>file_cache_check_interval</param-name>
+    <param-value>10</param-value>
+  </context-param>
+
+  <!-- Interval before an unused file cache entry is closed (seconds, 0=unlimited) -->
+  <context-param>
+    <param-name>file_cache_expiry_interval</param-name>
+    <param-value>60</param-value>
+  </context-param>
+
+</web-app>

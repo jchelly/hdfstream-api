@@ -41,7 +41,7 @@ def scan_directory(real_directory, virtual_directory, output_file):
             # Get real and virtual paths to this file
             real_absolute_path = real_filename.absolute()
             relative_path = real_absolute_path.relative_to(real_directory)
-            virtual_absolute_path = Path(virtual_directory) / relative_path
+            virtual_absolute_path = (Path(virtual_directory) / relative_path).relative_to("/")
 
             # Get size, last modification time and type
             st = os.stat(real_absolute_path)

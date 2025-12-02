@@ -2,7 +2,7 @@
 # Docker commands if not using github actions
 #
 # Build:   docker build --tag "hdfstream-api" .
-# Run:     docker run -d -p 8080:8080 --name hdfstream-api hdfstream-api
+# Run:     docker run -d -p 8080:8080 -v /path/on/host:/opt/hdfstream/data:ro --name hdfstream-api hdfstream-api
 # Log in:  docker exec -it hdfstream-api /bin/bash
 # Stop:    docker stop hdfstream-api
 # Remove:  docker container rm hdfstream-api
@@ -79,12 +79,17 @@ COPY --from=builder /hdfstream-api/build/webapp/target/hdfstream.war /usr/local/
 # Copy file with path to libhdfstream for tomcat
 COPY --from=builder /hdfstream-api/build/webapp/setenv.sh /usr/local/tomcat/bin/
 
+# Copy configuration and startup scripts over
+COPY --from=builder /hdfstream-api/webapp/src/main/docker/startup.sh /opt/hdfstream/
+COPY --from=builder /hdfstream-api/webapp/src/main/docker/scan_directory.py /opt/hdfstream/
+
 # Expose Tomcat’s default port
 EXPOSE 8080
 
-# Start Tomcat
-CMD ["catalina.sh", "run"]
+# Generate configuration and start the service.
+# Assumes data files are mounted under /opt/hdfstream/data/.
+CMD ["/opt/hdfstream/startup.sh", "run"]
 
-# Wait until the server is responding
+# This allows docker to check if the service is running
 HEALTHCHECK --start-period=5s --interval=10s --timeout=5s --retries=5 \
   CMD curl -f http://localhost:8080/hdfstream/msgpack -o /dev/null || exit 1
