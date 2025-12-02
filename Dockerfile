@@ -50,7 +50,7 @@ COPY . /hdfstream-api
 RUN cd /hdfstream-api \
     && mkdir build \
     && cd build \
-    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local/ -DCMAKE_INSTALL_PREFIX=/usr/local -DEXAMPLE_DATA_DIR=/usr/local/data \
+    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local/ -DCMAKE_INSTALL_PREFIX=/usr/local -DCONFIG_DIR=./webapp/src/main/docker/ \
     && make \
     && make test \
     && make install
@@ -70,7 +70,7 @@ RUN apt-get update && apt-get install -y curl
 # Remove default webapps
 RUN rm -rf /usr/local/tomcat/webapps/*
 
-# Copy the built libraries and example data from the builder
+# Copy the built libraries from the builder
 COPY --from=builder /usr/local /usr/local
 
 # Copy the web app package over
