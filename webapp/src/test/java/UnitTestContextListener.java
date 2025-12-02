@@ -21,11 +21,6 @@ import uk.ac.dur.cosma.libhdfstream.HDFStream;
 public class UnitTestContextListener extends HDFStreamContextListener {
 
     @Override
-    protected InputStream getResource(ServletContext context, String name) throws IOException {
-        return new FileInputStream(new File(name));
-    }
-
-    @Override
     protected HDFStream startHDFStream(int nr_processes, int max_open_files, int max_open_datasets,
                                        int file_cache_check_interval, int file_cache_expiry_interval) {
 
