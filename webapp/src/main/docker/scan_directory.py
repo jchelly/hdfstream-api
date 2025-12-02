@@ -41,7 +41,7 @@ def scan_directory(real_directory, virtual_directory, output_file):
                 # Get real and virtual paths to this file
                 real_absolute_path = real_filename.absolute()
                 relative_path = real_absolute_path.relative_to(real_directory)
-                virtual_absolute_path = (Path(virtual_directory) / relative_path).relative_to("/")
+                virtual_absolute_path = (Path(virtual_directory) / relative_path)
 
                 # Get size, last modification time and type
                 st = os.stat(real_absolute_path)
@@ -50,7 +50,7 @@ def scan_directory(real_directory, virtual_directory, output_file):
                 mtype = media_type(real_absolute_path)
 
                 # Write out the config line for this file
-                out.write(f"{virtual_absolute_path}, {real_absolute_path}, {int(size)}, {int(modtime)}, {mtype}\n")
+                out.write(f"{str(virtual_absolute_path).lstrip('/')}, {real_absolute_path}, {int(size)}, {int(modtime)}, {mtype}\n")
 
 
 if __name__ == "__main__":
