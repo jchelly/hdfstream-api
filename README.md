@@ -338,3 +338,46 @@ directory names.
 These special files are not displayed in directory listings in the web
 interface but will be included in tar file downloads and can be read using
 the python module.
+
+## Docker container
+
+This repository includes a Dockerfile to generate a container image
+which can serve arbitrary directories. This can be used to test client
+software: the container can be set up to serve the same test data
+which is used for tests on local data.
+
+### Building the container
+
+The container is built and pushed to the github container registry
+with each release. To build the container outside of github:
+```
+docker build --tag "hdfstream-api" .
+```
+
+### Pulling the container from GHCR
+
+A pre-built container can be pulled from the github container registry
+with
+```
+docker pull ghcr.io/jchelly/hdfstream-api:X.Y.Z
+```
+where `X.Y.Z` is the release version number.
+
+### Running the container
+
+To run the container we need to specify the directory which contains
+the data to serve and mount it as `/opt/hdfstream/data` in the
+container.
+```
+docker run -d -p 8080:8080 \
+  -v ./tests/data:/opt/hdfstream/data:ro \
+  -e HDFSTREAM_PREFIX=tests/data \
+  --name hdfstream-api \
+  ghcr.io/jchelly/hdfstream-api:X.Y.Z
+```
+Here, the server will serve the directory `./tests/data`. The
+HDFSTREAM_PREFIX environment variable adds a prefix to the virtual
+paths presented by the server.
+
+The web interface should then be available at
+`http://localhost:8080/hdfstream`.

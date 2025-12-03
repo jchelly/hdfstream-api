@@ -88,7 +88,7 @@ EXPOSE 8080
 
 # Generate configuration and start the service.
 # Assumes data files are mounted under /opt/hdfstream/data/.
-CMD ["/opt/hdfstream/startup.sh", "run"]
+CMD ["/opt/hdfstream/startup.sh"]
 
 # This allows docker to check if the service is running
 HEALTHCHECK --start-period=5s --interval=10s --timeout=5s --retries=5 \
