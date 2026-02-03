@@ -72,25 +72,25 @@
   <!-- Size of the process pool used for reading -->
   <context-param>
     <param-name>nr_processes</param-name>
-    <param-value>8</param-value>
+    <param-value>4</param-value>
   </context-param>
 
   <!-- Number of HDF5 file IDs cached by each process -->
   <context-param>
     <param-name>max_open_files</param-name>
-    <param-value>32</param-value>
+    <param-value>8</param-value>
   </context-param>
 
   <!-- Number of HDF5 dataset IDs cached for each open file -->
   <context-param>
     <param-name>max_open_datasets</param-name>
-    <param-value>128</param-value>
+    <param-value>16</param-value>
   </context-param>
 
-  <!-- Size in bytes of serialization buffer -->
+  <!-- Size in bytes of serialization buffer (reduced to fit docker's default 64MB shared mem limit) -->
   <context-param>
     <param-name>buffer_size</param-name>
-    <param-value>33554432</param-value>
+    <param-value>1048576</param-value>
   </context-param>
 
   <!-- Location of the directory configuration file(s) -->

@@ -5,14 +5,14 @@ set(SWIFTSIMIO_DATA_DIR "${EXAMPLE_DATA_DIR}/swiftsimio/")
 set(SWIFTSIMIO_CONFIG_CSV "${CMAKE_BINARY_DIR}/webapp/src/main/example/swiftsimio.csv")
 
 # Names of the files to download and configure
-set(SWIFT_FILES LegacyCosmologicalVolume.hdf5 LegacyCosmologicalVolumeDithered.hdf5 eagle_0025.0.hdf5 eagle_0025.1.hdf5 EagleSingle.hdf5 EagleDistributed.hdf5 SoapExample.hdf5)
+set(SWIFT_FILES LegacyCosmologicalVolume.hdf5 LegacyCosmologicalVolumeDithered.hdf5 eagle_0025.0.hdf5 eagle_0025.1.hdf5 EagleSingle.hdf5 EagleDistributed.hdf5 SoapExample.hdf5 ColibreSingle.hdf5)
 
 if(NOT EXISTS "${SWIFTSIMIO_CONFIG_CSV}")
 
   #
   # Download the swiftsimio swift test data
   #
-  set(SWIFTSIMIO_DATA_URL "https://virgodb.cosma.dur.ac.uk/swift-webstorage/IOExamples/ssio_ci_04_2025/")
+  set(SWIFTSIMIO_DATA_URL "https://virgodb.cosma.dur.ac.uk/swift-webstorage/IOExamples/ssio_ci_11_2025/")
   file(MAKE_DIRECTORY "${SWIFTSIMIO_DATA_DIR}")
   foreach(FILENAME ${SWIFT_FILES})
     file(DOWNLOAD "${SWIFTSIMIO_DATA_URL}${FILENAME}" "${SWIFTSIMIO_DATA_DIR}/${FILENAME}")
@@ -26,7 +26,7 @@ if(NOT EXISTS "${SWIFTSIMIO_CONFIG_CSV}")
   foreach(data_file ${ALL_FILES})
     file(SIZE "${SWIFTSIMIO_DATA_DIR}/${data_file}" file_size)
     file(TIMESTAMP "${SWIFTSIMIO_DATA_DIR}/${data_file}" file_timestamp "%s")
-    file(APPEND "${SWIFTSIMIO_CONFIG_CSV}" "Tests/SWIFT/IOExamples/ssio_ci_04_2025/${data_file}, ${SWIFTSIMIO_DATA_DIR}/${data_file}, ${file_size}, ${file_timestamp}, application/x-hdf5\n")
+    file(APPEND "${SWIFTSIMIO_CONFIG_CSV}" "Tests/SWIFT/IOExamples/ssio_ci_11_2025/${data_file}, ${SWIFTSIMIO_DATA_DIR}/${data_file}, ${file_size}, ${file_timestamp}, application/x-hdf5\n")
   endforeach()
 
 endif()
