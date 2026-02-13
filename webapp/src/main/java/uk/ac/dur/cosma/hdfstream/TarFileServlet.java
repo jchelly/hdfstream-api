@@ -98,7 +98,7 @@ public class TarFileServlet extends HttpServlet implements Servlet {
     {
         // Get the directory structure
         ServletContext context = getServletContext();
-	VirtualDirectory virtual_directory = (VirtualDirectory) context.getAttribute("virtual_directory");
+        VirtualDirectory virtual_directory = ((ConfigManager) context.getAttribute("config")).getRoot();
 
         // Expression which returns true if user belongs to a role:
         // This determines which directories we can see.

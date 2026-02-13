@@ -54,7 +54,7 @@ public class StatusServlet extends HttpServlet implements Servlet {
         request.setAttribute("cache_info", cache_info);
 
         // Get total data size as a string
-        VirtualDirectory root = (VirtualDirectory) context.getAttribute("virtual_directory");
+        VirtualDirectory root = ((ConfigManager) context.getAttribute("config")).getRoot();
         long size = root.getTotalSize((in) -> true);
         String total_size = VirtualDirectory.formatSize(size);
         request.setAttribute("total_size", total_size);
