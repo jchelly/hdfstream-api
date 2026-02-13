@@ -42,6 +42,11 @@ public class InternalConfigManager extends ConfigManager {
         root = vdir;
     }
 
+    /* Reloading is not possible */
+    public void reload() throws VirtualDirectoryException {
+        throw new VirtualDirectoryException("Reloading is not supported!");
+    }
+
     /* Get the current virtual directory root */
     public VirtualDirectory getRoot() {
         return root;

@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import uk.ac.dur.cosma.virtual_directory.VirtualDirectory;
+import uk.ac.dur.cosma.virtual_directory.VirtualDirectoryException;
 import uk.ac.dur.cosma.libhdfstream.*;
 
 public class StatusServlet extends HttpServlet implements Servlet {
@@ -33,8 +34,29 @@ public class StatusServlet extends HttpServlet implements Servlet {
     protected void doHeadOrGet(HttpServletRequest request, HttpServletResponse response, boolean is_get)
 	throws ServletException, IOException
     {
+        ServletContext context = getServletContext();
+        String message = null;
+
+        // Check we have a virtual directory config
+        ConfigManager config = (ConfigManager) context.getAttribute("config");
+        if(config == null) {
+            message = "Failed to read virtual directory configuration";
+        } else {
+            message = "Server started";
+        }
+
+        // Check for the reload flag
+        String reload = request.getParameter("reload");
+        if((config != null) && (reload != null) && reload.equals("1")) {
+            try {
+                config.reload();
+                message = "Server configuration reloaded";
+            } catch (VirtualDirectoryException e) {
+                message = "Reload failed: "+e.getMessage();
+            }
+        }
+
         // Return an internal server error if hdfstream didn't start
-	ServletContext context = getServletContext();
 	HDFStream hs = (HDFStream) context.getAttribute("hdfstream");
         if(hs==null) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Hdfstream library initialization failed");
@@ -54,10 +76,13 @@ public class StatusServlet extends HttpServlet implements Servlet {
         request.setAttribute("cache_info", cache_info);
 
         // Get total data size as a string
-        VirtualDirectory root = ((ConfigManager) context.getAttribute("config")).getRoot();
+        VirtualDirectory root = config.getRoot();
         long size = root.getTotalSize((in) -> true);
         String total_size = VirtualDirectory.formatSize(size);
         request.setAttribute("total_size", total_size);
+
+        // Store any status message
+        request.setAttribute("status_message", message);
 
         // Forward this request to the directory status page
         RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/status.jsp");
