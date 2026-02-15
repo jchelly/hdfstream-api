@@ -1,5 +1,6 @@
 version: 2
 updates:
+
   # Check Java dependencies of the server code
   - package-ecosystem: "maven"
     directory: "/webapp"
@@ -7,7 +8,16 @@ updates:
       - dependency-name: "uk.ac.dur.cosma:libhdfstream"
       - dependency-name: "org.apache.tomcat.embed:*"
         versions: [">=10.0.0"]
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "java"
 
+  # Check Java dependencies of the virtual directory library
+  - package-ecosystem: "maven"
+    directory: "/virtual_directory"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
