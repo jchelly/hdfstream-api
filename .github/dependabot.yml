@@ -5,12 +5,8 @@ updates:
     directory: "/webapp"
     ignore:
       - dependency-name: "uk.ac.dur.cosma:libhdfstream"
-      - dependency-name: "org.apache.tomcat:*"
-        versions: [">=10.0.0"]
       - dependency-name: "org.apache.tomcat.embed:*"
         versions: [">=10.0.0"]
-      - dependency-name: "org.junit.jupiter:*"
-        versions: [">=6.0.0"]
 
     schedule:
       interval: "daily"
