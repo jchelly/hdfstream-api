@@ -37,6 +37,14 @@ public class StatusServlet extends HttpServlet implements Servlet {
         ServletContext context = getServletContext();
         String message = null;
 
+        // Don't allow remote access to this page for anyone, just in
+        // case we forget the remote address filter in web.xml!
+        String ip = request.getRemoteAddr();
+        if ((!ip.equals("127.0.0.1")) && (!ip.equals("0:0:0:0:0:0:0:1"))) {
+            response.sendError(404);
+            return;
+        }
+
         // Check we have a virtual directory config
         ConfigManager config = (ConfigManager) context.getAttribute("config");
         if(config == null) {
