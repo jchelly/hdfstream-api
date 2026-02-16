@@ -51,7 +51,7 @@ public class StatusServlet extends HttpServlet implements Servlet {
         if(config == null) {
             message = "Failed to read virtual directory configuration";
         } else {
-            message = "Server started";
+            message = "Server started, connected from " + ip;
         }
 
         // Return an internal server error if hdfstream didn't start
