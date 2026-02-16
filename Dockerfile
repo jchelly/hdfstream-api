@@ -27,9 +27,8 @@ RUN apt-get update && apt-get install -y \
 
 # Build msgpack-c
 ARG MSGPACK_VERSION=c-6.1.0
-RUN git clone https://github.com/msgpack/msgpack-c.git /tmp/msgpack-c \
+RUN git clone --branch=$MSGPACK_VERSION --depth=1 https://github.com/msgpack/msgpack-c.git /tmp/msgpack-c \
     && cd /tmp/msgpack-c \
-    && git checkout $MSGPACK_VERSION \
     && cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/ \
     && make -j$(nproc) \
     && make install \
@@ -37,9 +36,8 @@ RUN git clone https://github.com/msgpack/msgpack-c.git /tmp/msgpack-c \
 
 # Build HDF5 (needs to be >=1.12, so apt package is too old)
 ARG HDF5_VERSION=hdf5_1.14.6
-RUN git clone https://github.com/HDFGroup/hdf5.git /tmp/hdf5 \
+RUN git clone --branch=$HDF5_VERSION --depth=1 https://github.com/HDFGroup/hdf5.git /tmp/hdf5 \
     && cd /tmp/hdf5 \
-    && git checkout $HDF5_VERSION \
     && mkdir build \
     && cd build \
     && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/ \
