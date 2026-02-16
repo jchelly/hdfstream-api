@@ -90,6 +90,8 @@ public class UnitTestServer {
         context.addServletMappingDecoded("/msgpack/*", "HDFStreamServlet");
 	Tomcat.addServlet(context, "TarFileServlet", new TarFileServlet());
         context.addServletMappingDecoded("/download/*", "TarFileServlet");
+	Tomcat.addServlet(context, "StatusServlet", new StatusServlet());
+        context.addServletMappingDecoded("/status", "StatusServlet");
 
         // Set login config, if users were specified
         if(userPasswords != null) {

@@ -38,6 +38,7 @@ set(WEBAPP_SOURCES
   ./src/test/java/NDArray.java
   ./src/test/java/PermissionsUnitTest.java
   ./src/test/java/TestDataset.java
+  ./src/test/java/TestReload.java
   ./src/test/java/TestDimensionInfo.java
   ./src/test/java/TestDirectoryEntry.java
   ./src/test/java/TestFileDownload.java

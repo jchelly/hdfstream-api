@@ -36,6 +36,7 @@ public class StatusServlet extends HttpServlet implements Servlet {
     {
         ServletContext context = getServletContext();
         String message = null;
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/status.jsp");
 
         // Don't allow remote access to this page for anyone, just in
         // case we forget the remote address filter in web.xml!
@@ -53,6 +54,13 @@ public class StatusServlet extends HttpServlet implements Servlet {
             message = "Server started";
         }
 
+        // Return an internal server error if hdfstream didn't start
+	HDFStream hs = (HDFStream) context.getAttribute("hdfstream");
+        if(hs==null) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Hdfstream library initialization failed");
+            return;
+        }
+
         // Check for the reload flag
         String reload = request.getParameter("reload");
         if((config != null) && (reload != null) && reload.equals("1")) {
@@ -62,13 +70,10 @@ public class StatusServlet extends HttpServlet implements Servlet {
             } catch (VirtualDirectoryException e) {
                 message = "Reload failed: "+e.getMessage();
             }
-        }
-
-        // Return an internal server error if hdfstream didn't start
-	HDFStream hs = (HDFStream) context.getAttribute("hdfstream");
-        if(hs==null) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Hdfstream library initialization failed");
-            return;
+            if(dispatcher == null) {
+                response.setStatus(200);
+                return;
+            }
         }
 
         // Determine number of processes
@@ -93,7 +98,6 @@ public class StatusServlet extends HttpServlet implements Servlet {
         request.setAttribute("status_message", message);
 
         // Forward this request to the directory status page
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/status.jsp");
         dispatcher.forward(request, response);
     }
 }

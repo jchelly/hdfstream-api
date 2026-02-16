@@ -15,6 +15,9 @@ public abstract class BasicUnitTest {
     protected static UnitTestServer server;
     protected static UnitTestClient client;
 
+    // Default config file to use
+    protected static String default_config = "../../data/tests/basic/config.csv";
+
     public static void startServer(String config) throws Exception {
 
         // Locate file with the virtual directory config for the test data
@@ -31,7 +34,7 @@ public abstract class BasicUnitTest {
 
     @BeforeAll
     public static void setUp() throws Exception {
-        startServer("../../data/tests/basic/config.csv");
+        startServer(default_config);
     }
 
     @AfterAll
