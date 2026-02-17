@@ -8,6 +8,28 @@
     <tracking-mode>COOKIE</tracking-mode>
   </session-config>
 
+  <!-- Limit access to the server status page to localhost -->
+  <filter>
+    <filter-name>Remote Address Filter</filter-name>
+    <filter-class>org.apache.catalina.filters.RemoteAddrFilter</filter-class>
+    <init-param>
+      <param-name>allow</param-name>
+      <param-value>127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1</param-value>
+    </init-param>
+    <init-param>
+      <param-name>denyStatus</param-name>
+      <param-value>403</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>Remote Address Filter</filter-name>
+    <url-pattern>/status</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>Remote Address Filter</filter-name>
+    <url-pattern>/status/*</url-pattern>
+  </filter-mapping>
+
   <!-- Page returned in case of an error -->
   <error-page>
     <location>/WEB-INF/error.jsp</location>

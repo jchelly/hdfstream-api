@@ -5,13 +5,6 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import uk.ac.dur.cosma.virtual_directory.VirtualDirectory;
 import uk.ac.dur.cosma.virtual_directory.VirtualDirectoryException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.zip.GZIPInputStream;
 
 import uk.ac.dur.cosma.libhdfstream.*;
 
@@ -28,15 +21,6 @@ public class HDFStreamContextListener implements ServletContextListener{
             result[i] = fields[i].trim();
         }
         return result;
-    }
-
-    // Open a file if external_config!=0, or a resource in the war file otherwise
-    protected InputStream getResource(ServletContext context, String name, int external_config) throws IOException {
-        if(external_config != 0) {
-            return new FileInputStream(new File(name));
-        } else {
-            return context.getResourceAsStream(name);
-        }
     }
 
     // During unit tests this is overriden to use the hdfstream_reader executable from the build directory.
@@ -76,35 +60,21 @@ public class HDFStreamContextListener implements ServletContextListener{
 	context.setAttribute("buffer_size", buffer_size);
 
         /*
-          Read virtual directory configuration
-
-          Note that we have to be sure to close the config file immediately
-          after reading it to avoid problems when reloading the web app, so
-          we use a try() block to ensure it gets auto-closed. This prevents
-          "WEB-INF could not be completely deleted" errors in catalina.out.
-
-          directory_configs may contain multiple filenames separated by
-          semicolons, in which case we read all of the specified files.
+          Read virtual directory configuration. directory_configs may
+          contain multiple filenames separated by semicolons, in which
+          case we read all of the specified files.
         */
-        VirtualDirectory vdir = new VirtualDirectory();
-        for(String directory_config : directory_configs) {
-            if(directory_config.endsWith(".gz")) {
-                /* Assume config file is gzipped if it has a .gz extension */
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(getResource(context, directory_config, external_config))))) {
-                    vdir.addFromReader(reader);
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to read gzipped virtual directory configuration: " + directory_config + " : " + e.getMessage());
-                }
+        ConfigManager config;
+        try {
+            if(external_config != 0) {
+                config = new ExternalConfigManager(directory_configs);
             } else {
-                /* Uncompressed config file */
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(getResource(context, directory_config, external_config)))) {
-                    vdir.addFromReader(reader);
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to read virtual directory configuration: " + directory_config + " : " + e.getMessage());
-                }
+                config = new InternalConfigManager(context, directory_configs);
             }
+        } catch (VirtualDirectoryException e) {
+            config = null;
         }
-	context.setAttribute("virtual_directory", vdir);
+        context.setAttribute("config", config);
 
         /* Set up object to limit concurrent requests per user */
         ConcurrentRequestCount crc = new ConcurrentRequestCount(max_requests_per_user);

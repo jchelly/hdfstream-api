@@ -241,4 +241,18 @@ public class UnitTestClient {
         }
         return data;
     }
+
+    public boolean requestReload() throws Exception {
+
+        // Construct URI with the path
+        URIBuilder builder = new URIBuilder(baseURL+"/status");
+        builder.addParameter("reload", "1");
+        URI uri = builder.build();
+        HttpUriRequest request = new HttpGet(uri);
+
+        // Send the request and return true if it worked
+        try (CloseableHttpResponse response = client.execute(request)) {
+            return (response.getStatusLine().getStatusCode() == 200);
+        }
+    }
 }

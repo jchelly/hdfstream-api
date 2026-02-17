@@ -15,6 +15,9 @@
       <fmt:formatDate value="${now}" type="date" />, <fmt:formatDate value="${now}" type="time" />
     </p>
     <p>
+      <c:out value="${status_message}"/>
+    </p>
+    <p>
       Total configured data: <c:out value="${total_size}"/>
     </p>
     <h3>Process pool</h3>
