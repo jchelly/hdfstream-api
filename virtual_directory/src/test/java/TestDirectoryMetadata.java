@@ -115,5 +115,23 @@ public class TestDirectoryMetadata {
     public void testWrongFile() throws Exception {
 	DirectoryMetadata md = new DirectoryMetadata("no_such_file");
 	assertEquals("Unable to read directory metadata", md.description);
-    }    
+    }
+
+    @Test
+    public void testInvalidData() throws Exception {
+
+	// Generate the test data
+	MessageBufferPacker packer = MessagePack.newDefaultBufferPacker();
+        packer.packLong(1);
+	packer.close();
+        byte[] bytes = packer.toByteArray();
+
+	// Write to a temp file
+        Path file = Files.createTempFile(tempDir, "msgpack-", ".bin");
+        Files.write(file, bytes);
+
+	// Try to read it back with the DirectoryMetadata class
+	DirectoryMetadata md = new DirectoryMetadata(file.toString());
+	assertEquals("Unexpected data type in directory metadata", md.description);
+    }
 }
