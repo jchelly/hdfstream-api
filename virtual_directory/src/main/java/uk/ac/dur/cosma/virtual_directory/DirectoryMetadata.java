@@ -22,7 +22,7 @@ public class DirectoryMetadata {
     // Short descriptions of files in this directory
     public LinkedHashMap<String, String> file_labels = null;
 
-    public DirectoryMetadata(String real_path) {
+    public DirectoryMetadata(String real_path) throws IOException {
 
 	try (FileInputStream fis = new FileInputStream(real_path);
              MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(fis)) {
@@ -49,20 +49,11 @@ public class DirectoryMetadata {
 		default:
 		    throw new IOException("Unexpected field name");
 		}
-	    }
-	    
-	} catch (IOException e) {
-	    // We couldn't read the file
-	    description = "Unable to read directory metadata";
-	    file_labels = null;
+	    }	    
 	} catch (MessageSizeException e) {
-	    // An object is too large
-	    description = "Unexpected object size in directory metadata";
-	    file_labels = null;
+	    throw new IOException("Unexpected object size in directory metadata");
 	} catch (MessageTypeException e) {
-	    // Wrong data type
-	    description = "Unexpected data type in directory metadata";
-	    file_labels = null;
+	    throw new IOException("Unexpected data type in directory metadata");
         }
     }
 }

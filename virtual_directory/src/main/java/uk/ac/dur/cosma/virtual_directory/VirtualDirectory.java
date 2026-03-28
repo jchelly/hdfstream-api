@@ -42,7 +42,7 @@ public class VirtualDirectory {
 	}
     }
 
-    public DirectoryMetadata getMetadata() {
+    public DirectoryMetadata getMetadata() throws IOException {
 
 	// Handle the case where there is no metadata
 	if(real_path==null)return null;

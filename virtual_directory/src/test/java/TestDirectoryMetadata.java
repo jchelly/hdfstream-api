@@ -113,8 +113,9 @@ public class TestDirectoryMetadata {
 
     @Test
     public void testWrongFile() throws Exception {
-	DirectoryMetadata md = new DirectoryMetadata("no_such_file");
-	assertEquals("Unable to read directory metadata", md.description);
+	assertThrows(IOException.class, () -> {
+		DirectoryMetadata md = new DirectoryMetadata("no_such_file");
+	    });
     }
 
     @Test
@@ -131,7 +132,8 @@ public class TestDirectoryMetadata {
         Files.write(file, bytes);
 
 	// Try to read it back with the DirectoryMetadata class
-	DirectoryMetadata md = new DirectoryMetadata(file.toString());
-	assertEquals("Unexpected data type in directory metadata", md.description);
+	assertThrows(IOException.class, () -> {
+		DirectoryMetadata md = new DirectoryMetadata(file.toString());
+	    });
     }
 }
