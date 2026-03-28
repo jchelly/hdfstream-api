@@ -38,6 +38,7 @@ public class DirectoryMetadata {
 		    description = unpacker.unpackString();
 		    break;
 		case "file_labels":
+		    file_labels = new LinkedHashMap<String, String>();
 		    int nr_labels = unpacker.unpackMapHeader();
 		    for(int label_nr=0; label_nr<nr_labels; label_nr+=1) {
 			String file_name = unpacker.unpackString();

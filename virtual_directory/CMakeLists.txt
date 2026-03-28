@@ -21,6 +21,7 @@ set(VIRTUAL_DIRECTORY_SOURCES
   ./src/test/java/TestTarFileNoAccess.java
   ./src/test/java/TestTarFileRole.java
   ./src/test/java/TestTotalSize.java
+  ./src/test/java/TestDirectoryMetadata.java
 )
 
 # Build and install the library
