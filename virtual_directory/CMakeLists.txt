@@ -7,6 +7,7 @@ set(VIRTUAL_DIRECTORY_SOURCES
   ./src/main/java/uk/ac/dur/cosma/virtual_directory/VirtualDirectoryException.java
   ./src/main/java/uk/ac/dur/cosma/virtual_directory/VirtualFile.java
   ./src/main/java/uk/ac/dur/cosma/virtual_directory/VirtualPathInfo.java
+  ./src/main/java/uk/ac/dur/cosma/virtual_directory/DirectoryMetadata.java  
   ./src/test/java/TestAddFromReader.java
   ./src/test/java/TestFileProperties.java
   ./src/test/java/TestGetAllFiles.java

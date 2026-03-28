@@ -15,6 +15,7 @@ public class VirtualDirectory {
 
     public String virtual_path = null;
     private String real_path = null;
+    private volatile DirectoryMetadata metadata;
     private LinkedHashMap<String, VirtualFile> files = null;
     private LinkedHashMap<String, VirtualDirectory> directories = null;
     private VirtualDirectory parent = null;
@@ -34,13 +35,29 @@ public class VirtualDirectory {
 
     public void setRealPath(String real_path) throws VirtualDirectoryException {
 	if(this.real_path != null)throw new VirtualDirectoryException("Attempted to set directory metadata path more than once");
-	if(!str.trim().isEmpty()) {
-	    this.real_path = real_path;
+	if(!real_path.trim().isEmpty()) {
+	    this.real_path = real_path.trim();
 	} else {
 	    this.real_path = null;
 	}
     }
 
+    public DirectoryMetadata getMetadata() {
+
+	// Handle the case where there is no metadata
+	if(real_path==null)return null;
+
+	// Read the metadata file, if we didn't already
+	if (metadata == null) {
+            synchronized (this) {
+                if (metadata == null) {		    
+                    metadata = new DirectoryMetadata(real_path);
+                }
+            }
+        }
+	return metadata;
+    }
+    
     public static String formatSize(long size) {
         final String[] units = new String[] { "B", "kB", "MB", "GB", "TB", "PB", "EB" };
         int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
