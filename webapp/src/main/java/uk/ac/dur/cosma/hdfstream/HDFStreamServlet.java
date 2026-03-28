@@ -165,16 +165,24 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
         // Set the content type of the result
         response.setContentType("application/x-msgpack");
 
-        // Send the response body
+	// Determine identifier used to limit concurrent requests:
+	// Username if logged in, and IP address otherwise.
         String username = getUserName(request);
-        crc.acquire(username);
+	String identifier = null;
+	if(username != null)
+	    identifier = username;
+	else
+	    identifier = request.getRemoteAddr();
+
+        // Send the response body
+        crc.acquire(identifier);
         try {
             ServletOutputStream out = response.getOutputStream();
             hreq.streamResponse(hs, out, buffer_size, is_get);
         } catch (HDFStreamRequestException e) {
             sendMsgpackError(response, e.getStatusCode(), e.getErrorMessage());
         } finally {
-            crc.release(username);
+            crc.release(identifier);
         }
         return;
     }
@@ -294,16 +302,24 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
         // Set the content type of the result
         response.setContentType("application/x-msgpack");
 
-        // Send the response body
+	// Determine identifier used to limit concurrent requests:
+	// Username if logged in, and IP address otherwise.
         String username = getUserName(request);
-        crc.acquire(username);
+	String identifier = null;
+	if(username != null)
+	    identifier = username;
+	else
+	    identifier = request.getRemoteAddr();
+
+        // Send the response body
+        crc.acquire(identifier);
         try {
             ServletOutputStream out = response.getOutputStream();
             hreq.streamResponse(hs, out, buffer_size, true);
         } catch (HDFStreamRequestException e) {
             sendMsgpackError(response, e.getStatusCode(), e.getErrorMessage());
         } finally {
-            crc.release(username);
+            crc.release(identifier);
         }
         return;
     }
