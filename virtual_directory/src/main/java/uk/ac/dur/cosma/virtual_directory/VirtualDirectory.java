@@ -14,6 +14,7 @@ import java.text.DecimalFormat;
 public class VirtualDirectory {
 
     public String virtual_path = null;
+    private String real_path = null;
     private LinkedHashMap<String, VirtualFile> files = null;
     private LinkedHashMap<String, VirtualDirectory> directories = null;
     private VirtualDirectory parent = null;
@@ -29,6 +30,15 @@ public class VirtualDirectory {
             if(!in_role.check(role))return false;
         }
         return true;
+    }
+
+    public void setRealPath(String real_path) throws VirtualDirectoryException {
+	if(this.real_path != null)throw new VirtualDirectoryException("Attempted to set directory metadata path more than once");
+	if(!str.trim().isEmpty()) {
+	    this.real_path = real_path;
+	} else {
+	    this.real_path = null;
+	}
     }
 
     public static String formatSize(long size) {
@@ -144,10 +154,12 @@ public class VirtualDirectory {
                 VirtualDirectory subdir = null;
                 if(directories.containsKey(remainder) == false) {
                     subdir = new VirtualDirectory(this, this.virtual_path+"/"+remainder, required_roles);
+		    subdir.setRealPath(real_path);
                     directories.put(remainder, subdir);
                 } else {
-                    // Directory already exists. Add any new access roles in this case.
+                    // Directory already exists. Add any new access roles and the metadata path in this case.
                     subdir = directories.get(remainder);
+		    subdir.setRealPath(real_path);
                     for(String role : required_roles) {
                         subdir.required_roles.add(role);
                     }
