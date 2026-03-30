@@ -23,6 +23,12 @@ public class DirectoryEntry {
     // Files (not set for files)
     public LinkedHashMap<String,DirectoryEntry> files = null;
 
+    // Description (not set for files)
+    String description = null;
+
+    // Labels (not set for files)
+    public LinkedHashMap<String,String> labels = null;
+
     // Last modification time
     public long last_modified = -1;
 
@@ -50,7 +56,33 @@ public class DirectoryEntry {
             case "last_modified":
                 last_modified = unpacker.unpackLong();
                 break;
-            case "files":
+            case "description": {
+                ValueType val_type = unpacker.getNextFormat().getValueType();
+                if(val_type == ValueType.NIL) {
+                    // Description may be nil
+                    unpacker.unpackNil();
+                    } else {
+                    description = unpacker.unpackString();
+                }
+                break;
+            }
+            case "labels": {
+                ValueType val_type = unpacker.getNextFormat().getValueType();
+                if(val_type == ValueType.NIL) {
+                    // Labels may be nil
+                    unpacker.unpackNil();
+                } else {
+                    int nr_labels = unpacker.unpackMapHeader();
+                    labels = new LinkedHashMap<String,String>();
+                    for(int label_nr=0; label_nr<nr_labels; label_nr+=1) {
+                        String label_key = unpacker.unpackString();;
+                        String label_value = unpacker.unpackString();;
+                        labels.put(label_key, label_value);
+                    }
+                }
+                break;
+            }
+            case "files": {
                 int nr_files = unpacker.unpackMapHeader();
                 files = new LinkedHashMap<String,DirectoryEntry>();
                 for(int file_nr=0; file_nr<nr_files; file_nr+=1) {
@@ -59,7 +91,8 @@ public class DirectoryEntry {
                     files.put(file_name, file_object);
                 }
                 break;
-            case "directories":
+            }
+            case "directories": {
                 int nr_directories = unpacker.unpackMapHeader();
                 directories = new LinkedHashMap<String,DirectoryEntry>();
                 for(int directory_nr=0; directory_nr<nr_directories; directory_nr+=1) {
@@ -76,6 +109,7 @@ public class DirectoryEntry {
                     }
                 }
                 break;
+            }
             default:
                 throw new IOException("Unrecognised field " + name + " when decoding directory entry!");
             }

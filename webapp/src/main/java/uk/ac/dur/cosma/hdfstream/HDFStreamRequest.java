@@ -14,6 +14,7 @@ import uk.ac.dur.cosma.virtual_directory.VirtualFile;
 import uk.ac.dur.cosma.virtual_directory.VirtualDirectoryException;
 import uk.ac.dur.cosma.virtual_directory.VirtualPathInfo;
 import uk.ac.dur.cosma.virtual_directory.CheckRole;
+import uk.ac.dur.cosma.virtual_directory.DirectoryMetadata;
 import org.msgpack.core.MessagePacker;
 import org.msgpack.core.MessagePack;
 
@@ -119,8 +120,17 @@ public class HDFStreamRequest {
 
     protected void packDirectory(MessagePacker packer, VirtualDirectory directory, int max_depth, CheckRole in_role) throws IOException {
 
-        // A directory is a map with "type", "size", "files" and "directories" entries
-        packer.packMapHeader(4);
+        // A directory is a map with "type", "size", "files" and "directories" entries.
+        // It might also have "description" and "labels" entries.
+        String description = null;
+        LinkedHashMap<String, String> labels = null;
+        DirectoryMetadata md = directory.getMetadata();
+        if(md != null) {
+            description = md.description;
+            labels = md.labels;
+        }
+        int nr_entries = 6;
+        packer.packMapHeader(nr_entries);
 
         // Indicate that this is a directory
         packer.packString("type");
@@ -129,6 +139,28 @@ public class HDFStreamRequest {
         // Store the directory size
         packer.packString("size");
         packer.packLong(directory.getTotalSize(in_role));
+
+        // Store the description, if we have one
+        packer.packString("description");
+        if(description != null) {
+            packer.packString(description);
+        } else {
+            packer.packNil();
+        }
+
+        // Store the labels, if we have them
+        packer.packString("labels");
+        if(labels != null) {
+            packer.packMapHeader(labels.size());
+            for(Map.Entry<String, String> entry : labels.entrySet()) {
+                String label_key = entry.getKey();
+                String label_value = entry.getValue();
+                packer.packString(label_key);
+                packer.packString(label_value);
+            }
+        } else {
+            packer.packNil();
+        }
 
         // Pack map of {name : file} pairs for files in this directory
         packer.packString("files");
