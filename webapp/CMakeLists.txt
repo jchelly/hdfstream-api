@@ -52,6 +52,7 @@ set(WEBAPP_SOURCES
   ./src/test/java/TestSoftLink.java
   ./src/test/java/TestStringSliceInfo.java
   ./src/test/java/TestTarFileDownload.java
+  ./src/test/java/TestDirectoryMetadata.java
   ./src/test/java/UnitTestClient.java
   ./src/test/java/UnitTestContextListener.java
   ./src/test/java/UnitTestRealm.java

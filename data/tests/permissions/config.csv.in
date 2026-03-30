@@ -1,6 +1,6 @@
-tests/permissions/restricted,             not-used,                                          0,                             0, directory, restricted-access
+tests/permissions/restricted,             ,                                                  0,                             0, directory, restricted-access
 tests/permissions/restricted/data.txt,    @CMAKE_CURRENT_SOURCE_DIR@/restricted/data.txt,    @RESTRICTED_DATA_TXT_SIZE@,    0, text/plain
 tests/permissions/restricted/data.hdf5,   @CMAKE_CURRENT_SOURCE_DIR@/restricted/data.hdf5,   @RESTRICTED_DATA_HDF5_SIZE@,   0, application/x-hdf5
-tests/permissions/unrestricted,           not-used,                                          0,                             0, directory
+tests/permissions/unrestricted,           ,                                                  0,                             0, directory
 tests/permissions/unrestricted/data.txt,  @CMAKE_CURRENT_SOURCE_DIR@/unrestricted/data.txt,  @UNRESTRICTED_DATA_TXT_SIZE@,  0, text/plain
 tests/permissions/unrestricted/data.hdf5, @CMAKE_CURRENT_SOURCE_DIR@/unrestricted/data.hdf5, @UNRESTRICTED_DATA_HDF5_SIZE@, 0, application/x-hdf5

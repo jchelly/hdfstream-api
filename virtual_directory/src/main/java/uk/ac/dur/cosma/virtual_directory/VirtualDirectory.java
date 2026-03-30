@@ -14,6 +14,8 @@ import java.text.DecimalFormat;
 public class VirtualDirectory {
 
     public String virtual_path = null;
+    private String real_path = null;
+    private volatile DirectoryMetadata metadata;
     private LinkedHashMap<String, VirtualFile> files = null;
     private LinkedHashMap<String, VirtualDirectory> directories = null;
     private VirtualDirectory parent = null;
@@ -29,6 +31,31 @@ public class VirtualDirectory {
             if(!in_role.check(role))return false;
         }
         return true;
+    }
+
+    public void setRealPath(String real_path) throws VirtualDirectoryException {
+	if(this.real_path != null)throw new VirtualDirectoryException("Attempted to set directory metadata path more than once");
+	if(!real_path.trim().isEmpty()) {
+	    this.real_path = real_path.trim();
+	} else {
+	    this.real_path = null;
+	}
+    }
+
+    public DirectoryMetadata getMetadata() throws IOException {
+
+	// Handle the case where there is no metadata
+	if(real_path==null)return null;
+
+	// Read the metadata file, if we didn't already
+	if (metadata == null) {
+            synchronized (this) {
+                if (metadata == null) {
+                    metadata = new DirectoryMetadata(real_path);
+                }
+            }
+        }
+	return metadata;
     }
 
     public static String formatSize(long size) {
@@ -144,10 +171,12 @@ public class VirtualDirectory {
                 VirtualDirectory subdir = null;
                 if(directories.containsKey(remainder) == false) {
                     subdir = new VirtualDirectory(this, this.virtual_path+"/"+remainder, required_roles);
+		    subdir.setRealPath(real_path);
                     directories.put(remainder, subdir);
                 } else {
-                    // Directory already exists. Add any new access roles in this case.
+                    // Directory already exists. Add any new access roles and the metadata path in this case.
                     subdir = directories.get(remainder);
+		    subdir.setRealPath(real_path);
                     for(String role : required_roles) {
                         subdir.required_roles.add(role);
                     }
