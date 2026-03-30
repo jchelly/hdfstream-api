@@ -48,6 +48,7 @@ add_subdirectory(./src/lib)
 add_subdirectory(./data/tests/basic)
 add_subdirectory(./data/tests/permissions)
 add_subdirectory(./data/tests/soft_links)
+add_subdirectory(./data/tests/metadata)
 
 set(BUILD_WEB_APP TRUE CACHE BOOL "Whether to build the java libraries and web application")
 if(BUILD_WEB_APP)
