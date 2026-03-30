@@ -50,14 +50,14 @@ public class VirtualDirectory {
 	// Read the metadata file, if we didn't already
 	if (metadata == null) {
             synchronized (this) {
-                if (metadata == null) {		    
+                if (metadata == null) {
                     metadata = new DirectoryMetadata(real_path);
                 }
             }
         }
 	return metadata;
     }
-    
+
     public static String formatSize(long size) {
         final String[] units = new String[] { "B", "kB", "MB", "GB", "TB", "PB", "EB" };
         int digitGroups = (int) (Math.log10(size)/Math.log10(1024));

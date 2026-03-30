@@ -20,7 +20,7 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-  
+
   <dependencies>
 
     <!-- Junit for unit tests -->
@@ -36,13 +36,19 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-params</artifactId>
+        <scope>test</scope>
+    </dependency>
+
     <!-- Messagepack library -->
     <dependency>
       <groupId>org.msgpack</groupId>
       <artifactId>msgpack-core</artifactId>
       <version>0.9.11</version>
     </dependency>
-    
+
     <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-compress -->
     <dependency>
       <groupId>org.apache.commons</groupId>

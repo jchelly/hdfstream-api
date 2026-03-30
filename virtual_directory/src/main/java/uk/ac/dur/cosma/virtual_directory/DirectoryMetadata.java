@@ -15,7 +15,7 @@ public class DirectoryMetadata {
 
     // Maximum number of file descriptions to load
     private final int MAX_FILES = 1024;
-    
+
     // Description of this directory
     public String description = null;
 
@@ -49,7 +49,7 @@ public class DirectoryMetadata {
 		default:
 		    throw new IOException("Unexpected field name");
 		}
-	    }	    
+	    }
 	} catch (MessageSizeException e) {
 	    throw new IOException("Unexpected object size in directory metadata");
 	} catch (MessageTypeException e) {
