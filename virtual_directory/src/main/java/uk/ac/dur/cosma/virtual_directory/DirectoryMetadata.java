@@ -20,7 +20,7 @@ public class DirectoryMetadata {
     public String description = null;
 
     // Short descriptions of files in this directory
-    public LinkedHashMap<String, String> file_labels = null;
+    public LinkedHashMap<String, String> labels = null;
 
     public DirectoryMetadata(String real_path) throws IOException {
 
@@ -37,13 +37,13 @@ public class DirectoryMetadata {
 		case "description":
 		    description = unpacker.unpackString();
 		    break;
-		case "file_labels":
-		    file_labels = new LinkedHashMap<String, String>();
+		case "labels":
+		    labels = new LinkedHashMap<String, String>();
 		    int nr_labels = unpacker.unpackMapHeader();
 		    for(int label_nr=0; label_nr<nr_labels; label_nr+=1) {
 			String file_name = unpacker.unpackString();
 			String file_label = unpacker.unpackString();
-			file_labels.put(file_name, file_label);
+			labels.put(file_name, file_label);
 		    }
 		    break;
 		default:

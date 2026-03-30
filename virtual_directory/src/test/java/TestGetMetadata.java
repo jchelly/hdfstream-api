@@ -47,7 +47,7 @@ public class TestGetMetadata {
         }
 	// File labels entry
         if(have_labels) {
-            packer.packString("file_labels");
+            packer.packString("labels");
             packer.packMapHeader(1);
             packer.packString("file0");
             packer.packString("file_description0");
@@ -94,10 +94,10 @@ public class TestGetMetadata {
             assertNull(md.description);
         }
         if(have_labels) {
-            assertEquals(1, md.file_labels.size());
-            assertEquals("file_description0", md.file_labels.get("file0"));
+            assertEquals(1, md.labels.size());
+            assertEquals("file_description0", md.labels.get("file0"));
         } else {
-            assertNull(md.file_labels);
+            assertNull(md.labels);
         }
 
         // Check files

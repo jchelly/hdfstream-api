@@ -31,7 +31,7 @@ public class TestDirectoryMetadata {
 	packer.packString("description");
 	packer.packString("Directory description");
 	// File labels entry
-	packer.packString("file_labels");
+	packer.packString("labels");
         packer.packMapHeader(3);
 	packer.packString("file0");
 	packer.packString("file_description0");
@@ -50,10 +50,10 @@ public class TestDirectoryMetadata {
 	DirectoryMetadata md = new DirectoryMetadata(file.toString());
 	assertNotNull(md);
 	assertEquals("Directory description", md.description);
-	assertEquals(3, md.file_labels.size());
-	assertEquals("file_description0", md.file_labels.get("file0"));
-	assertEquals("file_description1", md.file_labels.get("file1"));
-	assertEquals("file_description2", md.file_labels.get("file2"));
+	assertEquals(3, md.labels.size());
+	assertEquals("file_description0", md.labels.get("file0"));
+	assertEquals("file_description1", md.labels.get("file1"));
+	assertEquals("file_description2", md.labels.get("file2"));
     }
 
     @Test
@@ -76,7 +76,7 @@ public class TestDirectoryMetadata {
 	DirectoryMetadata md = new DirectoryMetadata(file.toString());
 	assertNotNull(md);
 	assertEquals("Directory description", md.description);
-	assertEquals(null, md.file_labels);
+	assertEquals(null, md.labels);
     }
 
     @Test
@@ -86,7 +86,7 @@ public class TestDirectoryMetadata {
 	MessageBufferPacker packer = MessagePack.newDefaultBufferPacker();
         packer.packMapHeader(1);
 	// File labels entry
-	packer.packString("file_labels");
+	packer.packString("labels");
         packer.packMapHeader(3);
 	packer.packString("file0");
 	packer.packString("file_description0");
@@ -105,10 +105,10 @@ public class TestDirectoryMetadata {
 	DirectoryMetadata md = new DirectoryMetadata(file.toString());
 	assertNotNull(md);
 	assertEquals(null, md.description);
-	assertEquals(3, md.file_labels.size());
-	assertEquals("file_description0", md.file_labels.get("file0"));
-	assertEquals("file_description1", md.file_labels.get("file1"));
-	assertEquals("file_description2", md.file_labels.get("file2"));
+	assertEquals(3, md.labels.size());
+	assertEquals("file_description0", md.labels.get("file0"));
+	assertEquals("file_description1", md.labels.get("file1"));
+	assertEquals("file_description2", md.labels.get("file2"));
     }
 
     @Test
