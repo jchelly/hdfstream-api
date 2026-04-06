@@ -2,11 +2,17 @@
 #include "verify.h"
 #include <msgpack.h>
 
+static size_t msgpack_integer_as_size_t(const msgpack_object obj) {
+  verify(obj.type == MSGPACK_OBJECT_POSITIVE_INTEGER);
+  return obj.via.u64;
+}
+
 /* Compare a msgpack string to a C null terminated string */
-static bool msgpack_str_equals(const msgpack_object_str obj, const char *str) {
+static bool msgpack_str_equals(const msgpack_object obj, const char *str) {
+  verify(obj.type == MSGPACK_OBJECT_STR);
   size_t n = strlen(str);
-  if(n != obj.size)return false;
-  return (memcmp(obj.ptr, str, n) == 0);
+  if(n != obj.via.str.size)return false;
+  return (memcmp(obj.via.str.ptr, str, n) == 0);
 }
 
 static char *copy_string(msgpack_object obj) {
@@ -49,10 +55,8 @@ static hs_object decode_group(msgpack_object obj) {
   verify(obj.type == MSGPACK_OBJECT_MAP);
   verify(obj.via.map.size > 0);
   msgpack_object_kv *field = obj.via.map.ptr;
-  verify(field[0].key.type == MSGPACK_OBJECT_STR);
-  verify(field[0].val.type == MSGPACK_OBJECT_STR);
-  verify(msgpack_str_equals(field[0].key.via.str, "hdf5_object"));
-  verify(msgpack_str_equals(field[0].val.via.str, "group"));
+  verify(msgpack_str_equals(field[0].key, "hdf5_object"));
+  verify(msgpack_str_equals(field[0].val, "group"));
 
   /* Initialize the output object */
   result.type = HS_GROUP;
@@ -67,9 +71,9 @@ static hs_object decode_group(msgpack_object obj) {
 
   /* Otherwise, we should have members and attributes fields */
   verify(obj.via.map.size == 3);
-  for(size_t i=0; i<obj.via.map.size; i+=1) {
+  for(size_t i=1; i<obj.via.map.size; i+=1) {
     verify(field[i].key.type == MSGPACK_OBJECT_STR);
-    if(msgpack_str_equals(field[i].key.via.str, "members")) {
+    if(msgpack_str_equals(field[i].key, "members")) {
       verify(field[i].val.type == MSGPACK_OBJECT_MAP);
       /* Store number of group members */
       result.group.nr_members = field[i].val.via.map.size;
@@ -80,14 +84,12 @@ static hs_object decode_group(msgpack_object obj) {
       for(int member_nr=0; member_nr<result.group.nr_members; member_nr+=1) {
 	result.group.member_object[member_nr] = hs_decode_object(field[i].val.via.map.ptr[member_nr].val);
       }
-    } else if(msgpack_str_equals(field[i].key.via.str, "attributes")) {
+    } else if(msgpack_str_equals(field[i].key, "attributes")) {
       /* Decode the group's attributes */
       result.group.attrs = decode_attributes(field[i].val);
-    } else if(msgpack_str_equals(field[i].key.via.str, "hdf5_object")) {
-      /* Nothing to do */
     } else {
       /* Unrecognized field */
-      hs_free_object(result);
+      hs_free_object(&result);
       result.type = HS_ERROR;
       return result;
     }
@@ -100,7 +102,7 @@ static size_t *decode_shape(msgpack_object obj) {
   size_t n = obj.via.array.size;
   size_t *shape = malloc(sizeof(size_t)*n);
   for(size_t i=0; i<n; i+=1)
-    shape[i] = obj.via.array.ptr[i].via.i64;
+    shape[i] = msgpack_integer_as_size_t(obj.via.array.ptr[i]);
   return shape;
 }
 
@@ -115,10 +117,8 @@ static hs_object decode_dataset(msgpack_object obj) {
   verify(obj.type == MSGPACK_OBJECT_MAP);
   verify(obj.via.map.size > 0);
   msgpack_object_kv *field = obj.via.map.ptr;
-  verify(field[0].key.type == MSGPACK_OBJECT_STR);
-  verify(field[0].val.type == MSGPACK_OBJECT_STR);
-  verify(msgpack_str_equals(field[0].key.via.str, "hdf5_object"));
-  verify(msgpack_str_equals(field[0].val.via.str, "dataset"));
+  verify(msgpack_str_equals(field[0].key, "hdf5_object"));
+  verify(msgpack_str_equals(field[0].val, "dataset"));
 
   /* Initialize the output object */
   result.type = HS_DATASET;
@@ -134,26 +134,24 @@ static hs_object decode_dataset(msgpack_object obj) {
   /* Otherwise, we should also have shape, type, attributes and maybe data fields */
   verify(obj.via.map.size >= 4);
   verify(obj.via.map.size <= 5);
-  for(size_t i=0; i<obj.via.map.size; i+=1) {
+  for(size_t i=1; i<obj.via.map.size; i+=1) {
     verify(field[i].key.type == MSGPACK_OBJECT_STR);
-    if(msgpack_str_equals(field[i].key.via.str, "shape")) {
+    if(msgpack_str_equals(field[i].key, "shape")) {
       /* Decode the dataset shape */
       result.dataset.shape = decode_shape(field[i].val);
-    } else if(msgpack_str_equals(field[i].key.via.str, "type")) {
+    } else if(msgpack_str_equals(field[i].key, "type")) {
       /* Decode the dataset type string */
       result.dataset.type = copy_string(field[i].val);
-    } else if(msgpack_str_equals(field[i].key.via.str, "data")) {
+    } else if(msgpack_str_equals(field[i].key, "data")) {
       /* Decode the dataset contents */
       result.dataset.data = malloc(sizeof(hs_object));
       *(result.dataset.data) = hs_decode_object(field[i].val);
-    } else if(msgpack_str_equals(field[i].key.via.str, "attributes")) {
+    } else if(msgpack_str_equals(field[i].key, "attributes")) {
       /* Decode the dataset's attributes */
       result.group.attrs = decode_attributes(field[i].val);
-    } else if(msgpack_str_equals(field[i].key.via.str, "hdf5_object")) {
-      /* Nothing to do */
     } else {
       /* Unrecognized field */
-      hs_free_object(result);
+      hs_free_object(&result);
       result.type = HS_ERROR;
       return result;
     }
@@ -162,16 +160,107 @@ static hs_object decode_dataset(msgpack_object obj) {
 }
 
 static hs_object decode_ndarray(msgpack_object obj) {
-  verify(obj.type == MSGPACK_OBJECT_MAP);
+
+  /* Initialize the output object */
   hs_object result;
-  result.type = HS_ERROR;
+  result.type = HS_NDARRAY;
+  result.ndarray.type = NULL;
+  result.ndarray.rank = -1;
+  result.ndarray.shape = NULL;
+  result.ndarray.nbytes = 0;
+  result.ndarray.data = NULL;
+  
+  /* Interpret the map fields */
+  int have_nbytes = 0;
+  verify(obj.type == MSGPACK_OBJECT_MAP);
+  msgpack_object_kv *field = obj.via.map.ptr;
+  verify(msgpack_str_equals(field[0].key, "nd"));
+  verify(obj.via.map.size == 6);
+  for(size_t i=1; i<obj.via.map.size; i+=1) {
+    verify(field[i].key.type == MSGPACK_OBJECT_STR);
+    if(msgpack_str_equals(field[i].key, "type")) {
+      result.ndarray.type = copy_string(field[i].val);
+    } else if (msgpack_str_equals(field[i].key, "kind")) {
+      result.ndarray.kind = copy_string(field[i].val);
+    } else if (msgpack_str_equals(field[i].key, "shape")) {
+      result.ndarray.shape = decode_shape(field[i].val);
+    } else if (msgpack_str_equals(field[i].key, "nbytes")) {
+      result.ndarray.nbytes = msgpack_integer_as_size_t(field[i].val);
+      have_nbytes = 1;
+    } else if (msgpack_str_equals(field[i].key, "data")) {
+      verify(have_nbytes); /* Must appear *before* the data */
+      verify(field[i].val.type == MSGPACK_OBJECT_ARRAY);
+      result.ndarray.data = malloc(result.ndarray.nbytes);
+      /* Copy data from the msgpack bin objects */
+      msgpack_object_array *array = &(field[i].val.via.array);
+      size_t nr_buffers = array->size;
+      size_t nr_bytes_copied = 0;
+      for(size_t buffer_nr=0; buffer_nr<nr_buffers; buffer_nr+=1) {
+	/* All array elements should be bin objects */
+	verify(array->ptr[buffer_nr].type == MSGPACK_OBJECT_BIN);
+	/* Locate the current bin object */
+	msgpack_object_bin *bin = &(array->ptr[buffer_nr].via.bin);
+	/* Bounds check number of bytes to copy */
+	verify(nr_bytes_copied+bin->size <= result.ndarray.nbytes);
+	/* Copy the data */
+	memcpy(((char *) result.ndarray.data)+nr_bytes_copied, bin->ptr, bin->size);
+	/* Update number of bytes copied */
+	nr_bytes_copied += bin->size;
+      }
+      verify(nr_bytes_copied == result.ndarray.nbytes);
+    } else {
+      /* Unrecognized field */
+      hs_free_object(&result);
+      result.type = HS_ERROR;
+      return result;
+    }
+  }
   return result;  
 }
 
 static hs_object decode_vlen(msgpack_object obj) {
-  verify(obj.type == MSGPACK_OBJECT_MAP);
+
+  /* Initialize the output object */
   hs_object result;
-  result.type = HS_ERROR;
+  result.type = HS_VLEN;  
+  result.vlen.rank = -1;
+  result.vlen.shape = NULL;
+  result.vlen.data = NULL;
+  
+  /* Interpret the map fields */
+  verify(obj.type == MSGPACK_OBJECT_MAP);
+  msgpack_object_kv *field = obj.via.map.ptr;
+  verify(msgpack_str_equals(field[0].key, "vlen"));
+  verify(obj.via.map.size == 3);
+  for(size_t i=1; i<obj.via.map.size; i+=1) {
+    verify(field[i].key.type == MSGPACK_OBJECT_STR);
+    if(msgpack_str_equals(field[i].key, "shape")) {
+      /* Store shape of the array */
+      result.vlen.shape = decode_shape(field[i].val);
+    } else if(msgpack_str_equals(field[i].key, "data")) {
+      /* Field value should be an array */
+      verify(field[i].val.type == MSGPACK_OBJECT_ARRAY);
+      msgpack_object_array *array = &(field[i].val.via.array);
+      /* Determine number of elements */
+      result.vlen.nr_elements = array->size;
+      /* Check against the shape */
+      verify(result.vlen.shape != NULL);
+      size_t n = 1;
+      for(int dim_nr=0; dim_nr<result.vlen.rank; dim_nr+=1)
+	n *= result.vlen.shape[dim_nr];
+      verify(n == result.vlen.nr_elements);
+      /* Allocate array of element objects */
+      result.vlen.data = malloc(n*sizeof(hs_object));
+      /* Decode the elements */
+      for(size_t element_nr=0; element_nr<n; element_nr+=1)
+	result.vlen.data[element_nr] = hs_decode_object(array->ptr[element_nr]);
+    } else {
+      /* Unrecognized field */
+      hs_free_object(&result);
+      result.type = HS_ERROR;
+      return result;      
+    } 
+  }
   return result;  
 }
 
@@ -184,19 +273,27 @@ hs_object hs_decode_object(msgpack_object obj) {
     return result;
   }
 
-  /* If not nil, the object should be a msgpack map */
+  /* Check for a string object */
+  if(obj.type == MSGPACK_OBJECT_STR) {
+    hs_object result;
+    result.type = HS_STRING;
+    result.string = copy_string(obj);
+    return result;
+  }
+  
+  /* If not nil or string, the object should be a msgpack map */
   verify(obj.type == MSGPACK_OBJECT_MAP);
 
   /* The first entry tells us the object type */
   verify(obj.via.map.size > 0);
   msgpack_object_kv *field = obj.via.map.ptr;
   verify(field[0].key.type == MSGPACK_OBJECT_STR);
-  if(msgpack_str_equals(field[0].key.via.str, "hdf5_object")) {
-    verify(field[1].key.type == MSGPACK_OBJECT_STR);
-    if(msgpack_str_equals(field[0].val.via.str, "group")) {
+  if(msgpack_str_equals(field[0].key, "hdf5_object")) {
+    verify(field[0].val.type == MSGPACK_OBJECT_STR);
+    if(msgpack_str_equals(field[0].val, "group")) {
       /* This is a group */
       return decode_group(obj);
-    } else if(msgpack_str_equals(field[0].val.via.str, "dataset")) {
+    } else if(msgpack_str_equals(field[0].val, "dataset")) {
       /* This is a dataset */
       return decode_dataset(obj);
     } else{
@@ -205,11 +302,11 @@ hs_object hs_decode_object(msgpack_object obj) {
       result.type = HS_ERROR;
       return result;
     }
-  } else if(msgpack_str_equals(field[0].key.via.str, "nd")) {
+  } else if(msgpack_str_equals(field[0].key, "nd")) {
     /* This is an ndarray */
     verify(field[0].val.type == MSGPACK_OBJECT_BOOLEAN);
     return decode_ndarray(obj);
-  } else if(msgpack_str_equals(field[0].key.via.str, "vlen")) {
+  } else if(msgpack_str_equals(field[0].key, "vlen")) {
     /* This is a vlen array */
     verify(field[0].val.type == MSGPACK_OBJECT_BOOLEAN);
     return decode_vlen(obj);
@@ -221,10 +318,104 @@ hs_object hs_decode_object(msgpack_object obj) {
   }
 }
 
-int hs_free_object(hs_object obj) {
+static void free_array_of_strings(size_t n, char ***arr) {
+  if(*arr==NULL)return; /* Do nothing if already null */
+  for(size_t i=0; i<n; i+=1)
+    free(*arr+i);
+  free(*arr);
+  *arr = NULL;
+}
+
+static void free_array_of_hs_object(size_t n, hs_object **arr) {
+  if(*arr==NULL)return; /* Do nothing if already null */
+  for(size_t i=0; i<n; i+=1)
+    hs_free_object(*arr+i);
+  free(*arr);
+  *arr = NULL;
+}
+
+void hs_free_object(hs_object *obj) {
 
   /* If the object is null, there's nothing to do*/
-  if(obj.type==HS_NULL)return 0;
-  
-  return -1;
+  if(obj->type==HS_NULL)return;
+
+  /* If the object is a string, we can just free it */
+  if(obj->type==HS_STRING) {
+    if(obj->string)free(obj->string);
+    obj->string = NULL;
+    obj->type = HS_NULL;
+    return;
+  }
+
+  /* Check if it's a group */
+  if(obj->type==HS_GROUP) {
+    /* Free members */
+    free_array_of_hs_object(obj->group.nr_members, &obj->group.member_object);
+    /* Free member names */
+    free_array_of_strings(obj->group.nr_members, &obj->group.member_name);
+    /* Free attributes */
+    free_array_of_strings(obj->group.attrs.nr_attrs, &obj->group.attrs.name);
+    free_array_of_hs_object(obj->group.attrs.nr_attrs, &obj->group.attrs.value);
+    /* Set this object to null */
+    obj->type = HS_NULL;
+    return;    
+  }
+
+  /* Check if it's a dataset */
+  if(obj->type==HS_DATASET) {
+    if(obj->dataset.type) {
+      free(obj->dataset.type);
+      obj->dataset.type = NULL;
+    }
+    if(obj->dataset.shape) {
+      free(obj->dataset.shape);
+      obj->dataset.shape = NULL;
+    }
+    if(obj->dataset.data) {
+      hs_free_object(obj->dataset.data);
+      obj->dataset.data = NULL;
+    }
+    /* Set this object to null */
+    obj->type = HS_NULL;
+    return;    
+  }
+
+  /* Check if it's an ndarray */
+  if(obj->type==HS_NDARRAY) {
+    if(obj->ndarray.type) {
+      free(obj->ndarray.type);
+      obj->ndarray.type = NULL;
+    }
+    if(obj->ndarray.kind) {
+      free(obj->ndarray.kind);
+      obj->ndarray.kind = NULL;
+    }
+    if(obj->ndarray.shape) {
+      free(obj->ndarray.shape);
+      obj->ndarray.shape = NULL;
+    }
+    if(obj->ndarray.data) {
+      free(obj->ndarray.data);
+      obj->ndarray.data = NULL;
+    }
+    /* Set this object to null */
+    obj->type = HS_NULL;
+    return;    
+  }
+
+  /* Check if it's a vlen array */
+  if(obj->type==HS_VLEN) {
+    if(obj->vlen.shape) {
+      free(obj->vlen.shape);
+      obj->vlen.shape = NULL;
+    }
+    if(obj->vlen.data) {
+      for(size_t element_nr=0; element_nr<obj->vlen.nr_elements; element_nr+=1)
+	hs_free_object(obj->vlen.data+element_nr);
+      free(obj->vlen.data);
+    }
+    /* Set this object to null */
+    obj->type = HS_NULL;
+    return;    
+  }
 }
