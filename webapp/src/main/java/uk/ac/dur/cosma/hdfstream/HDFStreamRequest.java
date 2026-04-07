@@ -19,6 +19,7 @@ import uk.ac.dur.cosma.virtual_directory.CheckRole;
 import uk.ac.dur.cosma.virtual_directory.DirectoryMetadata;
 import org.msgpack.core.MessagePacker;
 import org.msgpack.core.MessagePack;
+import com.github.benmanes.caffeine.cache.Cache;
 
 import uk.ac.dur.cosma.libhdfstream.*;
 
@@ -35,6 +36,7 @@ public class HDFStreamRequest {
     protected SliceInfo slice_info = null;
     protected CheckRole in_role = null;
     protected String cache_key = null;
+    protected Cache request_cache = null;
 
     /*
       Requests are initialized using parameters extracted from a http get or
@@ -47,9 +49,12 @@ public class HDFStreamRequest {
       max_depth: maximum recursion depth
       data_size_limit: maximum size of dataset bodies to return
     */
-    public HDFStreamRequest(VirtualDirectory virtual_directory, CheckRole in_role, String path,
-                            String object, int max_depth, long data_size_limit, SliceInfo slice,
+    public HDFStreamRequest(VirtualDirectory virtual_directory, CheckRole in_role, Cache request_cache,
+                            String path, String object, int max_depth, long data_size_limit, SliceInfo slice,
                             int max_hdf5_name_length) throws HDFStreamRequestException {
+
+        // Keep a reference to the cache
+        this.request_cache = request_cache;
 
         // Reject very long paths
         if(path != null) {
@@ -130,7 +135,7 @@ public class HDFStreamRequest {
 
         byte[] buf = new byte[buffer_size];
         int bytes_read;
-        int max_left_to_buffer = 8*1024*1024;
+        int max_left_to_buffer = 4*1024*1024;
         ByteArrayOutputStream smallCache = new ByteArrayOutputStream();
         do {
             bytes_read = instream.read(buf);
@@ -274,12 +279,25 @@ public class HDFStreamRequest {
             throw new HDFStreamRequestException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Null file in streamObject!");
         }
 
+        // Return a response from the cache, if we can
+        if(cache_key != null) {
+            byte[] cached_data = (byte []) request_cache.getIfPresent(cache_key);
+            if(cached_data != null) {
+                // Response is in the cache
+                if(write_body)out.write(cached_data);
+                return;
+            }
+        }
+
         // Open the object to stream
+        byte[] data = null;
         if(slice_info == null) {
             // In this case we're returning a whole object, possibly recursively. Only the object name is compulsory
             // and we shouldn't be here if it wasn't specified.
             try (DataStream stream = hs.openObject(file.filesystem_path, object, max_depth, buffer_size, data_size_limit)) {
-                if(write_body)copyStream(stream, out, buffer_size);
+                if(write_body) {
+                    data = copyStreamAndReturnIfSmall(stream, out, buffer_size);
+                }
             } catch (IOException e) {
                 throw new HDFStreamRequestException(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
             }
@@ -292,6 +310,9 @@ public class HDFStreamRequest {
                 throw new HDFStreamRequestException(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
             }
         }
+
+        // Cache the response, if we have it
+        if((cache_key != null) && (data != null))request_cache.put(cache_key, data);
 
 	return;
     }
