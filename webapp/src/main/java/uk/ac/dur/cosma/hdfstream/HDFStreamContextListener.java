@@ -3,6 +3,8 @@ package uk.ac.dur.cosma.hdfstream;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import uk.ac.dur.cosma.virtual_directory.VirtualDirectory;
 import uk.ac.dur.cosma.virtual_directory.VirtualDirectoryException;
 
@@ -79,6 +81,12 @@ public class HDFStreamContextListener implements ServletContextListener{
         /* Set up object to limit concurrent requests per user */
         ConcurrentRequestCount crc = new ConcurrentRequestCount(max_requests_per_user);
 	context.setAttribute("concurrent_request_count", crc);
+
+        /* Create the request cache */
+        Cache<String, Object> request_cache = Caffeine.newBuilder()
+            .maximumSize(10_000)
+            .build();
+	context.setAttribute("request_cache", request_cache);
     }
 
     public void contextDestroyed(ServletContextEvent contextEvent) {
