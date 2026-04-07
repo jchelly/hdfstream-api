@@ -14,83 +14,95 @@ public class TestGroup extends BasicUnitTest {
     @ValueSource(booleans = {false, true})
     public void testDefaultMetadata(boolean post) throws Exception {
 
-        // Request root without max depth or size limit:
-        // Default is to load datasets up to 2GB but not recurse into subgroups.
-        String max_depth = null;
-        String data_size_limit = null;
-        HDF5Object root = client.requestObject("/tests/basic/test_data.hdf5", "/", max_depth, data_size_limit, 200, post);
+        // Repeat to test caching
+        for(int rep_nr=0; rep_nr<3; rep_nr+=1) {
 
-        // Check the response is what we expected:
-        assertNotEquals(null, root);
-        assertEquals("/", root.path);
-        assertEquals(1, root.members.size());
+            // Request root without max depth or size limit:
+            // Default is to load datasets up to 2GB but not recurse into subgroups.
+            String max_depth = null;
+            String data_size_limit = null;
+            HDF5Object root = client.requestObject("/tests/basic/test_data.hdf5", "/", max_depth, data_size_limit, 200, post);
 
-        // The dataset data should be a 1D array with 10 elements
-        HDF5Object dataset = root.members.get("data");
-        assertNotEquals(null, dataset);
-        assertEquals(1, dataset.shape.length);
-        assertEquals(10, dataset.shape[0]);
+            // Check the response is what we expected:
+            assertNotEquals(null, root);
+            assertEquals("/", root.path);
+            assertEquals(1, root.members.size());
 
-        // We should have loaded the dataset contents
-        NDArray array = dataset.data;
-        assertNotEquals(null, array);
-        assertEquals(1, array.shape.length);
-        assertEquals(10, array.shape[0]);
-        for(int i=0; i<10; i+=1)
-            assertEquals(i, array.getElementAsLong(i));
+            // The dataset data should be a 1D array with 10 elements
+            HDF5Object dataset = root.members.get("data");
+            assertNotEquals(null, dataset);
+            assertEquals(1, dataset.shape.length);
+            assertEquals(10, dataset.shape[0]);
+
+            // We should have loaded the dataset contents
+            NDArray array = dataset.data;
+            assertNotEquals(null, array);
+            assertEquals(1, array.shape.length);
+            assertEquals(10, array.shape[0]);
+            for(int i=0; i<10; i+=1)
+                assertEquals(i, array.getElementAsLong(i));
+        }
     }
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     public void testAllMetadata(boolean post) throws Exception {
 
-        // Request all metadata but no dataset contents from a file
-        String max_depth = "10";
-        String data_size_limit = "0";
-        HDF5Object root = client.requestObject("/tests/basic/test_data.hdf5", "/", max_depth, data_size_limit, 200, post);
+        // Repeat to test caching
+        for(int rep_nr=0; rep_nr<3; rep_nr+=1) {
 
-        // Check the response is what we expected:
-        assertNotEquals(null, root);
-        assertEquals("/", root.path);
-        assertEquals(1, root.members.size());
+            // Request all metadata but no dataset contents from a file
+            String max_depth = "10";
+            String data_size_limit = "0";
+            HDF5Object root = client.requestObject("/tests/basic/test_data.hdf5", "/", max_depth, data_size_limit, 200, post);
 
-        // The dataset data should be a 1D array with 10 elements
-        HDF5Object dataset = root.members.get("data");
-        assertNotEquals(null, dataset);
-        assertEquals(1, dataset.shape.length);
-        assertEquals(10, dataset.shape[0]);
+            // Check the response is what we expected:
+            assertNotEquals(null, root);
+            assertEquals("/", root.path);
+            assertEquals(1, root.members.size());
 
-        // We should not have loaded the dataset contents
-        assertEquals(null, dataset.data);
+            // The dataset data should be a 1D array with 10 elements
+            HDF5Object dataset = root.members.get("data");
+            assertNotEquals(null, dataset);
+            assertEquals(1, dataset.shape.length);
+            assertEquals(10, dataset.shape[0]);
+
+            // We should not have loaded the dataset contents
+            assertEquals(null, dataset.data);
+        }
     }
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     public void testAllData(boolean post) throws Exception {
 
-        // Request all metadata and dataset contents from a file
-        String max_depth = "10";
-        String data_size_limit = "1000000";
-        HDF5Object root = client.requestObject("/tests/basic/test_data.hdf5", "/", max_depth, data_size_limit, 200, post);
+        // Repeat to test caching
+        for(int rep_nr=0; rep_nr<3; rep_nr+=1) {
 
-        // Check the response is what we expected:
-        assertNotEquals(null, root);
-        assertEquals("/", root.path);
-        assertEquals(1, root.members.size());
+            // Request all metadata and dataset contents from a file
+            String max_depth = "10";
+            String data_size_limit = "1000000";
+            HDF5Object root = client.requestObject("/tests/basic/test_data.hdf5", "/", max_depth, data_size_limit, 200, post);
 
-        // The dataset data should be a 1D array with 10 elements
-        HDF5Object dataset = root.members.get("data");
-        assertNotEquals(null, dataset);
-        assertEquals(1, dataset.shape.length);
-        assertEquals(10, dataset.shape[0]);
+            // Check the response is what we expected:
+            assertNotEquals(null, root);
+            assertEquals("/", root.path);
+            assertEquals(1, root.members.size());
 
-        // We should have loaded the dataset contents too
-        NDArray array = dataset.data;
-        assertNotEquals(null, array);
-        assertEquals(1, array.shape.length);
-        assertEquals(10, array.shape[0]);
-        for(int i=0; i<10; i+=1)
-            assertEquals(i, array.getElementAsLong(i));
+            // The dataset data should be a 1D array with 10 elements
+            HDF5Object dataset = root.members.get("data");
+            assertNotEquals(null, dataset);
+            assertEquals(1, dataset.shape.length);
+            assertEquals(10, dataset.shape[0]);
+
+            // We should have loaded the dataset contents too
+            NDArray array = dataset.data;
+            assertNotEquals(null, array);
+            assertEquals(1, array.shape.length);
+            assertEquals(10, array.shape[0]);
+            for(int i=0; i<10; i+=1)
+                assertEquals(i, array.getElementAsLong(i));
+        }
     }
 
     @ParameterizedTest
