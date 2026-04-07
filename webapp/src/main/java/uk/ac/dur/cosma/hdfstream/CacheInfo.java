@@ -13,17 +13,17 @@ public class CacheInfo {
     public int max_cached_response_size;
 
     // Maximum allowed size of the cache
-    public long max_cache_size;;
+    public long max_response_cache_size;;
 
-    public CacheInfo(int max_cached_response_size, long max_cache_size) {
+    public CacheInfo(int max_cached_response_size, long max_response_cache_size) {
 
         // Store cache parameters
         this.max_cached_response_size = max_cached_response_size;
-        this.max_cache_size = max_cache_size;
+        this.max_response_cache_size = max_response_cache_size;
 
         // Set up the cache with a maximum size in bytes
         this.request_cache = Caffeine.newBuilder()
-            .maximumWeight(max_cache_size)
+            .maximumWeight(max_response_cache_size)
             .weigher((String key, byte[] val) -> val.length)
             .build();
     }

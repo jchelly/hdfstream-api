@@ -81,7 +81,7 @@ public class UnitTestServer {
         context.addParameter("file_cache_expiry_interval", "60");
         context.addParameter("max_requests_per_user", "4");
         context.addParameter("external_config", "1");
-        context.addParameter("max_cache_size", "10240");
+        context.addParameter("max_response_cache_size", "10240");
         context.addParameter("max_cached_response_size", "1024");
 
         // Register listener that starts the process pool
