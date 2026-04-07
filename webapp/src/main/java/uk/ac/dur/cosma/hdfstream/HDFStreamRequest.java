@@ -6,9 +6,11 @@ import java.lang.Integer;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 import java.util.LinkedHashMap;
+import java.lang.Math;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
 import uk.ac.dur.cosma.virtual_directory.VirtualDirectory;
 import uk.ac.dur.cosma.virtual_directory.VirtualFile;
 import uk.ac.dur.cosma.virtual_directory.VirtualDirectoryException;
@@ -32,6 +34,7 @@ public class HDFStreamRequest {
     protected long data_size_limit = Integer.MAX_VALUE;
     protected SliceInfo slice_info = null;
     protected CheckRole in_role = null;
+    protected String cache_key = null;
 
     /*
       Requests are initialized using parameters extracted from a http get or
@@ -106,6 +109,11 @@ public class HDFStreamRequest {
         this.in_role = in_role;
         this.max_depth = max_depth;
         this.data_size_limit = data_size_limit;
+
+        // Generate a cache key for this request. We only cache requests for HDF5 objects which are not slices.
+        if((object != null) && (file != null) && (slice == null)) {
+            cache_key = file.filesystem_path + ";" + object + ";" + Integer.toString(max_depth) + ";" + Long.toString(data_size_limit);
+        }
     }
 
     private static void copyStream(InputStream instream, OutputStream outstream, int buffer_size) throws IOException {
@@ -116,6 +124,28 @@ public class HDFStreamRequest {
             bytes_read = instream.read(buf);
             if(bytes_read > 0) outstream.write(buf, 0, bytes_read);
         } while(bytes_read >= 0);
+    }
+
+    private static byte[] copyStreamAndReturnIfSmall(InputStream instream, OutputStream outstream, int buffer_size) throws IOException {
+
+        byte[] buf = new byte[buffer_size];
+        int bytes_read;
+        int max_left_to_buffer = 8*1024*1024;
+        ByteArrayOutputStream smallCache = new ByteArrayOutputStream();
+        do {
+            bytes_read = instream.read(buf);
+            if(bytes_read > 0){
+                outstream.write(buf, 0, bytes_read);
+                int nr_to_buffer = Math.min(max_left_to_buffer, bytes_read);
+                if(nr_to_buffer > 0)smallCache.write(buf, 0, nr_to_buffer);
+                max_left_to_buffer -= bytes_read;
+            }
+        } while(bytes_read >= 0);
+        if(max_left_to_buffer >= 0) {
+            return smallCache.toByteArray();
+        } else {
+            return null;
+        }
     }
 
     protected void packDirectory(MessagePacker packer, VirtualDirectory directory, int max_depth, CheckRole in_role) throws IOException {
