@@ -8,9 +8,7 @@ import java.util.Map;
 import java.util.LinkedHashMap;
 import java.lang.Math;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.ByteArrayOutputStream;
 import uk.ac.dur.cosma.virtual_directory.VirtualDirectory;
 import uk.ac.dur.cosma.virtual_directory.VirtualFile;
 import uk.ac.dur.cosma.virtual_directory.VirtualDirectoryException;
@@ -118,38 +116,6 @@ public class HDFStreamRequest {
         // Generate a cache key for this request. We only cache requests for HDF5 objects which are not slices.
         if((object != null) && (file != null) && (slice == null)) {
             cache_key = file.filesystem_path + ";" + object + ";" + Integer.toString(max_depth) + ";" + Long.toString(data_size_limit);
-        }
-    }
-
-    private static void copyStream(InputStream instream, OutputStream outstream, int buffer_size) throws IOException {
-
-        byte[] buf = new byte[buffer_size];
-        int bytes_read;
-        do {
-            bytes_read = instream.read(buf);
-            if(bytes_read > 0) outstream.write(buf, 0, bytes_read);
-        } while(bytes_read >= 0);
-    }
-
-    private static byte[] copyStreamAndReturnIfSmall(InputStream instream, OutputStream outstream, int buffer_size, int max_size) throws IOException {
-
-        byte[] buf = new byte[buffer_size];
-        int bytes_read;
-        int max_left_to_buffer = max_size;
-        ByteArrayOutputStream smallCache = new ByteArrayOutputStream();
-        do {
-            bytes_read = instream.read(buf);
-            if(bytes_read > 0){
-                outstream.write(buf, 0, bytes_read);
-                int nr_to_buffer = Math.min(max_left_to_buffer, bytes_read);
-                if(nr_to_buffer > 0)smallCache.write(buf, 0, nr_to_buffer);
-                max_left_to_buffer -= bytes_read;
-            }
-        } while(bytes_read >= 0);
-        if(max_left_to_buffer >= 0) {
-            return smallCache.toByteArray();
-        } else {
-            return null;
         }
     }
 
@@ -296,7 +262,7 @@ public class HDFStreamRequest {
             // and we shouldn't be here if it wasn't specified.
             try (DataStream stream = hs.openObject(file.filesystem_path, object, max_depth, buffer_size, data_size_limit)) {
                 if(write_body) {
-                    data = copyStreamAndReturnIfSmall(stream, out, buffer_size, cache_info.max_cached_response_size);
+                    data = StreamCopier.copyStreamAndReturnIfSmall(stream, out, buffer_size, cache_info.max_cached_response_size);
                 }
             } catch (IOException e) {
                 throw new HDFStreamRequestException(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
@@ -305,7 +271,7 @@ public class HDFStreamRequest {
             // In this case we're taking one or more dataset slices
             try (DataStream stream = hs.openDatasetSlices(file.filesystem_path, object, slice_info.nr_slices,
                                                           slice_info.rank, slice_info.starts, slice_info.counts, buffer_size)) {
-                if(write_body)copyStream(stream, out, buffer_size);
+                if(write_body)StreamCopier.copyStream(stream, out, buffer_size);
             } catch (IOException e) {
                 throw new HDFStreamRequestException(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
             }

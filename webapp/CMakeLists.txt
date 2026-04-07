@@ -20,6 +20,7 @@ set(WEBAPP_SOURCES
   ./src/main/java/uk/ac/dur/cosma/hdfstream/InternalConfigManager.java
   ./src/main/java/uk/ac/dur/cosma/hdfstream/ExternalConfigManager.java
   ./src/main/java/uk/ac/dur/cosma/hdfstream/CacheInfo.java
+  ./src/main/java/uk/ac/dur/cosma/hdfstream/StreamCopier.java
   ./src/main/webapp/RefL0012N0188_stars.png
   ./src/main/webapp/WEB-INF/error.jsp
   ./src/main/webapp/WEB-INF/status.jsp
