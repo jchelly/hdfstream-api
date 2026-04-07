@@ -33,7 +33,6 @@ public class HDFStreamRequest {
     protected long data_size_limit = Integer.MAX_VALUE;
     protected SliceInfo slice_info = null;
     protected CheckRole in_role = null;
-    protected String cache_key = null;
     protected CacheInfo cache_info = null;
 
     /*
@@ -112,11 +111,6 @@ public class HDFStreamRequest {
         this.in_role = in_role;
         this.max_depth = max_depth;
         this.data_size_limit = data_size_limit;
-
-        // Generate a cache key for this request. We only cache requests for HDF5 objects which are not slices.
-        if((object != null) && (file != null) && (slice == null)) {
-            cache_key = file.filesystem_path + ";" + object + ";" + Integer.toString(max_depth) + ";" + Long.toString(data_size_limit);
-        }
     }
 
     protected void packDirectory(MessagePacker packer, VirtualDirectory directory, int max_depth, CheckRole in_role) throws IOException {
@@ -245,21 +239,23 @@ public class HDFStreamRequest {
             throw new HDFStreamRequestException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Null file in streamObject!");
         }
 
-        // Return a response from the cache, if we can
-        if(cache_key != null) {
+        // Open the object to stream
+        if(slice_info == null) {
+
+            // In this case we're returning a whole object, possibly recursively. Only the object name is compulsory
+            // and we shouldn't be here if it wasn't specified. Make a cache key for this request.
+            String cache_key = file.filesystem_path + ";" + object + ";" + Integer.toString(max_depth) + ";" + Long.toString(data_size_limit);
+
+            // Return a cached response if we can
             byte[] cached_data = cache_info.request_cache.getIfPresent(cache_key);
             if(cached_data != null) {
                 // Response is in the cache
                 if(write_body)out.write(cached_data);
                 return;
             }
-        }
 
-        // Open the object to stream
-        byte[] data = null;
-        if(slice_info == null) {
-            // In this case we're returning a whole object, possibly recursively. Only the object name is compulsory
-            // and we shouldn't be here if it wasn't specified.
+            // Otherwise we need to read the data
+            byte[] data = null;
             try (DataStream stream = hs.openObject(file.filesystem_path, object, max_depth, buffer_size, data_size_limit)) {
                 if(write_body) {
                     data = StreamCopier.copyStreamAndReturnIfSmall(stream, out, buffer_size, cache_info.max_cached_response_size);
@@ -267,8 +263,12 @@ public class HDFStreamRequest {
             } catch (IOException e) {
                 throw new HDFStreamRequestException(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
             }
+
+            // Cache the response, if it was below the size threshold
+            if(data != null)cache_info.request_cache.put(cache_key, data);
+
         } else {
-            // In this case we're taking one or more dataset slices
+            // In this case we're taking one or more dataset slices. These are not cached.
             try (DataStream stream = hs.openDatasetSlices(file.filesystem_path, object, slice_info.nr_slices,
                                                           slice_info.rank, slice_info.starts, slice_info.counts, buffer_size)) {
                 if(write_body)StreamCopier.copyStream(stream, out, buffer_size);
@@ -276,10 +276,6 @@ public class HDFStreamRequest {
                 throw new HDFStreamRequestException(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
             }
         }
-
-        // Cache the response, if we have it
-        if((cache_key != null) && (data != null))cache_info.request_cache.put(cache_key, data);
-
 	return;
     }
 
