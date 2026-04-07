@@ -7,7 +7,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 public class CacheInfo {
 
     // Cache for metadata requests
-    public Cache<String, byte []> request_cache;
+    public Cache<CacheKey, byte []> request_cache;
 
     // Maximum size of response to cache
     public int max_cached_response_size;
@@ -24,7 +24,7 @@ public class CacheInfo {
         // Set up the cache with a maximum size in bytes
         this.request_cache = Caffeine.newBuilder()
             .maximumWeight(max_response_cache_size)
-            .weigher((String key, byte[] val) -> val.length)
+            .weigher((CacheKey key, byte[] val) -> val.length)
             .build();
     }
 }
