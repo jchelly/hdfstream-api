@@ -21,9 +21,10 @@ public class CacheInfo {
         this.max_cached_response_size = max_cached_response_size;
         this.max_cache_size = max_cache_size;
 
-        // Set up the cache
+        // Set up the cache with a maximum size in bytes
         this.request_cache = Caffeine.newBuilder()
-            .maximumSize(10_000)
+            .maximumWeight(max_cache_size)
+            .weigher((String key, byte[] val) -> val.length)
             .build();
     }
 }
