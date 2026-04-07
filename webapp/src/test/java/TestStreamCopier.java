@@ -29,7 +29,7 @@ public class TestStreamCopier {
     private static int bufferSizes[] = {1, 2, 3, 4, 8, 16, 19, 20, 21, 999, 1000, 1001, 10000};
 
     // Size thresholds to test
-    private static int maxSizes[] = {1, 2, 3, 4, 8, 16, 19, 20, 21, 999, 1000, 1001, 10000};
+    private static int maxSizes[] = {0, 1, 2, 3, 4, 8, 16, 19, 20, 21, 999, 1000, 1001, 10000};
 
     private void runCopyStreamTest(int dataSize, int bufferSize) throws Exception {
 
