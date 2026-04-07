@@ -48,6 +48,8 @@ public class HDFStreamContextListener implements ServletContextListener{
         int file_cache_expiry_interval = Integer.valueOf(context.getInitParameter("file_cache_expiry_interval"));
         int max_requests_per_user = Integer.valueOf(context.getInitParameter("max_requests_per_user"));
         int external_config = Integer.valueOf(context.getInitParameter("external_config"));
+        long max_cached_response_size = Long.valueOf(context.getInitParameter("max_cached_response_size"));
+        long max_cache_size = Long.valueOf(context.getInitParameter("max_cache_size"));
 
         /* Store HDF5 name length limit */
         context.setAttribute("max_hdf5_name_length", max_hdf5_name_length);
@@ -83,10 +85,8 @@ public class HDFStreamContextListener implements ServletContextListener{
 	context.setAttribute("concurrent_request_count", crc);
 
         /* Create the request cache */
-        Cache<String, byte []> request_cache = Caffeine.newBuilder()
-            .maximumSize(10_000)
-            .build();
-	context.setAttribute("request_cache", request_cache);
+        CacheInfo ci = new CacheInfo(max_cached_response_size, max_cache_size);
+	context.setAttribute("cache_info", ci);
     }
 
     public void contextDestroyed(ServletContextEvent contextEvent) {

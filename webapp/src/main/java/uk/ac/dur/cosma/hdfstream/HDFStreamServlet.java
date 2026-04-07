@@ -94,7 +94,7 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
         VirtualDirectory virtual_directory = ((ConfigManager) context.getAttribute("config")).getRoot();
 
         // Find the cache
-        Cache<String, byte []> request_cache = (Cache<String, byte []>) context.getAttribute("request_cache");
+        CacheInfo cache_info = (CacheInfo) context.getAttribute("cache_info");
 
         // Expression which returns true if user belongs to a role:
         // This determines which directories we can see.
@@ -159,7 +159,7 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
         // Initialize the response
         HDFStreamRequest hreq = null;
         try {
-            hreq = new HDFStreamRequest(virtual_directory, in_role, request_cache,
+            hreq = new HDFStreamRequest(virtual_directory, in_role, cache_info,
                                         path, object, max_depth, data_size_limit,
                                         slice, max_hdf5_name_length);
         } catch (HDFStreamRequestException e) {
@@ -208,7 +208,7 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
         VirtualDirectory virtual_directory = ((ConfigManager) context.getAttribute("config")).getRoot();
 
         // Find the cache
-        Cache<String, byte []> request_cache = (Cache<String, byte []>) context.getAttribute("request_cache");
+        CacheInfo cache_info = (CacheInfo) context.getAttribute("cache_info");
 
         // Expression which returns true if user belongs to a role:
         // This determines which directories we can see.
@@ -300,7 +300,7 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
         // Initialize the response
         HDFStreamRequest hreq = null;
         try {
-            hreq = new HDFStreamRequest(virtual_directory, in_role, request_cache,
+            hreq = new HDFStreamRequest(virtual_directory, in_role, cache_info,
                                         path, object, max_depth, data_size_limit,
                                         slice, max_hdf5_name_length);
         } catch (HDFStreamRequestException e) {

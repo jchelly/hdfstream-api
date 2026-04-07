@@ -36,7 +36,7 @@ public class HDFStreamRequest {
     protected SliceInfo slice_info = null;
     protected CheckRole in_role = null;
     protected String cache_key = null;
-    protected Cache<String, byte []> request_cache = null;
+    protected CacheInfo cache_info = null;
 
     /*
       Requests are initialized using parameters extracted from a http get or
@@ -49,12 +49,12 @@ public class HDFStreamRequest {
       max_depth: maximum recursion depth
       data_size_limit: maximum size of dataset bodies to return
     */
-    public HDFStreamRequest(VirtualDirectory virtual_directory, CheckRole in_role, Cache<String, byte []> request_cache,
+    public HDFStreamRequest(VirtualDirectory virtual_directory, CheckRole in_role, CacheInfo cache_info,
                             String path, String object, int max_depth, long data_size_limit, SliceInfo slice,
                             int max_hdf5_name_length) throws HDFStreamRequestException {
 
         // Keep a reference to the cache
-        this.request_cache = request_cache;
+        this.cache_info = cache_info;
 
         // Reject very long paths
         if(path != null) {
@@ -281,7 +281,7 @@ public class HDFStreamRequest {
 
         // Return a response from the cache, if we can
         if(cache_key != null) {
-            byte[] cached_data = request_cache.getIfPresent(cache_key);
+            byte[] cached_data = cache_info.request_cache.getIfPresent(cache_key);
             if(cached_data != null) {
                 // Response is in the cache
                 if(write_body)out.write(cached_data);
@@ -312,7 +312,7 @@ public class HDFStreamRequest {
         }
 
         // Cache the response, if we have it
-        if((cache_key != null) && (data != null))request_cache.put(cache_key, data);
+        if((cache_key != null) && (data != null))cache_info.request_cache.put(cache_key, data);
 
 	return;
     }
