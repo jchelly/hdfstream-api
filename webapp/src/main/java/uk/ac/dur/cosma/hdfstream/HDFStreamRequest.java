@@ -17,7 +17,6 @@ import uk.ac.dur.cosma.virtual_directory.CheckRole;
 import uk.ac.dur.cosma.virtual_directory.DirectoryMetadata;
 import org.msgpack.core.MessagePacker;
 import org.msgpack.core.MessagePack;
-import com.github.benmanes.caffeine.cache.Cache;
 
 import uk.ac.dur.cosma.libhdfstream.*;
 

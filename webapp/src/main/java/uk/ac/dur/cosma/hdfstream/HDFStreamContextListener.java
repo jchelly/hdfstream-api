@@ -3,8 +3,6 @@ package uk.ac.dur.cosma.hdfstream;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import uk.ac.dur.cosma.virtual_directory.VirtualDirectory;
 import uk.ac.dur.cosma.virtual_directory.VirtualDirectoryException;
 
