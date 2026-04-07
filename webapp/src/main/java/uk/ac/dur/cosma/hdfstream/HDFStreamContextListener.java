@@ -83,7 +83,7 @@ public class HDFStreamContextListener implements ServletContextListener{
 	context.setAttribute("concurrent_request_count", crc);
 
         /* Create the request cache */
-        Cache<String, Object> request_cache = Caffeine.newBuilder()
+        Cache<String, byte []> request_cache = Caffeine.newBuilder()
             .maximumSize(10_000)
             .build();
 	context.setAttribute("request_cache", request_cache);

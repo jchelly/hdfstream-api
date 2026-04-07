@@ -94,7 +94,7 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
         VirtualDirectory virtual_directory = ((ConfigManager) context.getAttribute("config")).getRoot();
 
         // Find the cache
-        Cache request_cache = (Cache) context.getAttribute("request_cache");
+        Cache<String, byte []> request_cache = (Cache<String, byte []>) context.getAttribute("request_cache");
 
         // Expression which returns true if user belongs to a role:
         // This determines which directories we can see.
@@ -208,7 +208,7 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
         VirtualDirectory virtual_directory = ((ConfigManager) context.getAttribute("config")).getRoot();
 
         // Find the cache
-        Cache request_cache = (Cache) context.getAttribute("request_cache");
+        Cache<String, byte []> request_cache = (Cache<String, byte []>) context.getAttribute("request_cache");
 
         // Expression which returns true if user belongs to a role:
         // This determines which directories we can see.
