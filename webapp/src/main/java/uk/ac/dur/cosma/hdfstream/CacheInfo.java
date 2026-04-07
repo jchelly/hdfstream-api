@@ -10,12 +10,12 @@ public class CacheInfo {
     public Cache<String, byte []> request_cache;
 
     // Maximum size of response to cache
-    public long max_cached_response_size;;
+    public int max_cached_response_size;
 
     // Maximum allowed size of the cache
     public long max_cache_size;;
 
-    public CacheInfo(long max_cached_response_size, long max_cache_size) {
+    public CacheInfo(int max_cached_response_size, long max_cache_size) {
 
         // Store cache parameters
         this.max_cached_response_size = max_cached_response_size;

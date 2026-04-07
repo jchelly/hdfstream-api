@@ -131,11 +131,11 @@ public class HDFStreamRequest {
         } while(bytes_read >= 0);
     }
 
-    private static byte[] copyStreamAndReturnIfSmall(InputStream instream, OutputStream outstream, int buffer_size) throws IOException {
+    private static byte[] copyStreamAndReturnIfSmall(InputStream instream, OutputStream outstream, int buffer_size, int max_size) throws IOException {
 
         byte[] buf = new byte[buffer_size];
         int bytes_read;
-        int max_left_to_buffer = 4*1024*1024;
+        int max_left_to_buffer = max_size;
         ByteArrayOutputStream smallCache = new ByteArrayOutputStream();
         do {
             bytes_read = instream.read(buf);
@@ -296,7 +296,7 @@ public class HDFStreamRequest {
             // and we shouldn't be here if it wasn't specified.
             try (DataStream stream = hs.openObject(file.filesystem_path, object, max_depth, buffer_size, data_size_limit)) {
                 if(write_body) {
-                    data = copyStreamAndReturnIfSmall(stream, out, buffer_size);
+                    data = copyStreamAndReturnIfSmall(stream, out, buffer_size, cache_info.max_cached_response_size);
                 }
             } catch (IOException e) {
                 throw new HDFStreamRequestException(HttpServletResponse.SC_NOT_FOUND, e.getMessage());

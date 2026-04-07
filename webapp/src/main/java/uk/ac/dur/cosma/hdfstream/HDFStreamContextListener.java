@@ -48,7 +48,7 @@ public class HDFStreamContextListener implements ServletContextListener{
         int file_cache_expiry_interval = Integer.valueOf(context.getInitParameter("file_cache_expiry_interval"));
         int max_requests_per_user = Integer.valueOf(context.getInitParameter("max_requests_per_user"));
         int external_config = Integer.valueOf(context.getInitParameter("external_config"));
-        long max_cached_response_size = Long.valueOf(context.getInitParameter("max_cached_response_size"));
+        int max_cached_response_size = Integer.valueOf(context.getInitParameter("max_cached_response_size"));
         long max_cache_size = Long.valueOf(context.getInitParameter("max_cache_size"));
 
         /* Store HDF5 name length limit */
