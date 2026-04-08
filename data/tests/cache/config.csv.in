@@ -1,0 +1,5 @@
+tests/cache/test_data0.hdf5, @CMAKE_CURRENT_SOURCE_DIR@/test_data0.hdf5, @TEST_DATA0_SIZE@, 0, application/x-hdf5
+tests/cache/test_data1.hdf5, @CMAKE_CURRENT_SOURCE_DIR@/test_data1.hdf5, @TEST_DATA1_SIZE@, 0, application/x-hdf5
+tests/cache/test_data2.hdf5, @CMAKE_CURRENT_SOURCE_DIR@/test_data2.hdf5, @TEST_DATA2_SIZE@, 0, application/x-hdf5
+tests/cache/test_data3.hdf5, @CMAKE_CURRENT_SOURCE_DIR@/test_data3.hdf5, @TEST_DATA3_SIZE@, 0, application/x-hdf5
+tests/cache/test_data4.hdf5, @CMAKE_CURRENT_SOURCE_DIR@/test_data4.hdf5, @TEST_DATA4_SIZE@, 0, application/x-hdf5
