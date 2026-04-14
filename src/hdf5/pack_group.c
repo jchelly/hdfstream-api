@@ -142,12 +142,13 @@ int pack_group(hid_t obj_id, msgpack_packer pk, int max_depth,
         check(msgpack_pack_nil(&pk));
         break;
       }
-      free(name);
-      name = NULL;
     } else {
       /* We're not encoding the member objects, so just send a nil */
       check(msgpack_pack_nil(&pk));
     }
+    /* Don't need the member name any more */
+    free(name);
+    name = NULL;
   }
 
   /* Success */
