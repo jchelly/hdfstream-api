@@ -19,6 +19,7 @@ add_library(testlib
   ../src/hdf5/type_mapping.c
   ../src/hdf5/file_cache.c
   ../src/hdf5/pack_object.c
+  ../src/hdf5/pack_unknown.c
   ../src/hdf5/pack_dataset.c
   ../src/hdf5/pack_numpy_type.c
   ../src/hdf5/pack_contents.c

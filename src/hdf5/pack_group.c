@@ -6,6 +6,7 @@
 #include "pack_group.h"
 #include "pack_dataset.h"
 #include "pack_object.h"
+#include "pack_unknown.h"
 #include "pack_attributes.h"
 #include "pack_soft_link.h"
 #include "type_mapping.h"
@@ -83,7 +84,7 @@ int pack_group(hid_t obj_id, msgpack_packer pk, int max_depth,
       /* Something went wrong */
       goto cleanup;
     default:
-      /* Nothing to do for unknown link types */
+      /* Unknown link type */
       break;
     }
   }
@@ -127,7 +128,7 @@ int pack_group(hid_t obj_id, msgpack_packer pk, int max_depth,
           check(pack_object(obj_id, name, pk, max_depth-1, data_size_limit, buffer_size));
         } else {
           /* Link to an unknown object type */
-          check(msgpack_pack_nil(&pk));
+          check(pack_unknown(pk));
         }
         break;
       case H5L_TYPE_SOFT:
@@ -139,7 +140,7 @@ int pack_group(hid_t obj_id, msgpack_packer pk, int max_depth,
         goto cleanup;
       default:
         /* Unknown link type */
-        check(msgpack_pack_nil(&pk));
+        check(pack_unknown(pk));
         break;
       }
     } else {

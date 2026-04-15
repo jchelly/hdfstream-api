@@ -4,6 +4,7 @@
 #include "pack_object.h"
 #include "pack_group.h"
 #include "pack_dataset.h"
+#include "pack_unknown.h"
 
 int pack_object(hid_t loc_id, char *name, msgpack_packer pk, int max_depth,
                 size_t data_size_limit, size_t buffer_size) {
@@ -26,7 +27,8 @@ int pack_object(hid_t loc_id, char *name, msgpack_packer pk, int max_depth,
     if(pack_dataset(obj_id, pk, data_size_limit, buffer_size) < 0)goto cleanup;
     break;
   default:
-    goto cleanup;
+    if(pack_unknown(pk) < 0)goto cleanup;
+    break;
   }
 
   /* Success */
