@@ -34,6 +34,7 @@ typedef struct hs_group_t {
 
 typedef struct hs_dataset_t {
   char *type;
+  char *kind;
   int rank;
   size_t *shape;
   hs_attrs attrs;

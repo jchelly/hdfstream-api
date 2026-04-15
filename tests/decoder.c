@@ -124,6 +124,7 @@ static hs_object decode_dataset(msgpack_object obj) {
   result.type = HS_DATASET;
   result.dataset.shape = NULL;
   result.dataset.type = NULL;
+  result.dataset.kind = NULL;
   result.dataset.attrs.name = NULL;
   result.dataset.attrs.value = NULL;
   result.dataset.data = NULL;
@@ -132,8 +133,8 @@ static hs_object decode_dataset(msgpack_object obj) {
   if(obj.via.map.size == 1)return result;
 
   /* Otherwise, we should also have shape, type, attributes and maybe data fields */
-  verify(obj.via.map.size >= 4);
-  verify(obj.via.map.size <= 5);
+  verify(obj.via.map.size >= 5);
+  verify(obj.via.map.size <= 6);
   for(size_t i=1; i<obj.via.map.size; i+=1) {
     verify(field[i].key.type == MSGPACK_OBJECT_STR);
     if(msgpack_str_equals(field[i].key, "shape")) {
@@ -142,13 +143,16 @@ static hs_object decode_dataset(msgpack_object obj) {
     } else if(msgpack_str_equals(field[i].key, "type")) {
       /* Decode the dataset type string */
       result.dataset.type = copy_string(field[i].val);
+    } else if(msgpack_str_equals(field[i].key, "kind")) {
+      /* Decode the dataset type string */
+      result.dataset.kind = copy_string(field[i].val);
     } else if(msgpack_str_equals(field[i].key, "data")) {
       /* Decode the dataset contents */
       result.dataset.data = malloc(sizeof(hs_object));
       *(result.dataset.data) = hs_decode_object(field[i].val);
     } else if(msgpack_str_equals(field[i].key, "attributes")) {
       /* Decode the dataset's attributes */
-      result.group.attrs = decode_attributes(field[i].val);
+      result.dataset.attrs = decode_attributes(field[i].val);
     } else {
       /* Unrecognized field */
       hs_free_object(&result);
@@ -165,6 +169,7 @@ static hs_object decode_ndarray(msgpack_object obj) {
   hs_object result;
   result.type = HS_NDARRAY;
   result.ndarray.type = NULL;
+  result.ndarray.kind = NULL;
   result.ndarray.rank = -1;
   result.ndarray.shape = NULL;
   result.ndarray.nbytes = 0;
@@ -319,10 +324,11 @@ hs_object hs_decode_object(msgpack_object obj) {
 }
 
 static void free_array_of_strings(size_t n, char ***arr) {
-  if(*arr==NULL)return; /* Do nothing if already null */
+  char **ptr = *arr; // Pointer to array of "char *" pointers
+  if(ptr==NULL)return; /* Do nothing if already null */
   for(size_t i=0; i<n; i+=1)
-    free(*arr+i);
-  free(*arr);
+    free(ptr[i]);
+  free(ptr);
   *arr = NULL;
 }
 
@@ -367,14 +373,22 @@ void hs_free_object(hs_object *obj) {
       free(obj->dataset.type);
       obj->dataset.type = NULL;
     }
+    if(obj->dataset.kind) {
+      free(obj->dataset.kind);
+      obj->dataset.kind = NULL;
+    }
     if(obj->dataset.shape) {
       free(obj->dataset.shape);
       obj->dataset.shape = NULL;
     }
     if(obj->dataset.data) {
       hs_free_object(obj->dataset.data);
+      free(obj->dataset.data);
       obj->dataset.data = NULL;
     }
+    /* Free attributes */
+    free_array_of_strings(obj->dataset.attrs.nr_attrs, &obj->dataset.attrs.name);
+    free_array_of_hs_object(obj->dataset.attrs.nr_attrs, &obj->dataset.attrs.value);
     /* Set this object to null */
     obj->type = HS_NULL;
     return;
