@@ -46,7 +46,7 @@ int pack_group_recursive(hid_t obj_id, msgpack_packer pk, int depth,
   char *name = NULL;
 
   /* Check if we hit the recursion limit */
-  if(max_depth < 0) {
+  if(depth > max_depth) {
     check(msgpack_pack_nil(&pk));
     return 0;
   }
@@ -111,7 +111,7 @@ int pack_group_recursive(hid_t obj_id, msgpack_packer pk, int depth,
       switch(linfo.type) {
       case H5L_TYPE_HARD:
       case H5L_TYPE_EXTERNAL:
-        /* If it's a hard or external link, pack it. */
+        /* If it's a hard or external link, pack the linked object . */
         check(pack_object_recursive(obj_id, name, pk, depth+1, max_depth, data_size_limit, buffer_size));
         break;
       case H5L_TYPE_SOFT:

@@ -5,11 +5,18 @@
 #include "pack_group.h"
 #include "pack_dataset.h"
 #include "pack_unknown.h"
+#include "verify.h"
 
 int pack_object_recursive(hid_t loc_id, char *name, msgpack_packer pk, int depth,
                           int max_depth, size_t data_size_limit, size_t buffer_size) {
 
   int result = -1;
+
+  /* Don't open the object if we hit the recursion limit */
+  if(depth > max_depth) {
+    check(msgpack_pack_nil(&pk));
+    return 0;
+  }
 
   /* Open the specified HDF5 object */
   hid_t obj_id = H5Oopen(loc_id, name, H5P_DEFAULT);
@@ -21,13 +28,13 @@ int pack_object_recursive(hid_t loc_id, char *name, msgpack_packer pk, int depth
   /* Call the appropriate function to serialize this object */
   switch(type) {
   case H5I_GROUP:
-    if(pack_group_recursive(obj_id, pk, depth, max_depth, data_size_limit, buffer_size) < 0)goto cleanup;
+    check(pack_group_recursive(obj_id, pk, depth, max_depth, data_size_limit, buffer_size));
     break;
   case H5I_DATASET:
-    if(pack_dataset(obj_id, pk, data_size_limit, buffer_size) < 0)goto cleanup;
+    check(pack_dataset(obj_id, pk, data_size_limit, buffer_size));
     break;
   default:
-    if(pack_unknown(pk) < 0)goto cleanup;
+    check(pack_unknown(pk));
     break;
   }
 
