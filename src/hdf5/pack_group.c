@@ -12,8 +12,6 @@
 #include "type_mapping.h"
 #include "verify.h"
 
-herr_t visit_link(hid_t obj_id, const char *name, const H5L_info2_t *info, void *op_data);
-
 #if !H5_VERSION_GE(1, 12, 0)
 #error "HDF5 version 1.12.0 or newer is required."
 #endif
@@ -31,7 +29,7 @@ struct visit_info {
   msgpack_packer *pk;
 };
 
-herr_t visit_link(hid_t obj_id, const char *name, const H5L_info2_t *info, void *op_data) {
+static herr_t visit_link(hid_t obj_id, const char *name, const H5L_info2_t *info, void *op_data) {
 
   /* Negative return value from the H5Literate callback indicates an error */
   herr_t result = -1;
