@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h> 
 #include <msgpack.h>
 #include <msgpack/fbuffer.h>
 #include <hdf5.h>
@@ -10,17 +11,8 @@
 #include "decoder.h"
 #include "pack_and_decode.h"
 
-static void fill_data(int rank, hsize_t *dims, void *data) {
+static const int group_depth = 10;
 
-  int *ptr = (int *) data;
-
-  size_t nr_elements = 1;
-  for(int i=0; i<rank; i+=1)
-    nr_elements *= dims[i];
-
-  for(size_t i=0; i<nr_elements; i+=1)
-    ptr[i] = (int) i;
-}
 
 static hid_t create_test_file(void) {
 
@@ -28,50 +20,23 @@ static hid_t create_test_file(void) {
   hid_t file_id = create_file_in_memory();
 
   /* Create some nested groups */
-  hid_t grp_id = H5Gcreate(file_id, "group1", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  hid_t sg1_id = H5Gcreate(file_id, "group1/subgroup1", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  hid_t sg2_id = H5Gcreate(file_id, "group1/subgroup2", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  hid_t ss1_id = H5Gcreate(file_id, "group1/subgroup2/subsubgroup1", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-
-  /* Add an attribute to a group */
-  {
-    hsize_t dims[] = {0};
-    int data = 100;
-    create_attribute(ss1_id, "subsub_attr_int_scalar", 0, dims, H5T_NATIVE_INT, &data);
+  hid_t grp_id[group_depth];
+  for(int i=0; i<group_depth; i+=1) {
+    if(i==0) {
+      grp_id[i] = H5Gcreate(file_id, "groupname", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    } else {
+      grp_id[i] = H5Gcreate(grp_id[i-1], "groupname", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    }
   }
-
-  /* Create a dataset with attributes */
-  {
-    hsize_t dims[] = {10};
-    create_dataset(file_id, "group1/subgroup1/test_dataset", 1, dims, H5T_NATIVE_INT, fill_data);
-  }
-  hid_t dataset_id = H5Dopen(file_id, "group1/subgroup1/test_dataset", H5P_DEFAULT);
-  {
-    hsize_t dims[] = {0};
-    int data = 100;
-    create_attribute(dataset_id, "dataset_attr_int_scalar", 0, dims, H5T_NATIVE_INT, &data);
-  }
-  {
-    hsize_t dims[] = {3,3};
-    double data[] = {0.,1.,2.,3.,4.,5.,6.,7.,8.};
-    create_attribute(dataset_id, "dataset_attr_double_2d", 2, dims, H5T_NATIVE_DOUBLE, &data);
-  }
-  H5Gclose(grp_id);
-  H5Gclose(sg1_id);
-  H5Gclose(sg2_id);
-  H5Gclose(ss1_id);
-  H5Dclose(dataset_id);
+  for(int i=0; i<group_depth; i+=1)
+    H5Gclose(grp_id[i]);
 
   return file_id;
 }
 
 
-int main(int argc, char *argv[]) {
+static void run_test(int max_depth) {
 
-  (void) argc;
-  (void) argv;
-
-  int max_depth = 10;
   size_t data_size_limit = SIZE_MAX;
   size_t buffer_size = 1024;
 
@@ -80,20 +45,43 @@ int main(int argc, char *argv[]) {
 
   /* Serialize and interpret file contents */
   hs_object root = pack_and_decode(file_id, max_depth, data_size_limit, buffer_size);
+
+  /* We should always have the root group with one member */
   verify(root.type != HS_NULL);
-
-  /* Check we have the expected structure */
-  verify(root.type == HS_GROUP);
-  /* Root should contain one group called "group" */
   verify(root.group.nr_members==1);
-  verify(hs_get_member(root, "group1").type != HS_NULL);
-  verify(root.group.member_object[0].type == HS_GROUP);
 
+  /* Check that the recursion depth parameter took effect */
+  hs_object obj = root;
+  int depth = -1;
+  while(obj.type != HS_NULL) {
+    verify(obj.type == HS_GROUP);
+    if(obj.group.nr_members > 0) {
+      verify(strcmp("groupname", obj.group.member_name[0]) == 0);
+      obj = obj.group.member_object[0];
+      depth += 1;
+    } else {
+      /* No more nested groups */
+      break;
+    }
+  }
+  int expected_depth = (max_depth < group_depth-1) ? max_depth : group_depth-1;
+  verify(depth==expected_depth);
+  
   /* Free the decoded data */
   hs_free_object(&root);
 
   /* Close the file */
-  H5Fclose(file_id);
+  H5Fclose(file_id);  
+}
+
+
+int main(int argc, char *argv[]) {
+
+  (void) argc;
+  (void) argv;
+
+  for(int max_depth=0; max_depth<15; max_depth +=1)
+    run_test(max_depth);
 
   return 0;
 }

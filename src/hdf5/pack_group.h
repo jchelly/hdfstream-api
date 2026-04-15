@@ -4,6 +4,8 @@
 #include <hdf5.h>
 #include <msgpack.h>
 
+/* If a group contains too many links, just return the link names */
+#define MAX_LINKS_FOR_RECURSION 20
 
 /*
   Recursively pack a HDF5 group and its members to the supplied msgpack

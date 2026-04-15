@@ -16,8 +16,6 @@
 #error "HDF5 version 1.12.0 or newer is required."
 #endif
 
-/* If a group contains too many links, just return the link names */
-#define MAX_LINKS_FOR_RECURSION 20
 
 /* Information needed to encode link targets */
 struct visit_info {
