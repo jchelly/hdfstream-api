@@ -11,6 +11,7 @@ int pack_object_recursive(hid_t loc_id, char *name, msgpack_packer pk, int depth
                           int max_depth, size_t data_size_limit, size_t buffer_size) {
 
   int result = -1;
+  hid_t obj_id = -1;
 
   /* Don't open the object if we hit the recursion limit */
   if(depth > max_depth) {
@@ -19,7 +20,7 @@ int pack_object_recursive(hid_t loc_id, char *name, msgpack_packer pk, int depth
   }
 
   /* Open the specified HDF5 object */
-  hid_t obj_id = H5Oopen(loc_id, name, H5P_DEFAULT);
+  obj_id = H5Oopen(loc_id, name, H5P_DEFAULT);
   if(obj_id < 0)goto cleanup;
 
   /* Get the object type */
