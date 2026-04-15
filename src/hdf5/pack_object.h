@@ -13,9 +13,9 @@
   pack_dataset() as appropriate.
 */
 
-int pack_object_recursive(hid_t file_id, char *name, msgpack_packer pk, int depth,
+int pack_object_recursive(hid_t file_id, const char *name, msgpack_packer pk, int depth,
                           int max_depth, size_t data_size_limit, size_t buffer_size);
 
-int pack_object(hid_t file_id, char *name, msgpack_packer pk, int max_depth,
+int pack_object(hid_t file_id, const char *name, msgpack_packer pk, int max_depth,
                 size_t data_size_limit, size_t buffer_size);
 #endif

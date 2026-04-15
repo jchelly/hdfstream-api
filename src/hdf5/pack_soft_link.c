@@ -19,7 +19,7 @@
   Returns 0 on success, <0 on failure.
   Packer may contain partially written data on failure.
 */
-int pack_soft_link(hid_t obj_id, const char *name, msgpack_packer pk, H5L_info2_t *link_info) {
+int pack_soft_link(hid_t obj_id, const char *name, msgpack_packer pk, const H5L_info2_t *link_info) {
 
   int result = -1;
   char *target = NULL;

@@ -1,5 +1,5 @@
 #include <stdlib.h>
-
+#include <string.h>
 #include <hdf5.h>
 #include <msgpack.h>
 
@@ -12,12 +12,71 @@
 #include "type_mapping.h"
 #include "verify.h"
 
+herr_t visit_link(hid_t obj_id, const char *name, const H5L_info2_t *info, void *op_data);
+
 #if !H5_VERSION_GE(1, 12, 0)
 #error "HDF5 version 1.12.0 or newer is required."
 #endif
 
 /* If a group contains too many links, just return the link names */
 #define MAX_LINKS_FOR_RECURSION 20
+
+/* Information needed to encode link targets */
+struct visit_info {
+  int encode_members;
+  int depth;
+  int max_depth;
+  size_t data_size_limit;
+  size_t buffer_size;
+  msgpack_packer *pk;
+};
+
+herr_t visit_link(hid_t obj_id, const char *name, const H5L_info2_t *info, void *op_data) {
+
+  /* Negative return value from the H5Literate callback indicates an error */
+  herr_t result = -1;
+
+  /* Get a pointer to the struct with parameters we need */
+  struct visit_info *vi = (struct visit_info *) op_data;
+  msgpack_packer pk = *(vi->pk);
+
+  /* Add link name to the map */
+  size_t len = strlen(name);
+  check(msgpack_pack_str(&pk, len));
+  check(msgpack_pack_str_body(&pk, name, len));
+
+  /* Now pack either the member object or a nil */
+  if(vi->encode_members) {
+    /* Now we need to pack the member object */
+    switch(info->type) {
+    case H5L_TYPE_HARD:
+    case H5L_TYPE_EXTERNAL:
+      /* If it's a hard or external link, pack the linked object . */
+      check(pack_object_recursive(obj_id, name, pk, vi->depth+1, vi->max_depth, vi->data_size_limit, vi->buffer_size));
+      break;
+    case H5L_TYPE_SOFT:
+      /* This is a soft link, so we'll just store the path to the object */
+      check(pack_soft_link(obj_id, name, pk, info));
+      break;
+    case H5L_TYPE_ERROR:
+      /* Something went wrong */
+      goto cleanup;
+    default:
+      /* Unknown link type */
+      check(pack_unknown(pk));
+      break;
+    }
+  } else {
+    /* We're not encoding the member objects, so just send a nil */
+    check(msgpack_pack_nil(&pk));
+  }
+
+  /* Callback should return zero on success */
+  result = 0;
+
+ cleanup:
+  return result;
+}
 
 /*
   Recursively pack a HDF5 group and its members to the supplied msgpack
@@ -43,7 +102,6 @@ int pack_group_recursive(hid_t obj_id, msgpack_packer pk, int depth,
                          size_t buffer_size) {
 
   int result = -1;
-  char *name = NULL;
 
   /* Check if we hit the recursion limit */
   if(depth > max_depth) {
@@ -91,55 +149,22 @@ int pack_group_recursive(hid_t obj_id, msgpack_packer pk, int depth,
   check(msgpack_pack_str(&pk, 7));
   check(msgpack_pack_str_body(&pk, "members", 7));
   check(msgpack_pack_map(&pk, nr_links));
-  for(int link_nr=0; link_nr<nr_links; link_nr+=1) {
-    /* Get link info for this link*/
-    H5L_info2_t linfo;
-    if(H5Lget_info_by_idx2(obj_id, ".", H5_INDEX_NAME, H5_ITER_NATIVE, link_nr, &linfo, H5P_DEFAULT) < 0)goto cleanup;
-    if(linfo.type == H5L_TYPE_ERROR)goto cleanup;
-    /* Get name of this group member */
-    ssize_t len = H5Lget_name_by_idx(obj_id, ".", H5_INDEX_NAME, H5_ITER_NATIVE, link_nr, NULL, 0, H5P_DEFAULT);
-    if(len < 0)goto cleanup;
-    name = malloc(len+1);
-    len = H5Lget_name_by_idx(obj_id, ".", H5_INDEX_NAME, H5_ITER_NATIVE, link_nr, name, len+1, H5P_DEFAULT);
-    if(len < 0)goto cleanup;
-    /* Add name to the map */
-    check(msgpack_pack_str(&pk, len));
-    check(msgpack_pack_str_body(&pk, name, len));
-    /* Now pack either the member object or a nil */
-    if(encode_members) {
-      /* Now we need to pack the member object */
-      switch(linfo.type) {
-      case H5L_TYPE_HARD:
-      case H5L_TYPE_EXTERNAL:
-        /* If it's a hard or external link, pack the linked object . */
-        check(pack_object_recursive(obj_id, name, pk, depth+1, max_depth, data_size_limit, buffer_size));
-        break;
-      case H5L_TYPE_SOFT:
-        /* This is a soft link, so we'll just store the path to the object */
-        check(pack_soft_link(obj_id, name, pk, &linfo));
-        break;
-      case H5L_TYPE_ERROR:
-        /* Something went wrong */
-        goto cleanup;
-      default:
-        /* Unknown link type */
-        check(pack_unknown(pk));
-        break;
-      }
-    } else {
-      /* We're not encoding the member objects, so just send a nil */
-      check(msgpack_pack_nil(&pk));
-    }
-    /* Don't need the member name any more */
-    free(name);
-    name = NULL;
-  }
+
+  /* Iterate over links and pack the member objects */
+  hsize_t iter_index = 0;
+  struct visit_info vi;
+  vi.encode_members = encode_members;
+  vi.depth = depth;
+  vi.max_depth = max_depth;
+  vi.data_size_limit = data_size_limit;
+  vi.buffer_size = buffer_size;
+  vi.pk = &pk;
+  check(H5Literate2(obj_id, H5_INDEX_NAME, H5_ITER_NATIVE, &iter_index, visit_link, &vi));
 
   /* Success */
   result = 0;
 
  cleanup:
-  if(name)free(name);
   return result;
 }
 

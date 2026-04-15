@@ -7,7 +7,7 @@
 #include "pack_unknown.h"
 #include "verify.h"
 
-int pack_object_recursive(hid_t loc_id, char *name, msgpack_packer pk, int depth,
+int pack_object_recursive(hid_t loc_id, const char *name, msgpack_packer pk, int depth,
                           int max_depth, size_t data_size_limit, size_t buffer_size) {
 
   int result = -1;
@@ -48,7 +48,7 @@ int pack_object_recursive(hid_t loc_id, char *name, msgpack_packer pk, int depth
 }
 
 
-int pack_object(hid_t loc_id, char *name, msgpack_packer pk, int max_depth,
+int pack_object(hid_t loc_id, const char *name, msgpack_packer pk, int max_depth,
                 size_t data_size_limit, size_t buffer_size) {
   return pack_object_recursive(loc_id, name, pk, /* depth = */ 0, max_depth, data_size_limit, buffer_size);
 }
