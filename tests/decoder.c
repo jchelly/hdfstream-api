@@ -30,7 +30,7 @@ static char **copy_map_keys(msgpack_object obj) {
   char **buf = malloc(sizeof(char *)*nr_keys);
   msgpack_object_kv *field = obj.via.map.ptr;
   for(size_t i=0; i<nr_keys; i+=1)
-    buf[i] = copy_string(field[i].key);    
+    buf[i] = copy_string(field[i].key);
   return buf;
 }
 
@@ -43,7 +43,7 @@ static hs_attrs decode_attributes(msgpack_object obj) {
   result.value = malloc(nr_keys*sizeof(hs_object));
   for(size_t i=0; i<nr_keys; i+=1)
     result.value[i] = hs_decode_object(obj.via.map.ptr[i].val);
-  return result;  
+  return result;
 }
 
 static hs_object decode_group(msgpack_object obj) {
@@ -65,7 +65,7 @@ static hs_object decode_group(msgpack_object obj) {
   result.group.member_object = NULL;
   result.group.attrs.name = NULL;
   result.group.attrs.value = NULL;
-	
+
   /* Check for empty place-holder */
   if(obj.via.map.size == 1)return result;
 
@@ -156,7 +156,7 @@ static hs_object decode_dataset(msgpack_object obj) {
       return result;
     }
   }
-  return result;  
+  return result;
 }
 
 static hs_object decode_ndarray(msgpack_object obj) {
@@ -169,7 +169,7 @@ static hs_object decode_ndarray(msgpack_object obj) {
   result.ndarray.shape = NULL;
   result.ndarray.nbytes = 0;
   result.ndarray.data = NULL;
-  
+
   /* Interpret the map fields */
   int have_nbytes = 0;
   verify(obj.type == MSGPACK_OBJECT_MAP);
@@ -215,18 +215,18 @@ static hs_object decode_ndarray(msgpack_object obj) {
       return result;
     }
   }
-  return result;  
+  return result;
 }
 
 static hs_object decode_vlen(msgpack_object obj) {
 
   /* Initialize the output object */
   hs_object result;
-  result.type = HS_VLEN;  
+  result.type = HS_VLEN;
   result.vlen.rank = -1;
   result.vlen.shape = NULL;
   result.vlen.data = NULL;
-  
+
   /* Interpret the map fields */
   verify(obj.type == MSGPACK_OBJECT_MAP);
   msgpack_object_kv *field = obj.via.map.ptr;
@@ -258,14 +258,14 @@ static hs_object decode_vlen(msgpack_object obj) {
       /* Unrecognized field */
       hs_free_object(&result);
       result.type = HS_ERROR;
-      return result;      
-    } 
+      return result;
+    }
   }
-  return result;  
+  return result;
 }
 
 hs_object hs_decode_object(msgpack_object obj) {
-  
+
   /* Check for null object */
   if(obj.type == MSGPACK_OBJECT_NIL) {
     hs_object result;
@@ -280,7 +280,7 @@ hs_object hs_decode_object(msgpack_object obj) {
     result.string = copy_string(obj);
     return result;
   }
-  
+
   /* If not nil or string, the object should be a msgpack map */
   verify(obj.type == MSGPACK_OBJECT_MAP);
 
@@ -358,7 +358,7 @@ void hs_free_object(hs_object *obj) {
     free_array_of_hs_object(obj->group.attrs.nr_attrs, &obj->group.attrs.value);
     /* Set this object to null */
     obj->type = HS_NULL;
-    return;    
+    return;
   }
 
   /* Check if it's a dataset */
@@ -377,7 +377,7 @@ void hs_free_object(hs_object *obj) {
     }
     /* Set this object to null */
     obj->type = HS_NULL;
-    return;    
+    return;
   }
 
   /* Check if it's an ndarray */
@@ -400,7 +400,7 @@ void hs_free_object(hs_object *obj) {
     }
     /* Set this object to null */
     obj->type = HS_NULL;
-    return;    
+    return;
   }
 
   /* Check if it's a vlen array */
@@ -416,6 +416,6 @@ void hs_free_object(hs_object *obj) {
     }
     /* Set this object to null */
     obj->type = HS_NULL;
-    return;    
+    return;
   }
 }
