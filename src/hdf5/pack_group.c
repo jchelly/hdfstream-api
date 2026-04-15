@@ -101,12 +101,6 @@ int pack_group_recursive(hid_t obj_id, msgpack_packer pk, int depth,
 
   int result = -1;
 
-  /* Check if we hit the recursion limit */
-  if(depth > max_depth) {
-    check(msgpack_pack_nil(&pk));
-    return 0;
-  }
-
   /* Determine number of members of this group */
   H5G_info_t ginfo;
   if(H5Gget_info(obj_id, &ginfo) < 0)goto cleanup;

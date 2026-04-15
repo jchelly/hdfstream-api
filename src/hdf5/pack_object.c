@@ -13,12 +13,6 @@ int pack_object_recursive(hid_t loc_id, const char *name, msgpack_packer pk, int
   int result = -1;
   hid_t obj_id = -1;
 
-  /* Don't open the object if we hit the recursion limit */
-  if(depth > max_depth) {
-    check(msgpack_pack_nil(&pk));
-    return 0;
-  }
-
   /* Open the specified HDF5 object */
   obj_id = H5Oopen(loc_id, name, H5P_DEFAULT);
   if(obj_id < 0)goto cleanup;
@@ -29,7 +23,11 @@ int pack_object_recursive(hid_t loc_id, const char *name, msgpack_packer pk, int
   /* Call the appropriate function to serialize this object */
   switch(type) {
   case H5I_GROUP:
-    check(pack_group_recursive(obj_id, pk, depth, max_depth, data_size_limit, buffer_size));
+    /* Don't encode the group if we hit the recursion limit */
+    if(depth > max_depth)
+      check(msgpack_pack_nil(&pk));
+    else
+      check(pack_group_recursive(obj_id, pk, depth, max_depth, data_size_limit, buffer_size));
     break;
   case H5I_DATASET:
     check(pack_dataset(obj_id, pk, data_size_limit, buffer_size));
