@@ -68,6 +68,7 @@ typedef struct hs_object_t {
   };
 } hs_object;
 
+hs_object hs_get_member(hs_object obj, char *name);
 hs_object hs_decode_object(msgpack_object obj);
 void hs_free_object(hs_object *obj);
 

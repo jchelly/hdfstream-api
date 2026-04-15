@@ -28,10 +28,10 @@ static hid_t create_test_file(void) {
   hid_t file_id = create_file_in_memory();
 
   /* Create some nested groups */
-  hid_t grp_id = H5Gcreate(file_id, "group", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  hid_t sg1_id = H5Gcreate(file_id, "group/subgroup1", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  hid_t sg2_id = H5Gcreate(file_id, "group/subgroup2", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  hid_t ss1_id = H5Gcreate(file_id, "group/subgroup2/subsubgroup1", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t grp_id = H5Gcreate(file_id, "group1", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t sg1_id = H5Gcreate(file_id, "group1/subgroup1", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t sg2_id = H5Gcreate(file_id, "group1/subgroup2", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t ss1_id = H5Gcreate(file_id, "group1/subgroup2/subsubgroup1", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
   /* Add an attribute to a group */
   {
@@ -43,9 +43,9 @@ static hid_t create_test_file(void) {
   /* Create a dataset with attributes */
   {
     hsize_t dims[] = {10};
-    create_dataset(file_id, "group/subgroup1/test_dataset", 1, dims, H5T_NATIVE_INT, fill_data);
+    create_dataset(file_id, "group1/subgroup1/test_dataset", 1, dims, H5T_NATIVE_INT, fill_data);
   }
-  hid_t dataset_id = H5Dopen(file_id, "group/subgroup1/test_dataset", H5P_DEFAULT);
+  hid_t dataset_id = H5Dopen(file_id, "group1/subgroup1/test_dataset", H5P_DEFAULT);
   {
     hsize_t dims[] = {0};
     int data = 100;
@@ -84,7 +84,9 @@ int main(int argc, char *argv[]) {
 
   /* Check we have the expected structure */
   verify(root.type == HS_GROUP);
+  /* Root should contain one group called "group" */
   verify(root.group.nr_members==1);
+  verify(hs_get_member(root, "group1").type != HS_NULL);
   verify(root.group.member_object[0].type == HS_GROUP);
 
   /* Free the decoded data */

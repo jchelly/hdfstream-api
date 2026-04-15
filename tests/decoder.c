@@ -433,3 +433,20 @@ void hs_free_object(hs_object *obj) {
     return;
   }
 }
+
+/*
+  Return a member object, given its name. Object must be a group.
+*/
+hs_object hs_get_member(hs_object obj, char *name) {
+
+  hs_object result;
+  result.type = HS_NULL;
+  verify(obj.type==HS_GROUP);
+  for(int i=0; i<obj.group.nr_members; i+=1) {
+    if(strcmp(name, obj.group.member_name[i])==0) {
+      result = obj.group.member_object[i];
+      break;
+    }
+  }
+  return result;
+}
