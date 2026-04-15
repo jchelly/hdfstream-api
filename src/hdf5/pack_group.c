@@ -43,7 +43,6 @@ int pack_group_recursive(hid_t obj_id, msgpack_packer pk, int depth,
                          size_t buffer_size) {
 
   int result = -1;
-  H5L_info2_t *linfo = NULL;
   char *name = NULL;
 
   /* Check if we hit the recursion limit */
@@ -74,15 +73,6 @@ int pack_group_recursive(hid_t obj_id, msgpack_packer pk, int depth,
     if((nr_links > MAX_LINKS_FOR_RECURSION) || (depth >= max_depth))encode_members = 0;
   }
 
-  /* Get link info for group members */
-  linfo = malloc(sizeof(H5L_info2_t)*nr_links);
-  if(!linfo)goto cleanup;
-  for(int link_nr=0; link_nr<nr_links; link_nr+=1) {
-    /* Get the link type */
-    if(H5Lget_info_by_idx2(obj_id, ".", H5_INDEX_NAME, H5_ITER_NATIVE, link_nr, &linfo[link_nr], H5P_DEFAULT) < 0)goto cleanup;
-    if(linfo[link_nr].type == H5L_TYPE_ERROR)goto cleanup;
-  }
-
   /* Make a msgpack map */
   check(msgpack_pack_map(&pk, 3));
 
@@ -102,6 +92,10 @@ int pack_group_recursive(hid_t obj_id, msgpack_packer pk, int depth,
   check(msgpack_pack_str_body(&pk, "members", 7));
   check(msgpack_pack_map(&pk, nr_links));
   for(int link_nr=0; link_nr<nr_links; link_nr+=1) {
+    /* Get link info for this link*/
+    H5L_info2_t linfo;
+    if(H5Lget_info_by_idx2(obj_id, ".", H5_INDEX_NAME, H5_ITER_NATIVE, link_nr, &linfo, H5P_DEFAULT) < 0)goto cleanup;
+    if(linfo.type == H5L_TYPE_ERROR)goto cleanup;
     /* Get name of this group member */
     ssize_t len = H5Lget_name_by_idx(obj_id, ".", H5_INDEX_NAME, H5_ITER_NATIVE, link_nr, NULL, 0, H5P_DEFAULT);
     if(len < 0)goto cleanup;
@@ -114,7 +108,7 @@ int pack_group_recursive(hid_t obj_id, msgpack_packer pk, int depth,
     /* Now pack either the member object or a nil */
     if(encode_members) {
       /* Now we need to pack the member object */
-      switch(linfo[link_nr].type) {
+      switch(linfo.type) {
       case H5L_TYPE_HARD:
       case H5L_TYPE_EXTERNAL:
         /* If it's a hard or external link, pack it. */
@@ -122,7 +116,7 @@ int pack_group_recursive(hid_t obj_id, msgpack_packer pk, int depth,
         break;
       case H5L_TYPE_SOFT:
         /* This is a soft link, so we'll just store the path to the object */
-        check(pack_soft_link(obj_id, name, pk, &linfo[link_nr]));
+        check(pack_soft_link(obj_id, name, pk, &linfo));
         break;
       case H5L_TYPE_ERROR:
         /* Something went wrong */
@@ -145,7 +139,6 @@ int pack_group_recursive(hid_t obj_id, msgpack_packer pk, int depth,
   result = 0;
 
  cleanup:
-  if(linfo)free(linfo);
   if(name)free(name);
   return result;
 }
