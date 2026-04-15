@@ -38,11 +38,11 @@
   Returns 0 on success, <0 on failure.
   Packer may contain partially written data on failure.
 */
-int pack_group(hid_t obj_id, msgpack_packer pk, int max_depth,
-               size_t data_size_limit, size_t buffer_size) {
+int pack_group_recursive(hid_t obj_id, msgpack_packer pk, int depth,
+                         int max_depth, size_t data_size_limit,
+                         size_t buffer_size) {
 
   int result = -1;
-  H5O_info2_t *oinfo = NULL;
   H5L_info2_t *linfo = NULL;
   char *name = NULL;
 
@@ -57,36 +57,30 @@ int pack_group(hid_t obj_id, msgpack_packer pk, int max_depth,
   if(H5Gget_info(obj_id, &ginfo) < 0)goto cleanup;
   int nr_links = ginfo.nlinks;
 
-  /* Determine whether we try to encode member objects */
-  int encode_members = 1;
-  if((nr_links > MAX_LINKS_FOR_RECURSION) || (max_depth <= 0))encode_members = 0;
+  /*
+    Recursion behavior:
 
-  /* Get metadata for group members */
-  oinfo = malloc(sizeof(H5O_info2_t)*nr_links);
-  if(!oinfo)goto cleanup;
+    If depth=0 we encode metadata for all member groups and datasets.
+    This includes dtype and shape for datasets, and the list of link
+    names for groups.
+
+    If depth > 0, we only encode member objects if there are not too
+    many links and depth < max_depth.
+
+    If depth == maxdepth == 0 then only groups will be packed as nil.
+  */
+  int encode_members = 1;
+  if(depth > 0) {
+    if((nr_links > MAX_LINKS_FOR_RECURSION) || (depth >= max_depth))encode_members = 0;
+  }
+
+  /* Get link info for group members */
   linfo = malloc(sizeof(H5L_info2_t)*nr_links);
   if(!linfo)goto cleanup;
   for(int link_nr=0; link_nr<nr_links; link_nr+=1) {
     /* Get the link type */
     if(H5Lget_info_by_idx2(obj_id, ".", H5_INDEX_NAME, H5_ITER_NATIVE, link_nr, &linfo[link_nr], H5P_DEFAULT) < 0)goto cleanup;
-    switch(linfo[link_nr].type) {
-    case H5L_TYPE_HARD:
-    case H5L_TYPE_EXTERNAL:
-      if(encode_members) {
-        /* Get object info for hard or external links */
-        if(H5Oget_info_by_idx3(obj_id, ".", H5_INDEX_NAME, H5_ITER_NATIVE, link_nr, &oinfo[link_nr], H5O_INFO_BASIC, H5P_DEFAULT) < 0)goto cleanup;
-      }
-      break;
-    case H5L_TYPE_SOFT:
-      /* We serialize soft link paths without dereferencing them */
-      break;
-    case H5L_TYPE_ERROR:
-      /* Something went wrong */
-      goto cleanup;
-    default:
-      /* Unknown link type */
-      break;
-    }
+    if(linfo[link_nr].type == H5L_TYPE_ERROR)goto cleanup;
   }
 
   /* Make a msgpack map */
@@ -123,13 +117,8 @@ int pack_group(hid_t obj_id, msgpack_packer pk, int max_depth,
       switch(linfo[link_nr].type) {
       case H5L_TYPE_HARD:
       case H5L_TYPE_EXTERNAL:
-        /* If it's a hard or external link to a group or dataset, pack it. */
-        if((oinfo[link_nr].type == H5O_TYPE_GROUP) || (oinfo[link_nr].type == H5O_TYPE_DATASET)) {
-          check(pack_object(obj_id, name, pk, max_depth-1, data_size_limit, buffer_size));
-        } else {
-          /* Link to an unknown object type */
-          check(pack_unknown(pk));
-        }
+        /* If it's a hard or external link, pack it. */
+        check(pack_object_recursive(obj_id, name, pk, depth+1, max_depth, data_size_limit, buffer_size));
         break;
       case H5L_TYPE_SOFT:
         /* This is a soft link, so we'll just store the path to the object */
@@ -156,8 +145,15 @@ int pack_group(hid_t obj_id, msgpack_packer pk, int max_depth,
   result = 0;
 
  cleanup:
-  if(oinfo)free(oinfo);
   if(linfo)free(linfo);
   if(name)free(name);
   return result;
+}
+
+/*
+  Pack group starting at recursion depth zero.
+*/
+int pack_group(hid_t obj_id, msgpack_packer pk, int max_depth,
+               size_t data_size_limit, size_t buffer_size) {
+  return pack_group_recursive(obj_id, pk, 0, max_depth, data_size_limit, buffer_size);
 }

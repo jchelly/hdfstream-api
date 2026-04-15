@@ -6,8 +6,8 @@
 #include "pack_dataset.h"
 #include "pack_unknown.h"
 
-int pack_object(hid_t loc_id, char *name, msgpack_packer pk, int max_depth,
-                size_t data_size_limit, size_t buffer_size) {
+int pack_object_recursive(hid_t loc_id, char *name, msgpack_packer pk, int depth,
+                          int max_depth, size_t data_size_limit, size_t buffer_size) {
 
   int result = -1;
 
@@ -21,7 +21,7 @@ int pack_object(hid_t loc_id, char *name, msgpack_packer pk, int max_depth,
   /* Call the appropriate function to serialize this object */
   switch(type) {
   case H5I_GROUP:
-    if(pack_group(obj_id, pk, max_depth, data_size_limit, buffer_size) < 0)goto cleanup;
+    if(pack_group_recursive(obj_id, pk, depth, max_depth, data_size_limit, buffer_size) < 0)goto cleanup;
     break;
   case H5I_DATASET:
     if(pack_dataset(obj_id, pk, data_size_limit, buffer_size) < 0)goto cleanup;
@@ -37,4 +37,10 @@ int pack_object(hid_t loc_id, char *name, msgpack_packer pk, int max_depth,
  cleanup:
   if(obj_id >= 0)H5Oclose(obj_id);
   return result;
+}
+
+
+int pack_object(hid_t loc_id, char *name, msgpack_packer pk, int max_depth,
+                size_t data_size_limit, size_t buffer_size) {
+  return pack_object_recursive(loc_id, name, pk, /* depth = */ 0, max_depth, data_size_limit, buffer_size);
 }

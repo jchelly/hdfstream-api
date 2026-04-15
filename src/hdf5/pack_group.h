@@ -23,7 +23,10 @@
   Packer may contain partially written data on failure.
 */
 
+int pack_group_recursive(hid_t obj_id, msgpack_packer pk, int depth,
+                         int max_depth, size_t data_size_limit,
+                         size_t buffer_size);
+
 int pack_group(hid_t obj_id, msgpack_packer pk, int max_depth,
                size_t data_size_limit, size_t buffer_size);
-
 #endif
