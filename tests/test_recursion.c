@@ -8,6 +8,7 @@
 #include "pack_group.h"
 #include "create_test_file.h"
 #include "decoder.h"
+#include "pack_and_decode.h"
 
 static void fill_data(int rank, hsize_t *dims, void *data) {
 
@@ -70,33 +71,24 @@ int main(int argc, char *argv[]) {
   (void) argc;
   (void) argv;
 
-  const size_t buffer_size = 1024;
+  int max_depth = 10;
+  size_t data_size_limit = SIZE_MAX;
+  size_t buffer_size = 1024;
 
   /* Create a HDF5 file */
   hid_t file_id = create_test_file();
 
-  /* Initalize packer to pack to a memory buffer  */
-  msgpack_sbuffer sbuf;
-  msgpack_sbuffer_init(&sbuf);
-  msgpack_packer pk;
-  msgpack_packer_init(&pk, &sbuf, msgpack_sbuffer_write);
-
-  /* Serialize the file's root group */
-  verify(pack_group(file_id, pk, 10, SIZE_MAX, buffer_size) == 0);
-
-  /* Interpret the packed data */
-  msgpack_unpacked result;
-  msgpack_unpacked_init(&result);
-  verify(msgpack_unpack_next(&result, sbuf.data, sbuf.size, NULL));
-  hs_object root = hs_decode_object(result.data);
+  /* Serialize and interpret file contents */
+  hs_object root = pack_and_decode(file_id, max_depth, data_size_limit, buffer_size);
   verify(root.type != HS_NULL);
-  msgpack_unpacked_destroy(&result);
+
+  /* Check we have the expected structure */
+  verify(root.type == HS_GROUP);
+  verify(root.group.nr_members==1);
+  verify(root.group.member_object[0].type == HS_GROUP);
 
   /* Free the decoded data */
   hs_free_object(&root);
-
-  /* Free the buffer */
-  msgpack_sbuffer_destroy(&sbuf);
 
   /* Close the file */
   H5Fclose(file_id);

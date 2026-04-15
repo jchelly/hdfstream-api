@@ -32,7 +32,9 @@ add_library(testlib
   receive_ndarray.c
   receive_msgpack_object.c
   create_test_file.c
-  decoder.c)
+  decoder.c
+  pack_and_decode.c)
+
 target_link_libraries(testlib ${HDF5_C_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} msgpack-c rt)
 
 # Unit tests of functions used to implement the reader processes
