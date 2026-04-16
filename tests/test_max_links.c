@@ -109,13 +109,18 @@ static void run_test(int max_depth, int group_depth, int nr_datasets) {
       /* Should have dataset names but no metadata */
       assert(ds.type==HS_NULL);
     } else if(max_depth > group_depth) {
-      /* Should have returned the datasets */
-      assert(ds.type==HS_DATASET);
+      if(nr_datasets <= MAX_LINKS_FOR_RECURSION) {
+        /* Should have returned the datasets */
+        assert(ds.type==HS_DATASET);
+      } else {
+        /* Too many datasets, so they were not returned */
+        assert(ds.type==HS_NULL);
+      }
     } else {
-      /* Recursion depth did not reach the datasets */
+      /* Recursion depth did not reach the datasets. Should have one subgroup with no member info. */
       assert(deepest_group.group.nr_members==1);
       assert(deepest_group.group.member_object[0].type==HS_NULL);
-      assert(ds.type==HS_ERROR);
+      assert(ds.type==HS_ERROR); /* Dataset should not be found */
     }
   }
 
@@ -132,8 +137,15 @@ int main(int argc, char *argv[]) {
   (void) argc;
   (void) argv;
 
-  for(int max_depth=0; max_depth<15; max_depth +=1)
-    run_test(max_depth, 10, 5);
+  const int min_nr = MAX_LINKS_FOR_RECURSION-1;
+  const int max_nr = MAX_LINKS_FOR_RECURSION+1;
+  for(int nr_datasets=min_nr; nr_datasets<=max_nr; nr_datasets+=1) {
+    for(int group_depth=1; group_depth<10; group_depth+=1) {
+      for(int max_depth=0; max_depth<10; max_depth +=1) {
+        run_test(max_depth, 10, nr_datasets);
+      }
+    }
+  }
 
   return 0;
 }
