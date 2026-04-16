@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <string.h> 
+#include <string.h>
 #include <msgpack.h>
 #include <msgpack/fbuffer.h>
 #include <hdf5.h>
@@ -66,12 +66,12 @@ static void run_test(int max_depth) {
   }
   int expected_depth = (max_depth < group_depth-1) ? max_depth : group_depth-1;
   verify(depth==expected_depth);
-  
+
   /* Free the decoded data */
   hs_free_object(&root);
 
   /* Close the file */
-  H5Fclose(file_id);  
+  H5Fclose(file_id);
 }
 
 

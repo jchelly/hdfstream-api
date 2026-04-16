@@ -76,6 +76,7 @@ foreach(TEST_NAME
     pack_soft_link
     pack_broken_link
     recursion
+    max_links
   )
   add_executable(test_${TEST_NAME} test_${TEST_NAME}.c)
   target_link_libraries(test_${TEST_NAME} testlib)

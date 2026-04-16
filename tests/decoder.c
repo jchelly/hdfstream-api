@@ -440,7 +440,7 @@ void hs_free_object(hs_object *obj) {
 hs_object hs_get_member(hs_object obj, char *name) {
 
   hs_object result;
-  result.type = HS_NULL;
+  result.type = HS_ERROR;
   verify(obj.type==HS_GROUP);
   for(int i=0; i<obj.group.nr_members; i+=1) {
     if(strcmp(name, obj.group.member_name[i])==0) {
