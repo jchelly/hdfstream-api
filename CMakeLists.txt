@@ -66,7 +66,7 @@ if(BUILD_WEB_APP)
 
   # Set java release version for JNI library. Should be the same as in
   # virtual_directory/pom.xml and webapp/pom.xml.
-  set(CMAKE_JAVA_COMPILE_FLAGS "--release=16")
+  set(CMAKE_JAVA_COMPILE_FLAGS "--release=11")
 
   if(${JNI_FOUND} AND ${Java_FOUND})
 
