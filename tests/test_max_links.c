@@ -113,26 +113,26 @@ static void run_test(int max_depth, int group_depth, int nr_datasets) {
     if(group_depth == 0) {
       /* In this case the datasets are in the root group, which we requested
          directly. Should have all metadata. */
-      assert(ds.type==HS_DATASET);
+      verify(ds.type==HS_DATASET);
     } else if(max_depth == group_depth) {
       /* We just reached the recursion limit, so we should have dataset names
          but no metadata */
-      assert(ds.type==HS_NULL);
+      verify(ds.type==HS_NULL);
     } else if(max_depth > group_depth) {
       /* Datasets are within the recursion limit */
       if((nr_datasets <= MAX_LINKS_FOR_RECURSION) || (group_depth == 0)) {
         /* There are not too many datasets, so we should have the metadata */
-        assert(ds.type==HS_DATASET);
+        verify(ds.type==HS_DATASET);
       } else {
         /* There are too many datasets, so they were not returned */
-        assert(ds.type==HS_NULL);
+        verify(ds.type==HS_NULL);
       }
     } else {
       /* We hit the recursion limit before reaching the group with the datasets.
          Should have one subgroup with one member which has not been returned. */
-      assert(deepest_group.group.nr_members==1);
-      assert(deepest_group.group.member_object[0].type==HS_NULL);
-      assert(ds.type==HS_ERROR); /* Dataset should not be found */
+      verify(deepest_group.group.nr_members==1);
+      verify(deepest_group.group.member_object[0].type==HS_NULL);
+      verify(ds.type==HS_ERROR); /* Dataset should not be found */
     }
   }
 
