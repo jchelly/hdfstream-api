@@ -29,6 +29,7 @@ static hid_t create_test_file(int group_depth, int nr_datasets) {
 
   /* Create HDF5 file */
   hid_t file_id = create_file_in_memory();
+  hid_t loc_id = file_id;
 
   /* Create some nested groups */
   hid_t grp_id[group_depth];
@@ -38,10 +39,10 @@ static hid_t create_test_file(int group_depth, int nr_datasets) {
     } else {
       grp_id[i] = H5Gcreate(grp_id[i-1], "groupname", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     }
+    loc_id = grp_id[i];
   }
 
   /* Create some datasets in the innermost group */
-  hid_t loc_id = grp_id[group_depth-1];
   for(int i=0; i<nr_datasets; i+=1) {
     char name[500];
     sprintf(name, "Dataset%d", i);
@@ -69,9 +70,13 @@ static void run_test(int max_depth, int group_depth, int nr_datasets) {
   /* Serialize and interpret file contents */
   hs_object root = pack_and_decode(file_id, max_depth, data_size_limit, buffer_size);
 
-  /* We should always have the root group with one member */
+  /* We should always have the root group with at least one member */
   verify(root.type != HS_NULL);
-  verify(root.group.nr_members==1);
+  if(group_depth > 0) {
+    verify(root.group.nr_members==1);
+  } else {
+    verify(root.group.nr_members==nr_datasets);
+  }
 
   /* Check that the recursion depth parameter took effect */
   hs_object obj = root;
@@ -105,19 +110,26 @@ static void run_test(int max_depth, int group_depth, int nr_datasets) {
     char name[500];
     sprintf(name, "Dataset%d", dataset_nr);
     hs_object ds = hs_get_member(deepest_group, name);
-    if(max_depth == group_depth) {
-      /* Should have dataset names but no metadata */
+    if(group_depth == 0) {
+      /* In this case the datasets are in the root group, which we requested
+         directly. Should have all metadata. */
+      assert(ds.type==HS_DATASET);
+    } else if(max_depth == group_depth) {
+      /* We just reached the recursion limit, so we should have dataset names
+         but no metadata */
       assert(ds.type==HS_NULL);
     } else if(max_depth > group_depth) {
-      if(nr_datasets <= MAX_LINKS_FOR_RECURSION) {
-        /* Should have returned the datasets */
+      /* Datasets are within the recursion limit */
+      if((nr_datasets <= MAX_LINKS_FOR_RECURSION) || (group_depth == 0)) {
+        /* There are not too many datasets, so we should have the metadata */
         assert(ds.type==HS_DATASET);
       } else {
-        /* Too many datasets, so they were not returned */
+        /* There are too many datasets, so they were not returned */
         assert(ds.type==HS_NULL);
       }
     } else {
-      /* Recursion depth did not reach the datasets. Should have one subgroup with no member info. */
+      /* We hit the recursion limit before reaching the group with the datasets.
+         Should have one subgroup with one member which has not been returned. */
       assert(deepest_group.group.nr_members==1);
       assert(deepest_group.group.member_object[0].type==HS_NULL);
       assert(ds.type==HS_ERROR); /* Dataset should not be found */
@@ -140,9 +152,9 @@ int main(int argc, char *argv[]) {
   const int min_nr = MAX_LINKS_FOR_RECURSION-1;
   const int max_nr = MAX_LINKS_FOR_RECURSION+1;
   for(int nr_datasets=min_nr; nr_datasets<=max_nr; nr_datasets+=1) {
-    for(int group_depth=1; group_depth<10; group_depth+=1) {
+    for(int group_depth=0; group_depth<10; group_depth+=1) {
       for(int max_depth=0; max_depth<10; max_depth +=1) {
-        run_test(max_depth, 10, nr_datasets);
+        run_test(max_depth, group_depth, nr_datasets);
       }
     }
   }
