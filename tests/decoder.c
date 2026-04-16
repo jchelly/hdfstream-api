@@ -301,6 +301,11 @@ hs_object hs_decode_object(msgpack_object obj) {
     } else if(msgpack_str_equals(field[0].val, "dataset")) {
       /* This is a dataset */
       return decode_dataset(obj);
+    } else if(msgpack_str_equals(field[0].val, "unknown")) {
+      /* This is an unknown object type */
+      hs_object result;
+      result.type = HS_UNKNOWN;
+      return result;
     } else{
       /* Not recognized, so return error */
       hs_object result;
@@ -315,11 +320,6 @@ hs_object hs_decode_object(msgpack_object obj) {
     /* This is a vlen array */
     verify(field[0].val.type == MSGPACK_OBJECT_BOOLEAN);
     return decode_vlen(obj);
-  } else if(msgpack_str_equals(field[0].key, "unknown")) {
-    /* This is an unknown object type */
-    hs_object result;
-    result.type = HS_UNKNOWN;
-    return result;
   } else {
     /* Not recognized, so return error */
     hs_object result;
