@@ -27,20 +27,35 @@ public class TestCachedGroup extends BasicUnitTest {
                     max_cached_response_size);
     }
 
-    private void tryRead(int file_nr, int group_nr) throws Exception {
+    private void tryRead(int file_nr, int group_nr, int max_depth, long data_size_limit) throws Exception {
 
         // Read the group
         String filename = "/tests/cache/test_data"+Integer.toString(file_nr)+".hdf5";
         String object = "Group"+Integer.toString(group_nr);
-        String max_depth = "0";
-        String data_size_limit = "0";
-        HDF5Object root = client.requestObject(filename, object, max_depth, data_size_limit, 200, true);
+        HDF5Object root = client.requestObject(filename, object, Integer.toString(max_depth), Long.toString(data_size_limit), 200, true);
 
         // Check we read the right one!
         long file_nr_attr = root.attributes.get("file_nr").getElementAsLong(0);
         assertEquals(file_nr, file_nr_attr);
         long group_nr_attr = root.attributes.get("group_nr").getElementAsLong(0);
         assertEquals(group_nr, group_nr_attr);
+
+        // If data_size_limit >= 8, we should have downloaded the dataset body
+        HDF5Object dataset = root.members.get("Dataset"+Integer.toString(group_nr));
+        assertNotNull(dataset);
+        if(data_size_limit >= 8) {
+            assertNotNull(dataset.data);
+        } else {
+            assertNull(dataset.data);
+        }
+
+        // If max_depth > 0, we should have a sub-group, too
+        HDF5Object subgroup =  root.members.get("SubGroup"+Integer.toString(group_nr));
+        if(max_depth > 0) {
+            assertNotNull(subgroup);
+        } else {
+            assertNull(subgroup);
+        }
     }
 
     @Test
@@ -53,9 +68,11 @@ public class TestCachedGroup extends BasicUnitTest {
             // Pick a random file and group to read
             int file_nr = random.nextInt(nr_files);
             int group_nr = random.nextInt(nr_groups);
-
+            // Random depth and size limits
+            int max_depth = random.nextInt(2);
+            long data_size_limit = random.nextInt(2) * 10;
             // Read the group and check we get the right one
-            tryRead(file_nr, group_nr);
+            tryRead(file_nr, group_nr, max_depth, data_size_limit);
         }
     }
 
@@ -66,8 +83,12 @@ public class TestCachedGroup extends BasicUnitTest {
         for(int rep_nr=0; rep_nr<nr_reps; rep_nr+=1) {
             for(int file_nr=0; file_nr<nr_files; file_nr+=1) {
                 for(int group_nr=0; group_nr<nr_groups; group_nr+=1) {
-                    // Read the group and check we get the right one
-                    tryRead(file_nr, group_nr);
+                    for(int max_depth=0; max_depth<2; max_depth+=1) {
+                        for(long data_size_limit=0; data_size_limit<11; data_size_limit+=10) {
+                            // Read the group and check we get the right one
+                            tryRead(file_nr, group_nr, max_depth, data_size_limit);
+                        }
+                    }
                 }
             }
         }
