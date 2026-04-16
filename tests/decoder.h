@@ -10,7 +10,8 @@ typedef enum hs_type_t {
   HS_DATASET,
   HS_NDARRAY,
   HS_VLEN,
-  HS_STRING
+  HS_STRING,
+  HS_UNKNOWN
 } hs_type;
 
 typedef struct hs_group_t hs_group;

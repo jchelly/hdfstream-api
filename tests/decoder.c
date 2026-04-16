@@ -315,6 +315,11 @@ hs_object hs_decode_object(msgpack_object obj) {
     /* This is a vlen array */
     verify(field[0].val.type == MSGPACK_OBJECT_BOOLEAN);
     return decode_vlen(obj);
+  } else if(msgpack_str_equals(field[0].key, "unknown")) {
+    /* This is an unknown object type */
+    hs_object result;
+    result.type = HS_UNKNOWN;
+    return result;
   } else {
     /* Not recognized, so return error */
     hs_object result;
@@ -342,15 +347,10 @@ static void free_array_of_hs_object(size_t n, hs_object **arr) {
 
 void hs_free_object(hs_object *obj) {
 
-  /* If the object is null, there's nothing to do*/
-  if(obj->type==HS_NULL)return;
-
   /* If the object is a string, we can just free it */
   if(obj->type==HS_STRING) {
     if(obj->string)free(obj->string);
     obj->string = NULL;
-    obj->type = HS_NULL;
-    return;
   }
 
   /* Check if it's a group */
@@ -362,9 +362,6 @@ void hs_free_object(hs_object *obj) {
     /* Free attributes */
     free_array_of_strings(obj->group.attrs.nr_attrs, &obj->group.attrs.name);
     free_array_of_hs_object(obj->group.attrs.nr_attrs, &obj->group.attrs.value);
-    /* Set this object to null */
-    obj->type = HS_NULL;
-    return;
   }
 
   /* Check if it's a dataset */
@@ -389,9 +386,6 @@ void hs_free_object(hs_object *obj) {
     /* Free attributes */
     free_array_of_strings(obj->dataset.attrs.nr_attrs, &obj->dataset.attrs.name);
     free_array_of_hs_object(obj->dataset.attrs.nr_attrs, &obj->dataset.attrs.value);
-    /* Set this object to null */
-    obj->type = HS_NULL;
-    return;
   }
 
   /* Check if it's an ndarray */
@@ -412,9 +406,6 @@ void hs_free_object(hs_object *obj) {
       free(obj->ndarray.data);
       obj->ndarray.data = NULL;
     }
-    /* Set this object to null */
-    obj->type = HS_NULL;
-    return;
   }
 
   /* Check if it's a vlen array */
@@ -428,10 +419,11 @@ void hs_free_object(hs_object *obj) {
 	hs_free_object(obj->vlen.data+element_nr);
       free(obj->vlen.data);
     }
-    /* Set this object to null */
-    obj->type = HS_NULL;
-    return;
   }
+
+  /* Set this object to null */
+  obj->type = HS_NULL;
+  return;
 }
 
 /*
