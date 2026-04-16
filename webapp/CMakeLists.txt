@@ -46,6 +46,7 @@ set(WEBAPP_SOURCES
   ./src/test/java/TestDirectoryEntry.java
   ./src/test/java/TestFileDownload.java
   ./src/test/java/TestGroup.java
+  ./src/test/java/TestCacheKey.java
   ./src/test/java/TestCachedGroup.java
   ./src/test/java/TestHDFStreamJNI.java
   ./src/test/java/TestMsgpackSliceInfo.java
