@@ -18,17 +18,36 @@ public class TestGroup extends BasicUnitTest {
         for(int rep_nr=0; rep_nr<3; rep_nr+=1) {
 
             // Request root without max depth or size limit:
-            // Default is to load datasets up to 2GB but not recurse into subgroups.
+            // Default is to load link names and dataset metadata.
             String max_depth = null;
             String data_size_limit = null;
             HDF5Object root = client.requestObject("/tests/basic/test_data.hdf5", "/", max_depth, data_size_limit, 200, post);
 
-            // Check the response is what we expected:
+            // The metadata for dataset "data" should have been loaded
+            HDF5Object dataset = root.members.get("data");
+            assertEquals(1, dataset.shape.length);
+            assertEquals(10, dataset.shape[0]);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    public void testMaxDepth1Metadata(boolean post) throws Exception {
+
+        // Repeat to test caching
+        for(int rep_nr=0; rep_nr<3; rep_nr+=1) {
+
+            // Request root with maximum recursion depth of 1
+            String max_depth = "1";
+            String data_size_limit = null;
+            HDF5Object root = client.requestObject("/tests/basic/test_data.hdf5", "/", max_depth, data_size_limit, 200, post);
+
+            // The root group should have one member
             assertNotEquals(null, root);
             assertEquals("/", root.path);
             assertEquals(1, root.members.size());
 
-            // The dataset data should be a 1D array with 10 elements
+            // The metadata for dataset "data" should have been loaded
             HDF5Object dataset = root.members.get("data");
             assertNotEquals(null, dataset);
             assertEquals(1, dataset.shape.length);

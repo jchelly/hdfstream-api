@@ -19,6 +19,6 @@
   Packer may contain partially written data on failure.
 */
 
-int pack_soft_link(hid_t obj_id, const char *name, msgpack_packer pk, H5L_info2_t *link_info);
+int pack_soft_link(hid_t obj_id, const char *name, msgpack_packer pk, const H5L_info2_t *link_info);
 
 #endif

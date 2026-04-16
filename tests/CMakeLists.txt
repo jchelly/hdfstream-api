@@ -19,6 +19,7 @@ add_library(testlib
   ../src/hdf5/type_mapping.c
   ../src/hdf5/file_cache.c
   ../src/hdf5/pack_object.c
+  ../src/hdf5/pack_unknown.c
   ../src/hdf5/pack_dataset.c
   ../src/hdf5/pack_numpy_type.c
   ../src/hdf5/pack_contents.c
@@ -30,7 +31,10 @@ add_library(testlib
   decode_ndarray.c
   receive_ndarray.c
   receive_msgpack_object.c
-  create_test_file.c)
+  create_test_file.c
+  decoder.c
+  pack_and_decode.c)
+
 target_link_libraries(testlib ${HDF5_C_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} msgpack-c rt)
 
 # Unit tests of functions used to implement the reader processes
@@ -71,6 +75,9 @@ foreach(TEST_NAME
     pack_array_type
     pack_soft_link
     pack_broken_link
+    recursion
+    max_links
+    unknown_type
   )
   add_executable(test_${TEST_NAME} test_${TEST_NAME}.c)
   target_link_libraries(test_${TEST_NAME} testlib)
