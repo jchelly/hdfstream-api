@@ -4,14 +4,17 @@
 #include "pack_object.h"
 #include "pack_group.h"
 #include "pack_dataset.h"
+#include "pack_unknown.h"
+#include "verify.h"
 
-int pack_object(hid_t loc_id, char *name, msgpack_packer pk, int max_depth,
-                size_t data_size_limit, size_t buffer_size) {
+int pack_object_recursive(hid_t loc_id, const char *name, msgpack_packer pk, int depth,
+                          int max_depth, size_t data_size_limit, size_t buffer_size) {
 
   int result = -1;
+  hid_t obj_id = -1;
 
   /* Open the specified HDF5 object */
-  hid_t obj_id = H5Oopen(loc_id, name, H5P_DEFAULT);
+  obj_id = H5Oopen(loc_id, name, H5P_DEFAULT);
   if(obj_id < 0)goto cleanup;
 
   /* Get the object type */
@@ -20,13 +23,18 @@ int pack_object(hid_t loc_id, char *name, msgpack_packer pk, int max_depth,
   /* Call the appropriate function to serialize this object */
   switch(type) {
   case H5I_GROUP:
-    if(pack_group(obj_id, pk, max_depth, data_size_limit, buffer_size) < 0)goto cleanup;
+    /* Don't encode the group if we hit the recursion limit */
+    if(depth > max_depth)
+      check(msgpack_pack_nil(&pk));
+    else
+      check(pack_group_recursive(obj_id, pk, depth, max_depth, data_size_limit, buffer_size));
     break;
   case H5I_DATASET:
-    if(pack_dataset(obj_id, pk, data_size_limit, buffer_size) < 0)goto cleanup;
+    check(pack_dataset(obj_id, pk, data_size_limit, buffer_size));
     break;
   default:
-    goto cleanup;
+    check(pack_unknown(pk));
+    break;
   }
 
   /* Success */
@@ -35,4 +43,10 @@ int pack_object(hid_t loc_id, char *name, msgpack_packer pk, int max_depth,
  cleanup:
   if(obj_id >= 0)H5Oclose(obj_id);
   return result;
+}
+
+
+int pack_object(hid_t loc_id, const char *name, msgpack_packer pk, int max_depth,
+                size_t data_size_limit, size_t buffer_size) {
+  return pack_object_recursive(loc_id, name, pk, /* depth = */ 0, max_depth, data_size_limit, buffer_size);
 }
