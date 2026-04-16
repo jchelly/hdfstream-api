@@ -6,8 +6,8 @@ import java.lang.Integer;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 import java.util.LinkedHashMap;
+import java.lang.Math;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import uk.ac.dur.cosma.virtual_directory.VirtualDirectory;
 import uk.ac.dur.cosma.virtual_directory.VirtualFile;
@@ -32,6 +32,7 @@ public class HDFStreamRequest {
     protected long data_size_limit = Integer.MAX_VALUE;
     protected SliceInfo slice_info = null;
     protected CheckRole in_role = null;
+    protected CacheInfo cache_info = null;
 
     /*
       Requests are initialized using parameters extracted from a http get or
@@ -44,9 +45,12 @@ public class HDFStreamRequest {
       max_depth: maximum recursion depth
       data_size_limit: maximum size of dataset bodies to return
     */
-    public HDFStreamRequest(VirtualDirectory virtual_directory, CheckRole in_role, String path,
-                            String object, int max_depth, long data_size_limit, SliceInfo slice,
+    public HDFStreamRequest(VirtualDirectory virtual_directory, CheckRole in_role, CacheInfo cache_info,
+                            String path, String object, int max_depth, long data_size_limit, SliceInfo slice,
                             int max_hdf5_name_length) throws HDFStreamRequestException {
+
+        // Keep a reference to the cache
+        this.cache_info = cache_info;
 
         // Reject very long paths
         if(path != null) {
@@ -106,16 +110,6 @@ public class HDFStreamRequest {
         this.in_role = in_role;
         this.max_depth = max_depth;
         this.data_size_limit = data_size_limit;
-    }
-
-    private static void copyStream(InputStream instream, OutputStream outstream, int buffer_size) throws IOException {
-
-        byte[] buf = new byte[buffer_size];
-        int bytes_read;
-        do {
-            bytes_read = instream.read(buf);
-            if(bytes_read > 0) outstream.write(buf, 0, bytes_read);
-        } while(bytes_read >= 0);
     }
 
     protected void packDirectory(MessagePacker packer, VirtualDirectory directory, int max_depth, CheckRole in_role) throws IOException {
@@ -246,23 +240,41 @@ public class HDFStreamRequest {
 
         // Open the object to stream
         if(slice_info == null) {
+
             // In this case we're returning a whole object, possibly recursively. Only the object name is compulsory
-            // and we shouldn't be here if it wasn't specified.
+            // and we shouldn't be here if it wasn't specified. Make a cache key for this request.
+            CacheKey cache_key = new CacheKey(file.filesystem_path, object, max_depth, data_size_limit);
+
+            // Return a cached response if we can
+            byte[] cached_data = cache_info.request_cache.getIfPresent(cache_key);
+            if(cached_data != null) {
+                // Response is in the cache
+                if(write_body)out.write(cached_data);
+                return;
+            }
+
+            // Otherwise we need to read the data
+            byte[] data = null;
             try (DataStream stream = hs.openObject(file.filesystem_path, object, max_depth, buffer_size, data_size_limit)) {
-                if(write_body)copyStream(stream, out, buffer_size);
+                if(write_body) {
+                    data = StreamCopier.copyStreamAndReturnIfSmall(stream, out, buffer_size, cache_info.max_cached_response_size);
+                }
             } catch (IOException e) {
                 throw new HDFStreamRequestException(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
             }
+
+            // Cache the response, if it was below the size threshold
+            if(data != null)cache_info.request_cache.put(cache_key, data);
+
         } else {
-            // In this case we're taking one or more dataset slices
+            // In this case we're taking one or more dataset slices. These are not cached.
             try (DataStream stream = hs.openDatasetSlices(file.filesystem_path, object, slice_info.nr_slices,
                                                           slice_info.rank, slice_info.starts, slice_info.counts, buffer_size)) {
-                if(write_body)copyStream(stream, out, buffer_size);
+                if(write_body)StreamCopier.copyStream(stream, out, buffer_size);
             } catch (IOException e) {
                 throw new HDFStreamRequestException(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
             }
         }
-
 	return;
     }
 

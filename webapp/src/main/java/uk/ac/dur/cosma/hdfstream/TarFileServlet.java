@@ -31,16 +31,6 @@ public class TarFileServlet extends HttpServlet implements Servlet {
 
     public TarFileServlet() {}
 
-    private static void copyStream(InputStream instream, OutputStream outstream, int buffer_size) throws IOException {
-
-        byte[] buf = new byte[buffer_size];
-        int bytes_read;
-        do {
-            bytes_read = instream.read(buf);
-            if(bytes_read > 0) outstream.write(buf, 0, bytes_read);
-        } while(bytes_read >= 0);
-    }
-
     protected void streamFile(HttpServletRequest request, HttpServletResponse response, boolean is_get,
                               VirtualFile file, String base_name) throws ServletException, IOException {
 
@@ -68,7 +58,7 @@ public class TarFileServlet extends HttpServlet implements Servlet {
             if(is_get) {
                 int buffer_size = (Integer) getServletContext().getAttribute("buffer_size");
                 try {
-                    copyStream(input, output, buffer_size);
+                    StreamCopier.copyStream(input, output, buffer_size);
                 } catch (IOException e) {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "Error while reading the specified file.");
                 }

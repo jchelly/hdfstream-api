@@ -1,0 +1,6 @@
+file(SIZE ${CMAKE_CURRENT_SOURCE_DIR}/test_data0.hdf5 TEST_DATA0_SIZE)
+file(SIZE ${CMAKE_CURRENT_SOURCE_DIR}/test_data1.hdf5 TEST_DATA1_SIZE)
+file(SIZE ${CMAKE_CURRENT_SOURCE_DIR}/test_data2.hdf5 TEST_DATA2_SIZE)
+file(SIZE ${CMAKE_CURRENT_SOURCE_DIR}/test_data3.hdf5 TEST_DATA3_SIZE)
+file(SIZE ${CMAKE_CURRENT_SOURCE_DIR}/test_data4.hdf5 TEST_DATA4_SIZE)
+configure_file(config.csv.in config.csv @ONLY)

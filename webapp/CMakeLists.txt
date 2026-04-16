@@ -19,6 +19,9 @@ set(WEBAPP_SOURCES
   ./src/main/java/uk/ac/dur/cosma/hdfstream/ConfigManager.java
   ./src/main/java/uk/ac/dur/cosma/hdfstream/InternalConfigManager.java
   ./src/main/java/uk/ac/dur/cosma/hdfstream/ExternalConfigManager.java
+  ./src/main/java/uk/ac/dur/cosma/hdfstream/CacheInfo.java
+  ./src/main/java/uk/ac/dur/cosma/hdfstream/CacheKey.java
+  ./src/main/java/uk/ac/dur/cosma/hdfstream/StreamCopier.java
   ./src/main/webapp/RefL0012N0188_stars.png
   ./src/main/webapp/WEB-INF/error.jsp
   ./src/main/webapp/WEB-INF/status.jsp
@@ -43,6 +46,8 @@ set(WEBAPP_SOURCES
   ./src/test/java/TestDirectoryEntry.java
   ./src/test/java/TestFileDownload.java
   ./src/test/java/TestGroup.java
+  ./src/test/java/TestCacheKey.java
+  ./src/test/java/TestCachedGroup.java
   ./src/test/java/TestHDFStreamJNI.java
   ./src/test/java/TestMsgpackSliceInfo.java
   ./src/test/java/TestMultiSlice.java
@@ -57,6 +62,7 @@ set(WEBAPP_SOURCES
   ./src/test/java/UnitTestContextListener.java
   ./src/test/java/UnitTestRealm.java
   ./src/test/java/UnitTestServer.java
+  ./src/test/java/TestStreamCopier.java
 )
 
 # Build the web application with maven

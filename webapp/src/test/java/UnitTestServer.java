@@ -42,6 +42,14 @@ public class UnitTestServer {
     public UnitTestServer(String config_file, Map<String, String> userPasswords,
                           Map<String, String[]> userRoles,
                           Map<String, String[]> securityConstraints) throws Exception {
+        // Initialize with small, default cache parameters
+        this(config_file, userPasswords, userRoles, securityConstraints, 10240, 1024);
+    }
+
+    public UnitTestServer(String config_file, Map<String, String> userPasswords,
+                          Map<String, String[]> userRoles,
+                          Map<String, String[]> securityConstraints,
+                          long max_response_cache_size, int max_cached_response_size) throws Exception {
 
         // Create a tomcat instance
         tomcat = new Tomcat();
@@ -81,6 +89,8 @@ public class UnitTestServer {
         context.addParameter("file_cache_expiry_interval", "60");
         context.addParameter("max_requests_per_user", "4");
         context.addParameter("external_config", "1");
+        context.addParameter("max_response_cache_size", Long.toString(max_response_cache_size));
+        context.addParameter("max_cached_response_size", Integer.toString(max_cached_response_size));
 
         // Register listener that starts the process pool
         context.addApplicationListener(UnitTestContextListener.class.getName());

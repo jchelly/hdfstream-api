@@ -149,4 +149,16 @@
     <param-value>60</param-value>
   </context-param>
 
+  <!-- Maximum size of the response cache (bytes) -->
+  <context-param>
+    <param-name>max_response_cache_size</param-name>
+    <param-value>10240</param-value>
+  </context-param>
+
+  <!-- Only cache responses smaller than this limit (bytes) -->
+  <context-param>
+    <param-name>max_cached_response_size</param-name>
+    <param-value>1024</param-value>
+  </context-param>
+
 </web-app>
