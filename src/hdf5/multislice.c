@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "slice_limits.h"
 #include "multislice.h"
+#include "select.h"
 
 static hsize_t min_size(const hsize_t a, const hsize_t b) {
   if(a < b)
@@ -99,6 +100,7 @@ int multislice_init(struct multislice *ms, const int rank, int nr_slices,
 */
 int multislice_select_next_buffer_data(struct multislice *ms, hid_t file_space_id, hsize_t *nr_elements_to_read) {
 
+  hid_t select_space_id = -1;
   hsize_t *select_start = NULL;
   hsize_t *select_count = NULL;
   int result = -1; /* Indicates failure */
@@ -175,22 +177,17 @@ int multislice_select_next_buffer_data(struct multislice *ms, hid_t file_space_i
     *nr_elements_to_read += elements_to_read;
   }
 
-  /* Select the elements */
-  if(nr_selections > 0) {
-    for(hsize_t selection_nr=0; selection_nr<nr_selections; selection_nr+=1) {
-      ms->start[0] = select_start[selection_nr];
-      ms->count[0] = select_count[selection_nr];
-      if(H5Sselect_hyperslab(file_space_id, H5S_SELECT_OR, ms->start, NULL, ms->count, NULL) < 0) {
-        result = -1;
-        goto cleanup;
-      }
-    }
+  /* Select all of the slices  */
+  if(select_slices(file_space_id, nr_selections, select_start, select_count, ms->start, ms->count) < 0) {
+    result = -1;
+    goto cleanup;
   }
 
   /* Success */
   result = 0;
 
  cleanup:
+  if(select_space_id >= 0)H5Sclose(select_space_id);
   if(select_start)free(select_start);
   if(select_count)free(select_count);
   return result;
