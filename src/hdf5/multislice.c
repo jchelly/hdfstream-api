@@ -100,7 +100,6 @@ int multislice_init(struct multislice *ms, const int rank, int nr_slices,
 */
 int multislice_select_next_buffer_data(struct multislice *ms, hid_t file_space_id, hsize_t *nr_elements_to_read) {
 
-  hid_t select_space_id = -1;
   hsize_t *select_start = NULL;
   hsize_t *select_count = NULL;
   int result = -1; /* Indicates failure */
@@ -187,7 +186,6 @@ int multislice_select_next_buffer_data(struct multislice *ms, hid_t file_space_i
   result = 0;
 
  cleanup:
-  if(select_space_id >= 0)H5Sclose(select_space_id);
   if(select_start)free(select_start);
   if(select_count)free(select_count);
   return result;
