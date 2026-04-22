@@ -22,14 +22,8 @@ static hid_t select_slices_recursive(hid_t file_space_id,
   hid_t space_id_left  = -1;
   hid_t space_id_right = -1;
   hid_t result = -1;
-  if(nr_selections == 0) {
 
-    /* No selections, so select nothing */
-    result = H5Scopy(file_space_id);
-    if(result < 0)goto cleanup;
-    if(H5Sselect_none(result) >= 0)return result;
-
-  } else if(nr_selections <= 8) {
+  if(nr_selections <= 8) {
 
     result = H5Scopy(file_space_id);
     if(result < 0)goto cleanup;
