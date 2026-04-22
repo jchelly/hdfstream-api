@@ -29,14 +29,17 @@ static hid_t select_slices_recursive(hid_t file_space_id,
     if(result < 0)goto cleanup;
     if(H5Sselect_none(result) >= 0)return result;
 
-  } else if(nr_selections == 1) {
+  } else if(nr_selections <= 8) {
 
-    /* One selection, so select it */
     result = H5Scopy(file_space_id);
     if(result < 0)goto cleanup;
-    start[0] = select_start[first_selection];
-    count[0] = select_count[first_selection];
-    if(H5Sselect_hyperslab(result, H5S_SELECT_SET, start, NULL, count, NULL) >= 0)return result;
+    if(H5Sselect_none(result) < 0)goto cleanup;
+    for(hsize_t selection_nr=0; selection_nr<nr_selections; selection_nr+=1) {
+      start[0] = select_start[first_selection+selection_nr];
+      count[0] = select_count[first_selection+selection_nr];
+      if(H5Sselect_hyperslab(result, H5S_SELECT_OR, start, NULL, count, NULL) < 0)goto cleanup;
+    }
+    return result;
 
   } else {
 
