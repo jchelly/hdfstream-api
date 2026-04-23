@@ -5,6 +5,9 @@
 #include "multislice.h"
 #include "select.h"
 
+/* Limit the number of hyperslab selections per read operation */
+#define MAX_SELECTIONS_PER_BUFFER 10*1024
+
 static hsize_t min_size(const hsize_t a, const hsize_t b) {
   if(a < b)
     return a;
@@ -131,13 +134,13 @@ int multislice_select_next_buffer_data(struct multislice *ms, hid_t file_space_i
     combine selections.
   */
   hsize_t nr_selections = 0;
-  select_start = malloc(sizeof(hsize_t)*ms->elements_per_buffer);
-  select_count = malloc(sizeof(hsize_t)*ms->elements_per_buffer);
+  select_start = malloc(sizeof(hsize_t)*MAX_SELECTIONS_PER_BUFFER);
+  select_count = malloc(sizeof(hsize_t)*MAX_SELECTIONS_PER_BUFFER);
 
   /* Compute how many elements we can select: one buffer full, or until end (whichever is less) */
   *nr_elements_to_read = 0;
   hsize_t elements_left_in_buffer = min_size(ms->elements_per_buffer, ms->elements_left_total);
-  while(elements_left_in_buffer > 0) {
+  while((elements_left_in_buffer > 0) && (nr_selections < MAX_SELECTIONS_PER_BUFFER)) {
 
     /* Find the start and count for the current slice */
     assert(ms->slice_nr < ms->nr_slices);
@@ -150,7 +153,7 @@ int multislice_select_next_buffer_data(struct multislice *ms, hid_t file_space_i
 
     /* Store this selection, if it contains any elements */
     if(elements_to_read > 0) {
-      assert(nr_selections < ms->elements_per_buffer);
+      assert(nr_selections < MAX_SELECTIONS_PER_BUFFER);
       select_start[nr_selections] = slice_start + ms->offset_in_slice;
       select_count[nr_selections] = elements_to_read;
       nr_selections += 1;
