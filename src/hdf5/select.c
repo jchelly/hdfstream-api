@@ -71,5 +71,20 @@ herr_t select_slices(hid_t file_space_id, hsize_t nr_selections,
   if(dspace_id < 0)return -1;
   herr_t err = H5Sselect_copy(file_space_id, dspace_id);
   H5Sclose(dspace_id);
+
+#ifndef NDEBUG
+  /* In debug mode, check we selected the expected number of points */
+  hssize_t npoints = H5Sget_select_npoints(file_space_id);
+  hssize_t nr_expected = 0;
+  /* Count elements in the first dimension */
+  for(hsize_t i=0; i<nr_selections; i+=1)
+    nr_expected += select_count[i];
+  /* Multiply by number selected in other dimensions */
+  int rank = H5Sget_simple_extent_ndims(file_space_id);
+  for(int i=1; i<rank; i+=1)
+    nr_expected *= count[i];
+  if(nr_expected != npoints)return -1;
+#endif
+
   return err;
 }
