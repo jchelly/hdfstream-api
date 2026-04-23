@@ -81,6 +81,7 @@ foreach(TEST_NAME
     max_links
     unknown_type
     select_slices_recursive
+    select_slices_recursive_2d
   )
   add_executable(test_${TEST_NAME} test_${TEST_NAME}.c)
   target_link_libraries(test_${TEST_NAME} testlib)
