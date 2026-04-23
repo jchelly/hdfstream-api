@@ -6,6 +6,7 @@
 #include <hdf5.h>
 
 #include "verify.h"
+#include "verify_all_closed.h"
 #include "file_cache.h"
 
 
@@ -47,6 +48,6 @@ int main(int argc, char *argv[]) {
   verify(ordered_map_size(fc->map) == 0);
 
   file_cache_free(fc);
-
+  verify_all_closed();
   return 0;
 }
