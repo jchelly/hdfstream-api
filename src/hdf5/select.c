@@ -4,6 +4,7 @@ herr_t select_slices_direct(hid_t file_space_id, hsize_t nr_selections,
                             hsize_t *select_start, hsize_t *select_count,
                             hsize_t *start, hsize_t *count) {
 
+  if(H5Sselect_none(file_space_id) < 0)return -1;
   for(hsize_t selection_nr=0; selection_nr<nr_selections; selection_nr+=1) {
     start[0] = select_start[selection_nr];
     count[0] = select_count[selection_nr];
