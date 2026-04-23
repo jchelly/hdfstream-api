@@ -6,6 +6,7 @@
 #include <hdf5.h>
 
 #include "verify.h"
+#include "verify_all_closed.h"
 #include "pack_group.h"
 #include "create_test_file.h"
 #include "decoder.h"
@@ -72,6 +73,7 @@ static void run_test(int max_depth) {
 
   /* Close the file */
   H5Fclose(file_id);
+  verify_all_closed();
 }
 
 
@@ -82,6 +84,7 @@ int main(int argc, char *argv[]) {
 
   for(int max_depth=0; max_depth<15; max_depth +=1)
     run_test(max_depth);
+  verify_all_closed();
 
   return 0;
 }

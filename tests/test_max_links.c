@@ -6,6 +6,7 @@
 #include <hdf5.h>
 
 #include "verify.h"
+#include "verify_all_closed.h"
 #include "pack_group.h"
 #include "create_test_file.h"
 #include "decoder.h"
@@ -141,6 +142,7 @@ static void run_test(int max_depth, int group_depth, int nr_datasets) {
 
   /* Close the file */
   H5Fclose(file_id);
+  verify_all_closed();
 }
 
 

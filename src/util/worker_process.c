@@ -201,8 +201,27 @@ int worker_process_free(struct worker_process *worker) {
   /* Wait for child process to complete and check return code */
   if(!worker->is_dead) {
     kill(worker->pid, SIGTERM);
+
+    // Wait up to 200ms for graceful exit
+    int waited = 0;
+    int status;
+    while (waited < 200) {
+      pid_t r = waitpid(worker->pid, &status, WNOHANG);
+      if (r == worker->pid) {
+        worker->exit_status = status;
+        goto cleanup;
+      }
+      struct timespec ts = {0, 1000000}; // 1 ms
+      nanosleep(&ts, NULL);
+      waited+=1;
+    }
+
+    // Still alive, so force kill it
+    kill(worker->pid, SIGKILL);
     waitpid(worker->pid, &worker->exit_status, 0);
   }
+
+ cleanup:
 
   /* Close stdin/stdout file descriptors */
   close(worker->input_pipe[PIPE_WRITE]);

@@ -1,0 +1,79 @@
+#include "verify.h"
+#include "verify_all_closed.h"
+#include "select.h"
+
+#include <stdlib.h>
+#include <hdf5.h>
+
+
+static int selections_equal(hid_t dspace1, hid_t dspace2) {
+
+  /* Handle the case of no selection */
+  if((H5Sget_select_npoints(dspace1) == 0) && (H5Sget_select_npoints(dspace2) == 0))return 0;
+
+  verify(H5Sextent_equal(dspace1, dspace2) > 0);
+  verify(H5Sselect_shape_same(dspace1, dspace2) > 0);
+  verify(H5Sget_select_npoints(dspace1) == H5Sget_select_npoints(dspace2));
+  hid_t or = H5Scombine_select(dspace1, H5S_SELECT_OR, dspace2);
+  verify(or>=0);
+  verify(H5Sget_select_npoints(or) == H5Sget_select_npoints(dspace1));
+  verify(H5Sget_select_npoints(or) == H5Sget_select_npoints(dspace2));
+  H5Sclose(or);
+  return 0;
+}
+
+
+static void test_select_slices_recursive(const int n) {
+
+  /* Create a dataspace with n elements */
+  const int rank = 2;
+  hsize_t dims[] = {n, 3};
+  hid_t dspace_id = H5Screate_simple(rank, dims, NULL);
+
+  /* Create an array of slices to select */
+  const int nr_slices = n / 2;
+  hsize_t *select_start = malloc(sizeof(hsize_t)*nr_slices);
+  hsize_t *select_count = malloc(sizeof(hsize_t)*nr_slices);
+  for(int i=0; i<nr_slices; i+=1) {
+    verify(2*i+1 <= n);
+    select_start[i] = 2*i+0;
+    select_count[i] = 1;
+  }
+  hsize_t start[] = {0, 0};
+  hsize_t count[] = {1, 3};
+
+  /* Copy the dataspace */
+  hid_t dspace_id_check = H5Scopy(dspace_id);
+  verify(dspace_id_check >= 0);
+
+  /* Select the slices */
+  verify(select_slices(dspace_id, nr_slices, select_start, select_count, start, count) == 0);
+  verify(select_slices_direct(dspace_id_check, nr_slices, select_start, select_count, start, count) == 0);
+
+  /* Selections should be the same */
+  verify(selections_equal(dspace_id, dspace_id_check)==0);
+
+  H5Sclose(dspace_id);
+  H5Sclose(dspace_id_check);
+  verify_all_closed();
+
+  free(select_start);
+  free(select_count);
+}
+
+
+int main(int argc, char *argv[]) {
+
+  (void) argc;
+  (void) argv;
+
+  for(int i=0; i<10; i+=1) {
+    test_select_slices_recursive(i);
+  }
+  test_select_slices_recursive(10);
+  test_select_slices_recursive(100);
+  test_select_slices_recursive(1000);
+  test_select_slices_recursive(10000);
+
+  return 0;
+}

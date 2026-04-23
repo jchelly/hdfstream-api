@@ -1,7 +1,12 @@
 #include <hdf5.h>
 #include <assert.h>
+#include <stdlib.h>
 #include "slice_limits.h"
 #include "multislice.h"
+#include "select.h"
+
+/* Limit the number of hyperslab selections per read operation */
+#define MAX_SELECTIONS_PER_BUFFER 10*1024
 
 static hsize_t min_size(const hsize_t a, const hsize_t b) {
   if(a < b)
@@ -98,8 +103,15 @@ int multislice_init(struct multislice *ms, const int rank, int nr_slices,
 */
 int multislice_select_next_buffer_data(struct multislice *ms, hid_t file_space_id, hsize_t *nr_elements_to_read) {
 
+  hsize_t *select_start = NULL;
+  hsize_t *select_count = NULL;
+  int result = -1; /* Indicates failure */
+
   /* Check if we hit the end */
-  if(ms->elements_left_total == 0)return 1;
+  if(ms->elements_left_total == 0) {
+    result = 1;
+    goto cleanup;
+  }
 
   if(ms->rank == 0) {
     /* In case of scalars, just select all and return */
@@ -107,16 +119,28 @@ int multislice_select_next_buffer_data(struct multislice *ms, hid_t file_space_i
     ms->elements_left_total = 0; /* There's nothing more to select */
     assert(ms->nr_slices==0);       /* Scalars cannot be sliced */
     *nr_elements_to_read = 1;       /* Scalars always have one data element */
-    return 0;
+    result = 0;
+    goto cleanup;
   } else {
     /* In case of arrays, clear the selection */
     H5Sselect_none(file_space_id);
   }
 
+  /*
+    Will need to accumulate selection info
+
+    Calling H5Sselect_hyperslab for N slices has O(N^2) runtime,
+    so instead we gather all slice information and recursively
+    combine selections.
+  */
+  hsize_t nr_selections = 0;
+  select_start = malloc(sizeof(hsize_t)*MAX_SELECTIONS_PER_BUFFER);
+  select_count = malloc(sizeof(hsize_t)*MAX_SELECTIONS_PER_BUFFER);
+
   /* Compute how many elements we can select: one buffer full, or until end (whichever is less) */
   *nr_elements_to_read = 0;
   hsize_t elements_left_in_buffer = min_size(ms->elements_per_buffer, ms->elements_left_total);
-  while(elements_left_in_buffer > 0) {
+  while((elements_left_in_buffer > 0) && (nr_selections < MAX_SELECTIONS_PER_BUFFER)) {
 
     /* Find the start and count for the current slice */
     assert(ms->slice_nr < ms->nr_slices);
@@ -127,10 +151,13 @@ int multislice_select_next_buffer_data(struct multislice *ms, hid_t file_space_i
     hsize_t elements_left_in_slice = slice_count - ms->offset_in_slice;
     hsize_t elements_to_read = min_size(elements_left_in_slice, elements_left_in_buffer);
 
-    /* Select the elements in the file dataspace */
-    ms->start[0] = slice_start + ms->offset_in_slice;
-    ms->count[0] = elements_to_read;
-    if(H5Sselect_hyperslab(file_space_id, H5S_SELECT_OR, ms->start, NULL, ms->count, NULL) < 0)return -1;
+    /* Store this selection, if it contains any elements */
+    if(elements_to_read > 0) {
+      assert(nr_selections < MAX_SELECTIONS_PER_BUFFER);
+      select_start[nr_selections] = slice_start + ms->offset_in_slice;
+      select_count[nr_selections] = elements_to_read;
+      nr_selections += 1;
+    }
 
     /* Advance to the next part of the slice */
     ms->offset_in_slice += elements_to_read;
@@ -151,5 +178,18 @@ int multislice_select_next_buffer_data(struct multislice *ms, hid_t file_space_i
     /* Update count of elements to be read in the first dimension */
     *nr_elements_to_read += elements_to_read;
   }
-  return 0;
+
+  /* Select all of the slices  */
+  if(select_slices(file_space_id, nr_selections, select_start, select_count, ms->start, ms->count) < 0) {
+    result = -1;
+    goto cleanup;
+  }
+
+  /* Success */
+  result = 0;
+
+ cleanup:
+  if(select_start)free(select_start);
+  if(select_count)free(select_count);
+  return result;
 }
