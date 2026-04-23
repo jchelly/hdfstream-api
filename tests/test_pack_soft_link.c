@@ -4,6 +4,7 @@
 #include <hdf5.h>
 
 #include "verify.h"
+#include "verify_all_closed.h"
 #include "pack_soft_link.h"
 #include "create_test_file.h"
 
@@ -65,5 +66,6 @@ int main(int argc, char *argv[]) {
   msgpack_packer_free(pk);
   msgpack_unpacked_destroy(&msg);
   H5Fclose(file_id);
+  verify_all_closed();
   return 0;
 }

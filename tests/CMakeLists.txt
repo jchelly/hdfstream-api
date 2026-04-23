@@ -27,6 +27,7 @@ add_library(testlib
   ../src/hdf5/multislice.c
   ../src/hdf5/select.c
   ../src/hdf5/native_type.c
+  verify_all_closed.c
   pack_multiple_slices_1d.c
   pack_multiple_slices_2d.c
   decode_ndarray.c

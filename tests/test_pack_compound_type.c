@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "verify.h"
+#include "verify_all_closed.h"
 #include "../src/hdf5/pack_numpy_type.h"
 
 
@@ -91,5 +92,6 @@ int main(int argc, char *argv[]) {
   msgpack_sbuffer_destroy(&sbuf);
   H5Tclose(dtype_id);
 
+  verify_all_closed();
   return 0;
 }

@@ -5,6 +5,7 @@
 #include <hdf5.h>
 
 #include "verify.h"
+#include "verify_all_closed.h"
 #include "pack_dataset.h"
 #include "create_test_file.h"
 #include "decode_ndarray.h"
@@ -62,6 +63,8 @@ int main(int argc, char *argv[]) {
   msgpack_unpacked_destroy(&msg);
   if(arr.status==0)free(arr.data);
 
+  H5Dclose(dataset_id);
   H5Fclose(file_id);
+  verify_all_closed();
   return 0;
 }

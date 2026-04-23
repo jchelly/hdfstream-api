@@ -5,6 +5,7 @@
 #include <msgpack.h>
 
 #include "verify.h"
+#include "verify_all_closed.h"
 #include "create_test_file.h"
 #include "pack_multiple_slices_1d.h"
 
@@ -162,6 +163,8 @@ int main(int argc, char *argv[]) {
     pack_multiple_slices_1d(dataset_id, /* rank= */ 1, nr_slices, start, count, false, 3, 0);
   }
 
+  H5Dclose(dataset_id);
   H5Fclose(file_id);
+  verify_all_closed();
   return 0;
 }

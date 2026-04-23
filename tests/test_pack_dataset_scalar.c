@@ -5,6 +5,7 @@
 #include <hdf5.h>
 
 #include "verify.h"
+#include "verify_all_closed.h"
 #include "pack_dataset.h"
 #include "create_test_file.h"
 
@@ -56,5 +57,8 @@ int main(int argc, char *argv[]) {
   verify(pack_dataset(dataset_id, pk, /* data_size_limit = */ SIZE_MAX, buffer_size) == 0);
   fclose(fd);
 
+  H5Dclose(dataset_id);
+  H5Fclose(file_id);
+  verify_all_closed();
   return 0;
 }

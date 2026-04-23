@@ -4,6 +4,7 @@
 #include <hdf5.h>
 
 #include "verify.h"
+#include "verify_all_closed.h"
 #include "pack_attributes.h"
 #include "create_test_file.h"
 
@@ -73,7 +74,8 @@ int main(int argc, char *argv[]) {
   verify(pack_attributes(group_id, pk)==0);
   fclose(fd);
 
+  H5Gclose(group_id);
   H5Fclose(file_id);
-
+  verify_all_closed();
   return 0;
 }
