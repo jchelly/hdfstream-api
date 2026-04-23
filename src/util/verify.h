@@ -1,3 +1,5 @@
+#ifndef VERIFY_H_
+#define VERIFY_H_
 
 void verify_failed(char *message, char *filename, int line);
 
@@ -11,3 +13,5 @@ void verify_failed(char *message, char *filename, int line);
   Jump to cleanup block if return code is not zero
 */
 #define check(x) do {if((x) != 0) goto cleanup;} while(0)
+
+#endif
