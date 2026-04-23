@@ -80,6 +80,7 @@ foreach(TEST_NAME
     recursion
     max_links
     unknown_type
+    select_slices_recursive
   )
   add_executable(test_${TEST_NAME} test_${TEST_NAME}.c)
   target_link_libraries(test_${TEST_NAME} testlib)
