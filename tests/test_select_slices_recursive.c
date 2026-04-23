@@ -6,6 +6,23 @@
 #include <hdf5.h>
 
 
+static int selections_equal(hid_t dspace1, hid_t dspace2) {
+
+  /* Handle the case of no selection */
+  if((H5Sget_select_npoints(dspace1) == 0) && (H5Sget_select_npoints(dspace2) == 0))return 0;
+
+  verify(H5Sextent_equal(dspace1, dspace2) > 0);
+  verify(H5Sselect_shape_same(dspace1, dspace2) > 0);
+  verify(H5Sget_select_npoints(dspace1) == H5Sget_select_npoints(dspace2));
+  hid_t or = H5Scombine_select(dspace1, H5S_SELECT_OR, dspace2);
+  verify(or>=0);
+  verify(H5Sget_select_npoints(or) == H5Sget_select_npoints(dspace1));
+  verify(H5Sget_select_npoints(or) == H5Sget_select_npoints(dspace2));
+  H5Sclose(or);
+  return 0;
+}
+
+
 static void test_select_slices_recursive(const int n) {
 
   /* Create a dataspace with n elements */
@@ -25,11 +42,19 @@ static void test_select_slices_recursive(const int n) {
   hsize_t start[1] = {0};
   hsize_t count[1] = {1};
 
+  /* Copy the dataspace */
+  hid_t dspace_id_check = H5Scopy(dspace_id);
+  verify(dspace_id_check >= 0);
+
   /* Select the slices */
   verify(select_slices(dspace_id, nr_slices, select_start, select_count, start, count) == 0);
-  verify(H5Sget_select_npoints(dspace_id) == nr_slices);
+  verify(select_slices_direct(dspace_id_check, nr_slices, select_start, select_count, start, count) == 0);
+
+  /* Selections should be the same */
+  verify(selections_equal(dspace_id, dspace_id_check)==0);
 
   H5Sclose(dspace_id);
+  H5Sclose(dspace_id_check);
   verify_all_closed();
 
   free(select_start);
@@ -42,6 +67,12 @@ int main(int argc, char *argv[]) {
   (void) argc;
   (void) argv;
 
+  for(int i=0; i<10; i+=1) {
+    test_select_slices_recursive(i);
+  }
+  test_select_slices_recursive(10);
+  test_select_slices_recursive(100);
+  test_select_slices_recursive(1000);
   test_select_slices_recursive(10000);
 
   return 0;
