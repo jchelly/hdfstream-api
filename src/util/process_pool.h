@@ -28,6 +28,7 @@ struct process_pool {
   void *data;
   int next;
   int stop;
+  struct process_pool *next_pool;
 };
 
 

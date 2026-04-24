@@ -52,6 +52,7 @@ foreach(TEST_NAME
     worker_fail
     type_mapping
     process_pool
+    process_pool_shutdown
     process_pool_dead_process
     process_pool_score
     ordered_map_add_remove

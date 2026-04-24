@@ -9,6 +9,10 @@
 
 #include "process_pool.h"
 
+/* Linked list of process pools */
+static pthread_mutex_t pool_mutex = PTHREAD_MUTEX_INITIALIZER;
+struct process_pool *first_pool = NULL;
+
 /*
   Create a new process pool
 */
@@ -66,6 +70,12 @@ struct process_pool *process_pool_new(const int max_nr_processes,
     pool->args[i] = malloc(sizeof(char)*(strlen(args[i])+1));
     strcpy(pool->args[i], args[i]);
   }
+
+  /* Prepend the new pool to the linked list */
+  pthread_mutex_lock(&pool_mutex);
+  pool->next_pool = first_pool;
+  first_pool = pool;
+  pthread_mutex_unlock(&pool_mutex);
 
   return pool;
 }
@@ -131,6 +141,13 @@ static struct worker_process *try_process_pool_get_worker_by_score(struct proces
   /* Wait until a process is available */
   process_pool_wait_and_lock(pool);
 
+  /* Fail if we've shut down */
+  if(pool->stop) {
+    process_pool_unlock(pool);
+    sem_post(&(pool->sem)); /* We didn't assign a process */
+    return NULL;
+  }
+
   /* Find a free process to use */
   struct worker_process *worker = NULL;
   int high_score_index = -1;
@@ -155,11 +172,8 @@ static struct worker_process *try_process_pool_get_worker_by_score(struct proces
       }
     }
   }
-  if((high_score_index < 0) || pool->stop) {
-
-    /* No process assigned because we're shutting down */
+  if(high_score_index < 0) {
     worker = NULL;
-
   } else {
 
     /* Assign the worker process */
@@ -172,6 +186,8 @@ static struct worker_process *try_process_pool_get_worker_by_score(struct proces
 
   /* Free the lock */
   process_pool_unlock(pool);
+
+  if(worker==NULL)sem_post(&(pool->sem)); /* We didn't assign a process */
 
   /* Return a pointer to the worker process */
   return worker;
@@ -250,7 +266,10 @@ void process_pool_release_worker(struct process_pool *pool, struct worker_proces
 }
 
 /*
-  Free a process pool.
+  "Free" a process pool. We really just block it from starting new
+  processes, wait for the current processes to exit, and free any
+  resources associated with them. The pool itself cannot be freed
+  because threads might still have a pointer to it.
 */
 void process_pool_free(struct process_pool *pool) {
 
@@ -276,19 +295,13 @@ void process_pool_free(struct process_pool *pool) {
     nanosleep(&ts, NULL);
   }
 
-  /* Deallocate everything */
+  /* Deallocate resources associated with the processes */
   for(int i=0; i<pool->max_nr_processes; i+=1) {
-    if(pool->worker[i])worker_process_free(pool->worker[i]);
+    if(pool->worker[i]) {
+      worker_process_free(pool->worker[i]);
+      pool->worker[i] = NULL;
+    }
   }
-  free(pool->worker);
-  free(pool->worker_state);
-  pthread_mutex_destroy(&pool->mutex);
-  sem_destroy(&(pool->sem));
-  free(pool->executable);
-  for(int i=0; i<pool->nargs; i+=1)
-    free(pool->args[i]);
-  free(pool->args);
-  free(pool);
 }
 
 void process_pool_wait_and_lock(struct process_pool *pool) {
@@ -303,6 +316,7 @@ void process_pool_wait_and_lock(struct process_pool *pool) {
   /* Lock the pool */
   pthread_mutex_lock(&pool->mutex);
 }
+
 
 void process_pool_unlock(struct process_pool *pool) {
   pthread_mutex_unlock(&pool->mutex);
