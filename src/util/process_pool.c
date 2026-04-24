@@ -143,8 +143,8 @@ static struct worker_process *try_process_pool_get_worker_by_score(struct proces
 
   /* Fail if we've shut down */
   if(pool->stop) {
-    process_pool_unlock(pool);
     sem_post(&(pool->sem)); /* We didn't assign a process */
+    process_pool_unlock(pool);
     return NULL;
   }
 
@@ -280,6 +280,10 @@ void process_pool_free(struct process_pool *pool) {
   for(int i=0; i<pool->max_nr_processes; i+=1) {
     if(pool->worker[i])worker_process_kill(pool->worker[i]);
   }
+  /* Make sure threads don't block at the semaphore:
+     we might have shut down at a moment when all processes
+     were allocated. */
+  sem_post(&(pool->sem));
   pthread_mutex_unlock(&pool->mutex);
 
   /* Wait until all worker processes are released */

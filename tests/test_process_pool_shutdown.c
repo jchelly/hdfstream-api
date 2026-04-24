@@ -67,7 +67,7 @@ static void manager_process(void) {
     pthread_create(&thread[i], NULL, thread_func, (void *) ((intptr_t) i));
 
   /* Let the threads run for a bit */
-  sleep(5);
+  sleep(1);
 
   /* Freeing the pool should cause the threads to exit */
   process_pool_free(pool);
