@@ -131,12 +131,6 @@ static struct worker_process *try_process_pool_get_worker_by_score(struct proces
   /* Wait until a process is available */
   process_pool_wait_and_lock(pool);
 
-  /* Fail if we're shutting down */
-  if(pool->stop) {
-    return NULL;
-    process_pool_unlock(pool);
-  }
-
   /* Find a free process to use */
   struct worker_process *worker = NULL;
   int high_score_index = -1;
@@ -161,8 +155,11 @@ static struct worker_process *try_process_pool_get_worker_by_score(struct proces
       }
     }
   }
-  if(high_score_index < 0) {
+  if((high_score_index < 0) || pool->stop) {
+
+    /* No process assigned because we're shutting down */
     worker = NULL;
+
   } else {
 
     /* Assign the worker process */
