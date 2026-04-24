@@ -152,14 +152,17 @@ static struct worker_process *try_process_pool_get_worker_by_score(struct proces
       }
     }
   }
-  if(high_score_index < 0)return NULL;
+  if(high_score_index < 0) {
+    worker = NULL;
+  } else {
 
-  /* Assign the worker process */
-  worker = pool->worker[high_score_index];
-  pool->worker_state[high_score_index] = BUSY;
+    /* Assign the worker process */
+    worker = pool->worker[high_score_index];
+    pool->worker_state[high_score_index] = BUSY;
 
-  /* Advance starting process to spread the load evenly */
-  pool->next = (pool->next + 1) % pool->max_nr_processes;
+    /* Advance starting process to spread the load evenly */
+    pool->next = (pool->next + 1) % pool->max_nr_processes;
+  }
 
   /* Free the lock */
   process_pool_unlock(pool);
