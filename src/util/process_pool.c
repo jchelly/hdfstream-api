@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200809L
+#include <unistd.h>
 #include <stdlib.h>
 #include <semaphore.h>
 #include <errno.h>
@@ -22,6 +24,7 @@ struct process_pool *process_pool_new(const int max_nr_processes,
   pool->data = data;
   pool->init = init_callback;
   pool->shutdown = shutdown_callback;
+  pool->stop = 0;
 
   /* Initialize semphore to control access */
   if(sem_init(&(pool->sem), 0, (unsigned int) 0) != 0) {
@@ -74,7 +77,7 @@ void process_pool_start_worker(struct process_pool *pool) {
 
   pthread_mutex_lock(&pool->mutex);
   /* Check we didn't reach the max nr processes before we acquired the lock */
-  if(pool->nr_processes_running < pool->max_nr_processes) {
+  if((pool->nr_processes_running < pool->max_nr_processes) && (!pool->stop)) {
     /* Find the first stopped process index */
     int i = 0;
     while(i < pool->max_nr_processes) {
@@ -127,6 +130,12 @@ static struct worker_process *try_process_pool_get_worker_by_score(struct proces
 
   /* Wait until a process is available */
   process_pool_wait_and_lock(pool);
+
+  /* Fail if we're shutting down */
+  if(pool->stop) {
+    return NULL;
+    process_pool_unlock(pool);
+  }
 
   /* Find a free process to use */
   struct worker_process *worker = NULL;
@@ -248,6 +257,29 @@ void process_pool_release_worker(struct process_pool *pool, struct worker_proces
 */
 void process_pool_free(struct process_pool *pool) {
 
+  pthread_mutex_lock(&pool->mutex);
+  /* Block starting of new processes */
+  pool->stop = 1;
+  /* Signal all processes to stop */
+  for(int i=0; i<pool->max_nr_processes; i+=1) {
+    if(pool->worker[i])worker_process_kill(pool->worker[i]);
+  }
+  pthread_mutex_unlock(&pool->mutex);
+
+  /* Wait until all worker processes are released */
+  while(1) {
+    pthread_mutex_lock(&pool->mutex);
+    int nr_busy = 0;
+    for(int i=0; i<pool->max_nr_processes; i+=1) {
+      if(pool->worker_state[i] == BUSY)nr_busy += 1;
+    }
+    pthread_mutex_unlock(&pool->mutex);
+    if(nr_busy==0)break;
+    struct timespec ts = {0, 10000000}; // 10 ms
+    nanosleep(&ts, NULL);
+  }
+
+  /* Deallocate everything */
   for(int i=0; i<pool->max_nr_processes; i+=1) {
     if(pool->worker[i])worker_process_free(pool->worker[i]);
   }

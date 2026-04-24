@@ -27,6 +27,7 @@ struct process_pool {
   worker_callback shutdown;
   void *data;
   int next;
+  int stop;
 };
 
 

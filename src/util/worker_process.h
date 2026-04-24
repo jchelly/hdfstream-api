@@ -53,6 +53,7 @@ int worker_process_is_alive(struct worker_process *worker);
 
 /* Terminate and deallocate a worker process and return its exit code */
 int worker_process_free(struct worker_process *worker);
+void worker_process_kill(struct worker_process *worker);
 
 /* Functions for communication with the worker process, returns 0 on success, -1 on failure */
 int worker_process_send(struct worker_process *worker, const size_t len, const void *data);
