@@ -45,8 +45,13 @@ struct worker_process *process_pool_get_worker_by_score(struct process_pool *poo
 
 void process_pool_start_worker(struct process_pool *pool);
 void process_pool_release_worker(struct process_pool *pool, struct worker_process *worker);
-void process_pool_free(struct process_pool *pool);
 void process_pool_wait_and_lock(struct process_pool *pool);
 void process_pool_unlock(struct process_pool *pool);
+
+/* Shut down a process pool. Kills processes and frees resources associated with workers */
+void process_pool_free(struct process_pool *pool);
+
+/* Free all process pools. Must ensure all threads have joined first. */
+void process_pool_cleanup(void);
 
 #endif

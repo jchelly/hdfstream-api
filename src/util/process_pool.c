@@ -73,6 +73,7 @@ struct process_pool *process_pool_new(const int max_nr_processes,
 
   /* Prepend the new pool to the linked list */
   pthread_mutex_lock(&pool_mutex);
+  if(!first_pool)atexit(process_pool_cleanup);
   pool->next_pool = first_pool;
   first_pool = pool;
   pthread_mutex_unlock(&pool_mutex);
@@ -173,6 +174,8 @@ static struct worker_process *try_process_pool_get_worker_by_score(struct proces
     }
   }
   if(high_score_index < 0) {
+    /* Should not happen: we reserved a process with sem_wait */
+    assert(high_score_index >= 0);
     worker = NULL;
   } else {
 
@@ -324,4 +327,30 @@ void process_pool_wait_and_lock(struct process_pool *pool) {
 
 void process_pool_unlock(struct process_pool *pool) {
   pthread_mutex_unlock(&pool->mutex);
+}
+
+
+void process_pool_cleanup(void) {
+
+  pthread_mutex_lock(&pool_mutex);
+  struct process_pool *pool = first_pool;
+  while(pool) {
+    struct process_pool *next = pool->next_pool;
+
+    /* Free this process pool */
+    free(pool->worker);
+    free(pool->worker_state);
+    pthread_mutex_destroy(&pool->mutex);
+    sem_destroy(&(pool->sem));
+    free(pool->executable);
+    for(int i=0; i<pool->nargs; i+=1)
+      free(pool->args[i]);
+    free(pool->args);
+    free(pool);
+
+    /* Advance to the next pool in the list */
+    pool = next;
+  };
+  first_pool = NULL;
+  pthread_mutex_unlock(&pool_mutex);
 }
