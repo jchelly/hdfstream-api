@@ -291,7 +291,7 @@ size_t hdfstream_read_chunk(struct data_stream *stream, void *buffer, int *statu
   struct buffer_data *shared_buffer = srd->buffer + stream->next_buffer;
 
   /* Wait until the shared buffer is ready to read */
-  if(worker_process_wait_for_semaphore(stream->worker, &(shared_buffer->ready_for_read), /* delay = */ 10) < 0) {
+  if(worker_process_wait_for_semaphore(stream->worker, &(shared_buffer->ready_for_read), /* delay = */ 1) < 0) {
     /* Reader process failed somehow */
     *status = BUFFER_STATUS_ERROR;
     stream->ended = 1;

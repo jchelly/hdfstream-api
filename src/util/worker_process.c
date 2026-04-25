@@ -238,6 +238,13 @@ int worker_process_free(struct worker_process *worker) {
 
 
 /*
+  Send kill signal to a process
+*/
+void worker_process_kill(struct worker_process *worker) {
+  if(!worker->is_dead)kill(worker->pid, SIGKILL);
+}
+
+/*
    Send a message to the worker process stdin, return 0 on success, -1 on failure.
    Will flag the worker process as dead if we get an EPIPE.
 */
