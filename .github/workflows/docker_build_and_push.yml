@@ -24,7 +24,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Log in to the Container registry
-        uses: docker/login-action@4a8376e001c7725687f0624d1c3698a3f6ab337e
+        uses: docker/login-action@174f89633e6ee03e08ee79f448bcd513fee14c11
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
