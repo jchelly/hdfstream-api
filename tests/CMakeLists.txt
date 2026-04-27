@@ -48,6 +48,7 @@ foreach(TEST_NAME
     worker_callback
     worker_callback_failure
     worker_failed_recv
+    worker_failed_send
     worker_failed_wait
     worker_fail
     type_mapping
