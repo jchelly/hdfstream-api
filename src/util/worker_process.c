@@ -43,6 +43,7 @@ static ssize_t do_write(int filedes, const void *buf, size_t nbytes, int block_s
   while(nleft > 0) {
     ssize_t nwritten = write(filedes, ptr, nleft);
     if(nwritten < 0) {
+      if(errno == EINTR)continue;
       if(errno == EPIPE) {
         /* Broken pipe error */
         if(block_sigpipe) {
@@ -106,6 +107,7 @@ static ssize_t do_read(int filedes, void const *buf, size_t nbytes, int block_si
       nbytes = -3;
       break;
     } else if(nread < 0) {
+      if(errno == EINTR)continue;
       if(errno == EPIPE) {
         /* Broken pipe error */
         if(block_sigpipe) {
