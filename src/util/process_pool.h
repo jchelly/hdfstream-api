@@ -43,7 +43,7 @@ struct worker_process *process_pool_get_worker_by_score(struct process_pool *poo
 /* Macro to just get the next available worker process */
 #define process_pool_get_worker(pool) process_pool_get_worker_by_score(pool, NULL, NULL)
 
-void process_pool_start_worker(struct process_pool *pool);
+int process_pool_start_worker(struct process_pool *pool);
 void process_pool_release_worker(struct process_pool *pool, struct worker_process *worker);
 void process_pool_wait_and_lock(struct process_pool *pool);
 void process_pool_unlock(struct process_pool *pool);
