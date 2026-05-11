@@ -46,12 +46,6 @@ static ssize_t do_write(int filedes, const void *buf, size_t nbytes, int block_s
       if(errno == EINTR)continue;
       if(errno == EPIPE) {
         /* Broken pipe error */
-        if(block_sigpipe) {
-          /* Consume the sigpipe before unblocking it */
-          siginfo_t info;
-          struct timespec timeout = {0, 0};
-          sigtimedwait(&new_set, &info, &timeout);
-        }
         nbytes = -2;
         break;
       } else {
@@ -65,6 +59,10 @@ static ssize_t do_write(int filedes, const void *buf, size_t nbytes, int block_s
     }
   }
   if(block_sigpipe) {
+    /* Consume the sigpipe before unblocking it */
+    siginfo_t info;
+    struct timespec timeout = {0, 0};
+    while(sigtimedwait(&new_set, &info, &timeout) >= 0){};
     /* Then restore the signal mask */
     pthread_sigmask(SIG_SETMASK, &old_set, NULL);
   }
@@ -110,12 +108,6 @@ static ssize_t do_read(int filedes, void const *buf, size_t nbytes, int block_si
       if(errno == EINTR)continue;
       if(errno == EPIPE) {
         /* Broken pipe error */
-        if(block_sigpipe) {
-          /* Consume the sigpipe before unblocking it */
-          siginfo_t info;
-          struct timespec timeout = {0, 0};
-          sigtimedwait(&new_set, &info, &timeout);
-        }
         nbytes = -2;
         break;
       } else {
@@ -129,6 +121,10 @@ static ssize_t do_read(int filedes, void const *buf, size_t nbytes, int block_si
     }
   }
   if(block_sigpipe) {
+    /* Consume the sigpipe before unblocking it */
+    siginfo_t info;
+    struct timespec timeout = {0, 0};
+    while(sigtimedwait(&new_set, &info, &timeout) >= 0){};
     /* Then restore the signal mask */
     pthread_sigmask(SIG_SETMASK, &old_set, NULL);
   }

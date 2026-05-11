@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -14,12 +15,9 @@ static void worker_process(void) {
 
   worker_init();
 
-  int pid = (int) getpid();
-
   while(1){
     int i;
     worker_recv(sizeof(int), &i);
-    fprintf(stderr, "Process %d received value %d\n", pid, i);
     worker_send(sizeof(int), &i);
   };
 
@@ -33,7 +31,6 @@ static void *thread_func(void *data) {
   while(1) {
     struct worker_process *worker = process_pool_get_worker(pool);
     if(!worker){
-      printf("Thread %d exiting\n", i);
       break;
     }
     /* Thread may or may not communicate with the process */
@@ -50,8 +47,8 @@ static void *thread_func(void *data) {
 static void manager_process(const int nr_processes, const int nr_threads) {
 
   /* Specify executable to run */
-  char executable[] = "./test_process_pool";
-  char *args[] = {"test_process_pool", "1", NULL};
+  char executable[] = "./test_process_pool_shutdown";
+  char *args[] = {"test_process_pool_shutdown", "1", NULL};
 
   /* Start up the process pool */
   pool = process_pool_new(nr_processes, executable, args, NULL, worker_default_init, NULL);
@@ -68,7 +65,9 @@ static void manager_process(const int nr_processes, const int nr_threads) {
     pthread_create(&thread[i], NULL, thread_func, (void *) ((intptr_t) i));
 
   /* Let the threads run for a bit */
-  sleep(1);
+  struct timespec ts = {0, 100000000}; // 100 ms
+  nanosleep(&ts, NULL);
+  /* sleep(1); */
 
   /* Freeing the pool should cause the threads to exit */
   process_pool_free(pool);
@@ -85,11 +84,11 @@ int main(int argc, char *argv[]) {
 
   if(argc == 1) {
     /* No arguments, so assume this is manager process */
-    for(int i=0; i<5; i+=1)
+    for(int i=0; i<50; i+=1)
       manager_process(4, 20); /* More threads than processes */
-    for(int i=0; i<5; i+=1)
+    for(int i=0; i<50; i+=1)
       manager_process(8, 4); /* More processes than threads */
-    for(int i=0; i<5; i+=1)
+    for(int i=0; i<50; i+=1)
       manager_process(5, 5); /* Equal numbers */
   } else {
     /* Have arguments, so assume this is a worker process */
