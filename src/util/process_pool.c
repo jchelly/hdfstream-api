@@ -280,9 +280,13 @@ void process_pool_free(struct process_pool *pool) {
   pthread_mutex_lock(&pool->mutex);
   /* Block starting of new processes */
   pool->stop = 1;
-  /* Signal all processes to stop */
+  /* Signal all running processes to stop */
   for(int i=0; i<pool->max_nr_processes; i+=1) {
-    if(pool->worker[i])worker_process_kill(pool->worker[i]);
+    if(pool->worker[i]) {
+      if(pool->worker_state[i] != STOPPED) {
+        worker_process_kill(pool->worker[i]);
+      }
+    }
   }
   /* Make sure threads don't block at the semaphore:
      we might have shut down at a moment when all processes
