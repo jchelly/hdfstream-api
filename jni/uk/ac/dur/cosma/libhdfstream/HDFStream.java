@@ -14,6 +14,7 @@ public class HDFStream {
     }
 
     private long ptr;
+    private int refCount = 1;
     public int maxDims = -1;
     public int maxSlices = -1;
 
@@ -39,6 +40,7 @@ public class HDFStream {
         if(ptr==0)throw new RuntimeException("Failed to start process pool");
         maxDims = c_get_max_dims();
         maxSlices = c_get_max_slices();
+        refCount = 1;
     }
 
     public HDFStream(int nr_processes, String executable, int max_open_files, int max_open_datasets,
@@ -48,12 +50,35 @@ public class HDFStream {
         if(ptr==0)throw new RuntimeException("Failed to start process pool");
         maxDims = c_get_max_dims();
         maxSlices = c_get_max_slices();
+        refCount = 1;
     }
 
     public void free() {
         if(ptr==0)throw new RuntimeException("Process pool is not allocated");
         c_free(ptr);
         ptr = 0;
+    }
+
+    public synchronized void acquireReference() throws IOException {
+        if(refCount <= 0) {
+            // We already shut down
+            throw new IOException("Reference count has reached zero");
+        } else {
+            // Count the new reference
+            refCount += 1;
+        }
+    }
+
+    public synchronized void releaseReference() {
+        if(refCount <= 0) {
+            // We already shut down. Indicates wrong sequence of acquire/release calls.
+            throw new RuntimeException("Reference count already zero before releasing");
+        } else {
+            // Free a reference
+            refCount -= 1;
+            // Check if we reached zero. New references cannot be acquired after this.
+            if(refCount==0)free();
+        }
     }
 
     public DataStream openDatasetSlices(String file_name, String dataset_name,

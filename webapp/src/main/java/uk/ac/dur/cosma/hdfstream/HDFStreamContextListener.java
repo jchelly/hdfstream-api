@@ -92,6 +92,6 @@ public class HDFStreamContextListener implements ServletContextListener{
           Stop reader processes on shutdown.
         */
         HDFStream hs = (HDFStream) context.getAttribute("hdfstream");
-        if(hs != null)hs.free();
+        if(hs != null)hs.releaseReference();
     }
 }
