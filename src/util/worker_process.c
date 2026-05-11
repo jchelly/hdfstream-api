@@ -28,14 +28,13 @@ static ssize_t do_write(int filedes, const void *buf, size_t nbytes, int block_s
   size_t nleft = nbytes;
   char *ptr = (char *) buf;
 
-  sigset_t old_set;
+  sigset_t old_set, new_set;
   if(block_sigpipe) {
     /* Temporarily block SIGPIPE so we don't die if the pipe is broken.
        First we need to get the current signal mask. */
     sigemptyset(&old_set);
     pthread_sigmask(SIG_SETMASK, NULL, &old_set);
     /* Then block SIGPIPE */
-    sigset_t new_set;
     sigemptyset(&new_set);
     sigaddset(&new_set, SIGPIPE);
     pthread_sigmask(SIG_BLOCK, &new_set, NULL);
@@ -44,8 +43,15 @@ static ssize_t do_write(int filedes, const void *buf, size_t nbytes, int block_s
   while(nleft > 0) {
     ssize_t nwritten = write(filedes, ptr, nleft);
     if(nwritten < 0) {
+      if(errno == EINTR)continue;
       if(errno == EPIPE) {
         /* Broken pipe error */
+        if(block_sigpipe) {
+          /* Consume the sigpipe before unblocking it */
+          siginfo_t info;
+          struct timespec timeout = {0, 0};
+          sigtimedwait(&new_set, &info, &timeout);
+        }
         nbytes = -2;
         break;
       } else {
@@ -82,14 +88,13 @@ static ssize_t do_read(int filedes, void const *buf, size_t nbytes, int block_si
   size_t nleft = nbytes;
   char *ptr = (char *) buf;
 
-  sigset_t old_set;
+  sigset_t old_set, new_set;
   if(block_sigpipe) {
     /* Temporarily block SIGPIPE so we don't die if the pipe is broken.
        First we need to get the current signal mask. */
     sigemptyset(&old_set);
     pthread_sigmask(SIG_SETMASK, NULL, &old_set);
     /* Then block SIGPIPE */
-    sigset_t new_set;
     sigemptyset(&new_set);
     sigaddset(&new_set, SIGPIPE);
     pthread_sigmask(SIG_BLOCK, &new_set, NULL);
@@ -102,8 +107,15 @@ static ssize_t do_read(int filedes, void const *buf, size_t nbytes, int block_si
       nbytes = -3;
       break;
     } else if(nread < 0) {
+      if(errno == EINTR)continue;
       if(errno == EPIPE) {
         /* Broken pipe error */
+        if(block_sigpipe) {
+          /* Consume the sigpipe before unblocking it */
+          siginfo_t info;
+          struct timespec timeout = {0, 0};
+          sigtimedwait(&new_set, &info, &timeout);
+        }
         nbytes = -2;
         break;
       } else {
@@ -241,7 +253,7 @@ int worker_process_free(struct worker_process *worker) {
   Send kill signal to a process
 */
 void worker_process_kill(struct worker_process *worker) {
-  if(!worker->is_dead)kill(worker->pid, SIGKILL);
+  kill(worker->pid, SIGKILL);
 }
 
 /*

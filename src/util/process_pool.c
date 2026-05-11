@@ -84,8 +84,9 @@ struct process_pool *process_pool_new(const int max_nr_processes,
 /*
   Try to start up a new process while not exceeding the maximum
 */
-void process_pool_start_worker(struct process_pool *pool) {
+int process_pool_start_worker(struct process_pool *pool) {
 
+  int nr_running = 0;
   pthread_mutex_lock(&pool->mutex);
   /* Check we didn't reach the max nr processes before we acquired the lock */
   if((pool->nr_processes_running < pool->max_nr_processes) && (!pool->stop)) {
@@ -110,8 +111,9 @@ void process_pool_start_worker(struct process_pool *pool) {
       }
     }
   }
+  nr_running = pool->nr_processes_running;
   pthread_mutex_unlock(&pool->mutex);
-  return;
+  return nr_running;
 }
 
 /*
@@ -129,15 +131,14 @@ static struct worker_process *try_process_pool_get_worker_by_score(struct proces
     We start a process if we don't have the maximum number already running
     and there are none currently free.
   */
-  if(pool->nr_processes_running < pool->max_nr_processes) {
-    int nr_available = 0;
-    sem_getvalue(&pool->sem, &nr_available);
-    if(nr_available <= 0)
-      process_pool_start_worker(pool);
+  int nr_running;
+  int nr_available = 0;
+  sem_getvalue(&pool->sem, &nr_available);
+  if(nr_available <= 0) {
+    nr_running = process_pool_start_worker(pool);
+    /* If there are still no processes, we can't do anything */
+    if(nr_running == 0)return NULL;
   }
-
-  /* If there are still no processes, we can't do anything */
-  if(pool->nr_processes_running == 0)return NULL;
 
   /* Wait until a process is available */
   process_pool_wait_and_lock(pool);
@@ -279,9 +280,13 @@ void process_pool_free(struct process_pool *pool) {
   pthread_mutex_lock(&pool->mutex);
   /* Block starting of new processes */
   pool->stop = 1;
-  /* Signal all processes to stop */
+  /* Signal all running processes to stop */
   for(int i=0; i<pool->max_nr_processes; i+=1) {
-    if(pool->worker[i])worker_process_kill(pool->worker[i]);
+    if(pool->worker[i]) {
+      if(pool->worker_state[i] != STOPPED) {
+        worker_process_kill(pool->worker[i]);
+      }
+    }
   }
   /* Make sure threads don't block at the semaphore:
      we might have shut down at a moment when all processes
