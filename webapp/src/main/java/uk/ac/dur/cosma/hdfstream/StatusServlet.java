@@ -83,9 +83,11 @@ public class StatusServlet extends HttpServlet implements Servlet {
         // Get cache usage stats
         int n = Integer.valueOf(nr_processes);
         HDFStreamCacheInfo[] cache_info = new HDFStreamCacheInfo[n];
+        hs.acquireReference();
         for(int i=0; i<n; i+=1) {
             cache_info[i] = hs.getCacheInfo(i);
         }
+        hs.releaseReference();
         request.setAttribute("cache_info", cache_info);
 
         // Get total data size as a string
