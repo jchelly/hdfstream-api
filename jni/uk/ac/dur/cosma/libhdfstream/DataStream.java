@@ -118,6 +118,7 @@ public class DataStream extends InputStream implements AutoCloseable {
         if(!closed) {
             closed = true;
             c_free(stream_ptr);
+            hdfstream.releaseReference();
         }
     }
 }

@@ -56,8 +56,29 @@ public class HDFStream {
 
     public void free() {
         if(ptr==0)throw new RuntimeException("Process pool is not allocated");
+
+        // Signal all threads to stop
+        shutDown();
+
+        // Wait for all streams to be closed
+        while(getReferenceCount() > 1) {
+            System.out.println("Waiting for requests to terminate");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                System.out.println("Interrupt in free()");
+                Thread.currentThread().interrupt();
+                break;
+            }
+        };
+
+        // Free everything
         c_free(ptr);
         ptr = 0;
+
+        // Sanity check the reference count
+        releaseReference();
+        if(getReferenceCount() != 0)throw new RuntimeException("Reference count not zero on shutdown!");
     }
 
     public synchronized void acquireReference() throws IOException {
@@ -77,16 +98,14 @@ public class HDFStream {
         } else {
             // Free a reference
             refCount -= 1;
-            // Check if we reached zero. New references cannot be acquired after this.
-            if(refCount==0)free();
         }
     }
 
-    public synchronized int getReferenceCount() {
+    private synchronized int getReferenceCount() {
         return refCount;
     }
 
-    public synchronized void shutDown() {
+    private synchronized void shutDown() {
         stopping = true;
     }
 
@@ -94,9 +113,9 @@ public class HDFStream {
         return stopping;
     }
 
-    public DataStream openDatasetSlices(String file_name, String dataset_name,
-                                        int nr_slices, int rank, long start[], long count[],
-                                        long buffer_size) throws IOException{
+    private DataStream tryOpenDatasetSlices(String file_name, String dataset_name,
+                                            int nr_slices, int rank, long start[], long count[],
+                                            long buffer_size) throws IOException{
         if(ptr==0)throw new RuntimeException("Process pool is not allocated");
         if(file_name==null)throw new IOException("Null file name passed to openDatasetSlice");
         if(dataset_name==null)throw new IOException("Null dataset name passed to openDatasetSlice");
@@ -119,8 +138,22 @@ public class HDFStream {
 	return new DataStream(stream_ptr, buffer_size, this);
     }
 
-    public DataStream openObject(String file_name, String object_name, int max_depth,
-                                long buffer_size, long data_size_limit) throws IOException {
+    public DataStream openDatasetSlices(String file_name, String dataset_name,
+                                        int nr_slices, int rank, long start[], long count[],
+                                        long buffer_size) throws IOException{
+        DataStream ds = null;
+        acquireReference();
+        try {
+            ds = tryOpenDatasetSlices(file_name, dataset_name, nr_slices, rank, start, count, buffer_size);
+        } catch(Throwable t) {
+            releaseReference();
+            throw t;
+        }
+        return ds;
+    }
+
+    private DataStream tryOpenObject(String file_name, String object_name, int max_depth,
+                                     long buffer_size, long data_size_limit) throws IOException {
         if(ptr==0)throw new RuntimeException("Process pool is not allocated");
         if(file_name==null)throw new IOException("Null file name passed to openObject");
         if(object_name==null)throw new IOException("Null object name passed to openObject");
@@ -129,10 +162,34 @@ public class HDFStream {
 	return new DataStream(stream_ptr, buffer_size, this);
     }
 
-    public HDFStreamCacheInfo getCacheInfo(int worker_nr) {
+    public DataStream openObject(String file_name, String object_name, int max_depth,
+                                long buffer_size, long data_size_limit) throws IOException {
+        DataStream ds = null;
+        acquireReference();
+        try {
+            ds = tryOpenObject(file_name, object_name, max_depth, buffer_size, data_size_limit);
+        } catch(Throwable t) {
+            releaseReference();
+            throw t;
+        }
+        return ds;
+    }
+
+    private HDFStreamCacheInfo tryGetCacheInfo(int worker_nr) {
         if(ptr==0)throw new RuntimeException("Process pool is not allocated");
         int fields[] = new int[3];
         c_cache_info(ptr, worker_nr, fields);
         return new HDFStreamCacheInfo(fields);
+    }
+
+    public HDFStreamCacheInfo getCacheInfo(int worker_nr) throws IOException {
+        HDFStreamCacheInfo ci = null;
+        acquireReference();
+        try {
+            ci = tryGetCacheInfo(worker_nr);
+        } finally {
+            releaseReference();
+        }
+        return ci;
     }
 }

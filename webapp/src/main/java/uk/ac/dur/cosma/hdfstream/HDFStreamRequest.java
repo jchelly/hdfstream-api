@@ -255,15 +255,12 @@ public class HDFStreamRequest {
 
             // Otherwise we need to read the data
             byte[] data = null;
-            hs.acquireReference();
             try (DataStream stream = hs.openObject(file.filesystem_path, object, max_depth, buffer_size, data_size_limit)) {
                 if(write_body) {
                     data = StreamCopier.copyStreamAndReturnIfSmall(stream, out, buffer_size, cache_info.max_cached_response_size);
                 }
             } catch (IOException e) {
                 throw new HDFStreamRequestException(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
-            } finally {
-                hs.releaseReference();
             }
 
             // Cache the response, if it was below the size threshold
@@ -271,14 +268,11 @@ public class HDFStreamRequest {
 
         } else {
             // In this case we're taking one or more dataset slices. These are not cached.
-            hs.acquireReference();
             try (DataStream stream = hs.openDatasetSlices(file.filesystem_path, object, slice_info.nr_slices,
                                                           slice_info.rank, slice_info.starts, slice_info.counts, buffer_size)) {
                 if(write_body)StreamCopier.copyStream(stream, out, buffer_size);
             } catch (IOException e) {
                 throw new HDFStreamRequestException(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
-            } finally {
-                hs.releaseReference();
             }
         }
 	return;
