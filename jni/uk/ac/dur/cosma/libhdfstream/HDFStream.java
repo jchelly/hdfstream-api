@@ -135,26 +135,4 @@ public class HDFStream {
         c_cache_info(ptr, worker_nr, fields);
         return new HDFStreamCacheInfo(fields);
     }
-
-    public static void main(String[] args)
-    {
-        /* Initialize process pool */
-        HDFStream hs = new HDFStream(4, "../src/reader/hdfstream_reader", 1, 1, 0, 0);
-
-        /* Open a dataset slice and write it to a file */
-        int rank = 1;
-        long start[] = {0};
-        long count[] = {10};
-
-        try ( DataStream stream = hs.openObject("/cosma/home/jch/test.hdf5", "/", 1, 1024, 100*1024*1024)) {
-            File outputFile = new File("./data.msgpack");
-            Files.copy(stream, outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            System.out.println("Failed to open dataset slice");
-            System.exit(1);
-        }
-
-        /* Tidy up */
-        hs.free();
-    }
 }
