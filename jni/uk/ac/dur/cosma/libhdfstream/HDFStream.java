@@ -15,6 +15,7 @@ public class HDFStream {
 
     private long ptr;
     private int refCount = 1;
+    private int stopping = 0;
     public int maxDims = -1;
     public int maxSlices = -1;
 
@@ -60,9 +61,9 @@ public class HDFStream {
     }
 
     public synchronized void acquireReference() throws IOException {
-        if(refCount <= 0) {
+        if((refCount <= 0) || (stopping != 0)) {
             // We already shut down
-            throw new IOException("Reference count has reached zero");
+            throw new IOException("Server is shutting down");
         } else {
             // Count the new reference
             refCount += 1;
@@ -79,6 +80,14 @@ public class HDFStream {
             // Check if we reached zero. New references cannot be acquired after this.
             if(refCount==0)free();
         }
+    }
+
+    public synchronized int getReferenceCount() {
+        return refCount;
+    }
+
+    public synchronized void shutDown() {
+        stopping = 1;
     }
 
     public DataStream openDatasetSlices(String file_name, String dataset_name,
