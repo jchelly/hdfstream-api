@@ -15,7 +15,7 @@ public class HDFStream {
 
     private long ptr;
     private int refCount = 1;
-    private int stopping = 0;
+    private volatile boolean stopping = false;
     public int maxDims = -1;
     public int maxSlices = -1;
 
@@ -61,7 +61,7 @@ public class HDFStream {
     }
 
     public synchronized void acquireReference() throws IOException {
-        if((refCount <= 0) || (stopping != 0)) {
+        if((refCount <= 0) || stopping) {
             // We already shut down
             throw new IOException("Server is shutting down");
         } else {
@@ -87,7 +87,11 @@ public class HDFStream {
     }
 
     public synchronized void shutDown() {
-        stopping = 1;
+        stopping = true;
+    }
+
+    public boolean shuttingDown() {
+        return stopping;
     }
 
     public DataStream openDatasetSlices(String file_name, String dataset_name,
@@ -112,7 +116,7 @@ public class HDFStream {
         long stream_ptr = c_open_slices(ptr, file_name, dataset_name, nr_slices,
                                         rank, start, count, buffer_size);
 	if(stream_ptr==0)throw new IOException("Failed to open dataset slice");
-	return new DataStream(stream_ptr, buffer_size);
+	return new DataStream(stream_ptr, buffer_size, this);
     }
 
     public DataStream openObject(String file_name, String object_name, int max_depth,
@@ -122,7 +126,7 @@ public class HDFStream {
         if(object_name==null)throw new IOException("Null object name passed to openObject");
 	long stream_ptr = c_open_object(ptr, file_name, object_name, max_depth, buffer_size, data_size_limit);
 	if(stream_ptr==0)throw new IOException("Failed to open object");
-	return new DataStream(stream_ptr, buffer_size);
+	return new DataStream(stream_ptr, buffer_size, this);
     }
 
     public HDFStreamCacheInfo getCacheInfo(int worker_nr) {
