@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  
+
   <link rel="stylesheet" href="/hdfstream/common.css">
   <script crossorigin src="https://unpkg.com/@msgpack/msgpack@2.8.0"></script>
   <script crossorigin src="https://unpkg.com/dompurify@3.2.3/dist/purify.min.js"></script>
@@ -11,19 +11,20 @@
   <script src="https://unpkg.com/@highlightjs/cdn-assets@11.11.1/highlight.min.js"></script>
   <script src="https://unpkg.com/@highlightjs/cdn-assets@11.11.1/languages/python.min.js"></script>
   <script src="https://unpkg.com/@highlightjs/cdn-assets@11.11.1/languages/yaml.min.js"></script>
-  
+  <meta name="robots" content="noindex">
+
 </head>
 
 <body>
 
   <div class="sidebar">
-    
+
     <h3>Data collections</h3>
     <div id="collection_list"></div>
 
     <h3>Service documentation</h3>
     <ul id="service_docs"></ul>
-    
+
     <h3>Technical details</h3>
     <ul id="tech_docs"></ul>
 
@@ -33,7 +34,7 @@
     <div class="viewer" id="content">
       <!-- Javascript generated content goes here -->
       <noscript>This page requires javascript to work.</noscript>
-    </div>  
+    </div>
   </div>
 
   <script type="module">
