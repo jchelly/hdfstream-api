@@ -8,6 +8,8 @@ import java.lang.AutoCloseable;
 
 public class DataStream extends InputStream implements AutoCloseable {
 
+    private HDFStream hdfstream;
+
     private long stream_ptr = 0;
     private long stream_bufsize = 0;
     private native void c_free(long ptr);
@@ -20,9 +22,10 @@ public class DataStream extends InputStream implements AutoCloseable {
     private boolean end_of_stream = false;
     private boolean closed = false;
 
-    public DataStream(long ptr, long buffersize) {
+    public DataStream(long ptr, long buffersize, HDFStream hs) {
 	stream_ptr = ptr;
 	stream_bufsize = buffersize;
+        hdfstream = hs;
     }
 
     // Directly read into supplied buffer. Used to implement read().
@@ -56,6 +59,9 @@ public class DataStream extends InputStream implements AutoCloseable {
     }
 
     public int read(byte[] b, int off, int len) throws IOException {
+
+        // Check if we're shutting down
+        if(hdfstream.shuttingDown())throw new IOException("Server is shutting down");
 
         // Check that this is not the end of the stream
         if(end_of_stream)return -1;
@@ -112,6 +118,7 @@ public class DataStream extends InputStream implements AutoCloseable {
         if(!closed) {
             closed = true;
             c_free(stream_ptr);
+            hdfstream.releaseReference();
         }
     }
 }
