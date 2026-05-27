@@ -2,6 +2,7 @@
 #include <hdf5.h>
 #include <assert.h>
 #include <string.h>
+#include <malloc.h>
 
 #include "file_cache.h"
 #include "ordered_map.h"
@@ -183,4 +184,14 @@ void file_cache_expire_entries(struct file_cache *fc, int max_age) {
 #endif
     file_cache_entry_free(fce);
   }
+
+  /*
+    If we just closed the last open file, try to return memory to the system
+    while we're idle. Should only be done if this is a reader process.
+  */
+#ifndef SHADOW_CACHE
+  if((nr_expired > 0) && (ordered_map_size(fc->map) == 0)) {
+    malloc_trim(0);
+  }
+#endif
 }
