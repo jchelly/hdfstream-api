@@ -20,6 +20,9 @@
     <p>
       Total configured data: <c:out value="${total_size}"/>
     </p>
+    <p>
+      Requests since startup: <c:out value="${requestStatsFilter.getRequestCount()}"/>
+    </p>
     <h3>Process pool</h3>
     <p>
       Number of reader processes: <c:out value="${nr_processes}" />

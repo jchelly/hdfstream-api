@@ -97,6 +97,10 @@ public class StatusServlet extends HttpServlet implements Servlet {
         // Store any status message
         request.setAttribute("status_message", message);
 
+        // Allow the status page to access request stats
+        RequestStatsFilter filter = (RequestStatsFilter) getServletContext().getAttribute("requestStatsFilter");
+        request.setAttribute("requestStatsFilter", filter);
+
         // Forward this request to the directory status page
         dispatcher.forward(request, response);
     }
