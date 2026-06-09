@@ -32,7 +32,7 @@ public class TarFileServlet extends HttpServlet implements Servlet {
     public TarFileServlet() {}
 
     protected void streamFile(HttpServletRequest request, HttpServletResponse response, boolean is_get,
-                              VirtualFile file, String base_name) throws ServletException, IOException {
+                              VirtualFile file, String base_name, RequestCounter requestCounter) throws ServletException, IOException {
 
         // Open the file to send
         File inputFile;
@@ -59,6 +59,7 @@ public class TarFileServlet extends HttpServlet implements Servlet {
                 int buffer_size = (Integer) getServletContext().getAttribute("buffer_size");
                 try {
                     StreamCopier.copyStream(input, output, buffer_size);
+                    requestCounter.logRequest(RequestCounter.FILE, inputFile.length());
                 } catch (IOException e) {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "Error while reading the specified file.");
                 }
@@ -119,6 +120,9 @@ public class TarFileServlet extends HttpServlet implements Servlet {
             return;
         }
 
+        // Find the request count
+        RequestCounter requestCounter = (RequestCounter) context.getAttribute("request_counter");
+
         // Get file or directory from the request
         VirtualPathInfo path_info = null;
         try {
@@ -134,7 +138,7 @@ public class TarFileServlet extends HttpServlet implements Servlet {
         if(file != null) {
 
             // Stream a raw data file
-            streamFile(request, response, is_get, file, basename);
+            streamFile(request, response, is_get, file, basename, requestCounter);
 
         } else if (directory != null){
 
@@ -166,6 +170,9 @@ public class TarFileServlet extends HttpServlet implements Servlet {
             // Write the tar file to the response
             ServletOutputStream output = response.getOutputStream();
             tar_file.write(output);
+
+            // Log this request
+            requestCounter.logRequest(RequestCounter.DIRECTORY, tar_file.nr_bytes);
         } else {
             // resolvePath should have thrown an exception in this case
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "File and directory objects are null");
