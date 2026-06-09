@@ -17,12 +17,12 @@
     <p>
       <c:out value="${status_message}"/>
     </p>
-    <p>
-      Total configured data: <c:out value="${total_size}"/>
-    </p>
-    <p>
-      Requests since startup: <c:out value="${requestStatsFilter.getRequestCount()}"/>
-    </p>
+    <ul>
+      <li>Total configured data: <c:out value="${total_size}"/></li>
+      <li>File requests: <c:out value="${requestCounter.getBytes(0)}"/> bytes in <c:out value="${requestCounter.getCount(0)}"/> requests</li>
+      <li>Directory requests: <c:out value="${requestCounter.getBytes(1)}"/> bytes in <c:out value="${requestCounter.getCount(1)}"/> requests</li>
+      <li>Msgpack requests: <c:out value="${requestCounter.getBytes(2)}"/> bytes in <c:out value="${requestCounter.getCount(2)}"/> requests</li>
+    </ul>
     <h3>Process pool</h3>
     <p>
       Number of reader processes: <c:out value="${nr_processes}" />
