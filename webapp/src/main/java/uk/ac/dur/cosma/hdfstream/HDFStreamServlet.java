@@ -178,11 +178,14 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
 	else
 	    identifier = request.getRemoteAddr();
 
+        // Find the request count
+        RequestCounter requestCounter = (RequestCounter) context.getAttribute("request_counter");
+
         // Send the response body
         crc.acquire(identifier);
         try {
             ServletOutputStream out = response.getOutputStream();
-            hreq.streamResponse(hs, out, buffer_size, is_get);
+            hreq.streamAndLogResponse(hs, out, buffer_size, is_get, requestCounter);
         } catch (HDFStreamRequestException e) {
             sendMsgpackError(response, e.getStatusCode(), e.getErrorMessage());
         } finally {
@@ -319,11 +322,14 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
 	else
 	    identifier = request.getRemoteAddr();
 
+        // Find the request count
+        RequestCounter requestCounter = (RequestCounter) context.getAttribute("request_counter");
+
         // Send the response body
         crc.acquire(identifier);
         try {
             ServletOutputStream out = response.getOutputStream();
-            hreq.streamResponse(hs, out, buffer_size, true);
+            hreq.streamAndLogResponse(hs, out, buffer_size, true, requestCounter);
         } catch (HDFStreamRequestException e) {
             sendMsgpackError(response, e.getStatusCode(), e.getErrorMessage());
         } finally {

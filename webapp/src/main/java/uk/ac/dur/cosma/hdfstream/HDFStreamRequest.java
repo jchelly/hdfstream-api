@@ -17,6 +17,7 @@ import uk.ac.dur.cosma.virtual_directory.CheckRole;
 import uk.ac.dur.cosma.virtual_directory.DirectoryMetadata;
 import org.msgpack.core.MessagePacker;
 import org.msgpack.core.MessagePack;
+import org.apache.commons.io.output.CountingOutputStream;
 
 import uk.ac.dur.cosma.libhdfstream.*;
 
@@ -290,5 +291,13 @@ public class HDFStreamRequest {
             // Stream a HDF5 object in msgpack format. Path must be a HDF5 file in this case.
             streamObject(hs, out, buffer_size, write_body);
         }
+    }
+
+    public void streamAndLogResponse(HDFStream hs, OutputStream out, int buffer_size, boolean write_body,
+                                     RequestCounter requestCounter) throws IOException, HDFStreamRequestException {
+        CountingOutputStream cout = new CountingOutputStream(out);
+        streamResponse(hs, cout, buffer_size, write_body);
+        cout.flush();
+        requestCounter.logRequest(RequestCounter.MSGPACK, cout.getByteCount());
     }
 }
