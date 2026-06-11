@@ -1,6 +1,13 @@
 package uk.ac.dur.cosma.hdfstream;
 
-import java.util.concurrent.atomic.AtomicLong;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.HashMap;
+
 
 public class RequestCounter {
 
@@ -8,28 +15,44 @@ public class RequestCounter {
     public static final int DIRECTORY = 1;
     public static final int MSGPACK = 2;
 
-    private AtomicLong[] nrRequests;
-    private AtomicLong[] nrBytes;
+    // Keep counts for the last MAX_DAYS days
+    private static int MAX_DAYS = 7;
+    private final HashMap<Integer,Cache<Long,LongAdder>> nrRequests = new HashMap<Integer,Cache<Long,LongAdder>>();
+    private final HashMap<Integer,Cache<Long,LongAdder>> nrBytes = new HashMap<Integer,Cache<Long,LongAdder>>();
 
     public RequestCounter() {
-        nrRequests = new AtomicLong[3];
-        nrBytes = new AtomicLong[3];
         for(int i=0; i<3; i+=1) {
-            nrRequests[i] = new AtomicLong();
-            nrBytes[i] = new AtomicLong();
+            nrRequests.put(i, Caffeine.newBuilder()
+                           .expireAfterWrite(Duration.ofDays(MAX_DAYS))
+                           .build());
+            nrBytes.put(i, Caffeine.newBuilder()
+                        .expireAfterWrite(Duration.ofDays(MAX_DAYS))
+                        .build());
         }
     }
 
+    private long currentBucket() {
+        return LocalDate.now().toEpochDay();
+    }
+
     public void logRequest(int kind, long size) {
-        nrRequests[kind].incrementAndGet();
-        nrBytes[kind].addAndGet(size);
+        nrRequests.get(kind).get(currentBucket(), k -> new LongAdder()).increment();
+        nrBytes.get(kind).get(currentBucket(), k -> new LongAdder()).add(size);
     }
 
     public long getCount(int kind) {
-        return nrRequests[kind].get();
+        return nrRequests.get(kind).asMap()
+            .values()
+            .stream()
+            .mapToLong(LongAdder::sum)
+            .sum();
     }
 
     public long getBytes(int kind) {
-        return nrBytes[kind].get();
+        return nrBytes.get(kind).asMap()
+            .values()
+            .stream()
+            .mapToLong(LongAdder::sum)
+            .sum();
     }
 }

@@ -65,6 +65,7 @@ set(WEBAPP_SOURCES
   ./src/test/java/UnitTestRealm.java
   ./src/test/java/UnitTestServer.java
   ./src/test/java/TestStreamCopier.java
+  ./src/test/java/TestRequestCounter.java
 )
 
 # Build the web application with maven
