@@ -5,7 +5,7 @@ on:
     branches: [ master ]
 
 jobs:
-  integration:
+  build-server:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,8 +17,29 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          load: true
           tags: hdfstream-api:test
+          outputs: type=docker,dest=/tmp/hdfstream-api-test.tar
+
+      - name: Upload Server Image Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hdfstream-server-image
+          path: /tmp/hdfstream-api-test.tar
+          retention-days: 1
+
+  swiftsimio-tests:
+    runs-on: ubuntu-latest
+    needs: build-server
+
+    steps:
+      - name: Download server image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hdfstream-server-image
+          path: /tmp
+
+      - name: Load server image
+        run: docker load --input /tmp/hdfstream-api-test.tar
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v3
@@ -54,6 +75,56 @@ jobs:
 
       - name: Test swiftsimio with pytest
         working-directory: ./downstream/swiftsimio
+        run: |
+          pytest --hdfstream-server=http://localhost:8080/hdfstream
+
+      - name: Stop hdfstream service
+        uses: ./.github/actions/stop-hdfstream
+        if: always()
+
+  lightconeio-tests:
+    runs-on: ubuntu-latest
+    needs: build-server
+
+    steps:
+      - name: Download server image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hdfstream-server-image
+          path: /tmp
+
+      - name: Load server image
+        run: docker load --input /tmp/hdfstream-api-test.tar
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.12"
+
+      - name: Install hdfstream client module
+        run: |
+          pip install hdfstream
+
+      - name: Clone lightcone_io module with test data
+        uses: actions/checkout@v4
+        with:
+          repository: jchelly/LightconeIO
+          path: downstream/lightcone_io
+          ref: master
+
+      - name: Install lightcone_io module
+        run: |
+          pip install ./downstream/lightcone_io
+
+      - name: Start hdfstream service with lightcone_io test data mounted
+        uses: ./.github/actions/start-hdfstream
+        with:
+          data-dir: ./downstream/lightcone_io/tests/data
+          virtual-prefix: tests/data
+          image: hdfstream-api:test
+
+      - name: Test lightcone_io with pytest
+        working-directory: ./downstream/lightcone_io
         run: |
           pytest --hdfstream-server=http://localhost:8080/hdfstream
 
