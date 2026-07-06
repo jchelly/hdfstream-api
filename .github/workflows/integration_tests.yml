@@ -149,11 +149,13 @@ jobs:
           path: EAGLE
           key: eagle-data-v1
 
-      - name: Download EAGLE data
+      - name: Download EAGLE snapshots
         if: steps.data-cache.outputs.cache-hit != 'true'
         run: |
-          wget "https://dataweb.cosma.dur.ac.uk:8443/hdfstream/download/EAGLE/Fiducial_models/RefL0012N0188/snapshot_028_z000p000" -O EAGLE.tar
-          tar -xf EAGLE.tar
+          set -o pipefail
+          wget --progress=dot:giga "https://dataweb.cosma.dur.ac.uk:8443/hdfstream/download/EAGLE/Fiducial_models/RefL0012N0188/snapshot_026_z000p183" -O - | tar xf -
+          wget --progress=dot:giga "https://dataweb.cosma.dur.ac.uk:8443/hdfstream/download/EAGLE/Fiducial_models/RefL0012N0188/snapshot_027_z000p101" -O - | tar xf -
+          wget --progress=dot:giga "https://dataweb.cosma.dur.ac.uk:8443/hdfstream/download/EAGLE/Fiducial_models/RefL0012N0188/snapshot_028_z000p000" -O - | tar xf -
 
       - name: Download server image artifact
         uses: actions/download-artifact@v4
