@@ -192,6 +192,11 @@ jobs:
         run: |
           python3 ./slicing_test.py http://localhost:8080/hdfstream EAGLE/ ../EAGLE/ 6 30
 
+      - name: Run metadata test
+        working-directory: ./integration_tests
+        run: |
+          python3 ./metadata_test.py http://localhost:8080/hdfstream 6
+
       - name: Stop hdfstream service
         uses: ./.github/actions/stop-hdfstream
         if: always()
