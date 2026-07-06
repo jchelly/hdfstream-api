@@ -125,7 +125,7 @@ def compare_metadata(local_root, remote_root):
     print(f"{nr_attrs} attributes match")
 
 
-def test_file_metadata(server, user, password, process_nr, virtual_root, virtual_name, real_name):
+def test_file_metadata(server, process_nr, virtual_root, virtual_name, real_name):
     """
     Run metadata test on a single file
     """
@@ -134,7 +134,7 @@ def test_file_metadata(server, user, password, process_nr, virtual_root, virtual
     rng = np.random.default_rng(seed=process_nr)
 
     # Get list of groups in the file
-    remote_dir = hdfstream.RemoteDirectory(server, virtual_root, user=user, password=password)
+    remote_dir = hdfstream.RemoteDirectory(server, virtual_root)
     remote_root = remote_dir[virtual_name]["/"]
     group_names = get_remote_groups(remote_root)
 
@@ -171,7 +171,7 @@ def test_eagle_snapshot_metadata(server, process_nr):
     nr_reps = 20
     for _ in range(nr_reps):
         i = rng.integers(len(virtual_names))
-        test_file_metadata(server, user, password, process_nr, "EAGLE", virtual_names[i], real_names[i])
+        test_file_metadata(server, process_nr, "EAGLE", virtual_names[i], real_names[i])
 
 
 def run_metadata_test(server, nr_processes):
