@@ -43,13 +43,12 @@ RUN cd /hdfstream-api \
 #
 FROM ubuntu:26.04 AS fetcher
 
-ENV TOMCAT_VERSION=9.0.119
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y wget && \
     mkdir -p /tmp/tomcat && \
-    wget https://apache.org{TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
-    tar -xf apache-tomcat-${TOMCAT_VERSION}.tar.gz -C /tmp/tomcat --strip-components=1
+    wget https://downloads.apache.org/tomcat/tomcat-9/v9.0.119/bin/apache-tomcat-9.0.119.tar.gz -O tomcat.tar.gz && \
+    tar -xf tomcat.tar.gz -C /tmp/tomcat --strip-components=1
 
 #
 # Set up the final image
