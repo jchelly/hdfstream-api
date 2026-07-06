@@ -9,11 +9,11 @@
 #
 # Build dependencies:
 #
-# Here we use an Ubuntu Noble image with the java JDK installed.
+# Here we use an Ubuntu 26.04 (Resolute) image with the java JDK installed.
 #
-FROM eclipse-temurin:25-jdk-noble AS builder
+FROM ubuntu:26.04 AS builder
 
-# Install various build tools
+# Install various build tools and libraries
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
@@ -22,38 +22,34 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     zlib1g \
     zlib1g-dev \
+    openjdk-11-jdk-headless \
     maven \
+    libmsgpack-c-dev \
+    libhdf5-dev \
     && rm -rf /var/lib/apt/lists/*
-
-# Build msgpack-c
-ARG MSGPACK_VERSION=c-6.1.0
-RUN git clone --branch=$MSGPACK_VERSION --depth=1 https://github.com/msgpack/msgpack-c.git /tmp/msgpack-c \
-    && cd /tmp/msgpack-c \
-    && cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/ \
-    && make -j$(nproc) \
-    && make install \
-    && rm -rf /tmp/msgpack-c
-
-# Build HDF5 (needs to be >=1.12, so apt package is too old)
-ARG HDF5_VERSION=hdf5_1.14.6
-RUN git clone --branch=$HDF5_VERSION --depth=1 https://github.com/HDFGroup/hdf5.git /tmp/hdf5 \
-    && cd /tmp/hdf5 \
-    && mkdir build \
-    && cd build \
-    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/ \
-    && make -j$(nproc) \
-    && make install \
-    && rm -rf /tmp/hdf5
 
 # Copy over and build the hdfstream-api source code
 COPY . /hdfstream-api
 RUN cd /hdfstream-api \
     && mkdir build \
     && cd build \
-    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local/ -DCMAKE_INSTALL_PREFIX=/usr/local -DCONFIG_DIR=../webapp/src/main/docker/ \
+    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCONFIG_DIR=../webapp/src/main/docker/ \
     && make \
     && make test \
     && make install
+
+#
+# Download and extract Tomcat
+#
+FROM ubuntu:26.04 AS fetcher
+
+ENV TOMCAT_VERSION=9.0.119
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y wget && \
+    mkdir -p /tmp/tomcat && \
+    wget https://apache.org{TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
+    tar -xf apache-tomcat-${TOMCAT_VERSION}.tar.gz -C /tmp/tomcat --strip-components=1
 
 #
 # Set up the final image
@@ -62,22 +58,36 @@ RUN cd /hdfstream-api \
 # Need to copy over the libraries and data set up in the builder, and
 # configure tomcat to find the libraries.
 #
-FROM tomcat:9-jdk25-temurin-noble
+FROM ubuntu:26.04
 
 # We need curl to check the service is running and python to generate the config file
 RUN apt-get update && apt-get install -y curl python3
 
+ENV DEBIAN_FRONTEND=noninteractive
+ENV CATALINA_HOME=/opt/tomcat
+ENV PATH=$CATALINA_HOME/bin:$PATH
+
+# Install libraries
+RUN apt-get update && apt-get install -y \
+    openjdk-11-jdk-headless \
+    libhdf5-dev \
+    libmsgpack-c-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the extracted Tomcat files from the fetcher stage
+COPY --from=fetcher /tmp/tomcat $CATALINA_HOME
+
 # Remove default webapps
-RUN rm -rf /usr/local/tomcat/webapps/*
+RUN rm -rf ${CATALINA_HOME}/webapps/*
 
 # Copy the built libraries from the builder
 COPY --from=builder /usr/local /usr/local
 
 # Copy the web app package over
-COPY --from=builder /hdfstream-api/build/webapp/target/hdfstream.war /usr/local/tomcat/webapps/
+COPY --from=builder /hdfstream-api/build/webapp/target/hdfstream.war ${CATALINA_HOME}/webapps/
 
 # Copy file with path to libhdfstream for tomcat
-COPY --from=builder /hdfstream-api/build/webapp/setenv.sh /usr/local/tomcat/bin/
+COPY --from=builder /hdfstream-api/build/webapp/setenv.sh ${CATALINA_HOME}/bin/
 
 # Copy configuration and startup scripts over
 COPY --from=builder /hdfstream-api/webapp/src/main/docker/startup.sh /opt/hdfstream/
