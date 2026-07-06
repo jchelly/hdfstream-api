@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     zlib1g \
     zlib1g-dev \
-    openjdk-11-jdk-headless \
+    openjdk-21-jdk-headless \
     maven \
     libmsgpack-c-dev \
     libhdf5-dev \
@@ -68,7 +68,7 @@ ENV PATH=$CATALINA_HOME/bin:$PATH
 
 # Install libraries
 RUN apt-get update && apt-get install -y \
-    openjdk-11-jdk-headless \
+    openjdk-21-jdk-headless \
     libhdf5-dev \
     libmsgpack-c-dev \
     && rm -rf /var/lib/apt/lists/*
