@@ -46,7 +46,6 @@ RUN cd /hdfstream-api \
 #
 # Set up the final image
 #
-# This starts from the same Ubuntu Noble image but with tomcat installed.
 # Need to copy over the libraries and data set up in the builder, and
 # configure tomcat to find the libraries.
 #
