@@ -15,10 +15,6 @@ import multiprocessing as mp
 import hdfstream
 import h5py
 
-hdfstream.verify_cert(False)
-
-import get_users as gu
-
 
 def get_filenames(directory, path=""):
     """
@@ -49,13 +45,13 @@ def get_datasets(group, path=""):
     return result
 
 
-def slicing_test(process_nr, server, virtual_base_dir, filesystem_base_dir, duration, user, password):
+def slicing_test(process_nr, server, virtual_base_dir, filesystem_base_dir, duration):
     """
     Request random datasets from the server
     """
 
     # Get directory listing from the server
-    root = hdfstream.RemoteDirectory(server, virtual_base_dir, user=user, password=password)
+    root = hdfstream.RemoteDirectory(server, virtual_base_dir)
     filenames = get_filenames(root)
 
     # Initialize the random number generator in a repeatable way
@@ -118,7 +114,7 @@ def run_slicing_test(nr_processes, server, virtual_base_dir, filesystem_base_dir
     Run multiple instances of the slicing test in parallel
     """
     print("Slicing test started.")
-    args = [(i, server, virtual_base_dir, filesystem_base_dir, duration, gu.get_name(i), gu.get_password(i)) for i in range(nr_processes)]
+    args = [(i, server, virtual_base_dir, filesystem_base_dir, duration) for i in range(nr_processes)]
     with mp.Pool(nr_processes) as p:
         p.starmap(slicing_test, args)
     print("Slicing test done.")
@@ -135,9 +131,6 @@ if __name__ == "__main__":
     parser.add_argument("nr_processes", type=int, help="Number of parallel processes sending requests")
     parser.add_argument("duration", type=int, help="Duration of the test in seconds")
     args = parser.parse_args()
-
-    # Get username and password
-    gu.init()
 
     # Run the test
     run_slicing_test(args.nr_processes, args.server, args.virtual_base_dir, args.filesystem_base_dir, args.duration)
