@@ -182,6 +182,11 @@ jobs:
         run: |
           pip install hdfstream numpy h5py
 
+      - name: Run connection test
+        working-directory: ./integration_tests
+        run: |
+          python3 -c "import hdfstream; root = hdfstream.open('http://localhost:8080/hdfstream', 'EAGLE')"
+
       - name: Run slicing test
         working-directory: ./integration_tests
         run: |
