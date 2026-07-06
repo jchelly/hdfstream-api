@@ -135,3 +135,44 @@ jobs:
       - name: Stop hdfstream service
         uses: ./.github/actions/stop-hdfstream
         if: always()
+
+  eagle-tests:
+    runs-on: ubuntu-latest
+    needs: build-server
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        id: data-cache
+        with:
+          path: EAGLE
+          key: eagle-data-v1
+
+      - name: Download EAGLE data
+        if: steps.data-cache.outputs.cache-hit != 'true'
+        run: |
+          wget "https://dataweb.cosma.dur.ac.uk:8443/hdfstream/download/EAGLE/Fiducial_models/RefL0012N0188/snapshot_028_z000p000" -O EAGLE.tar
+          tar -xf EAGLE.tar
+
+      - name: Download server image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hdfstream-server-image
+          path: /tmp
+
+      - name: Load server image
+        run: docker load --input /tmp/hdfstream-api-test.tar
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.12"
+
+      - name: Install hdfstream client module
+        run: |
+          pip install hdfstream
+
+      - name: Stop hdfstream service
+        uses: ./.github/actions/stop-hdfstream
+        if: always()
