@@ -164,6 +164,13 @@ jobs:
       - name: Load server image
         run: docker load --input /tmp/hdfstream-api-test.tar
 
+      - name: Start hdfstream service with EAGLE test data mounted
+        uses: ./.github/actions/start-hdfstream
+        with:
+          data-dir: ./EAGLE
+          virtual-prefix: EAGLE
+          image: hdfstream-api:test
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v3
         with:
