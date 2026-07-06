@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
     git \
-    curl \
+    wget \
     pkg-config \
     zlib1g \
     zlib1g-dev \
@@ -29,8 +29,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and extract Tomcat
-RUN apt-get update && apt-get install -y wget && \
-    mkdir -p /tmp/tomcat && \
+RUN mkdir -p /tmp/tomcat && \
     wget https://downloads.apache.org/tomcat/tomcat-9/v9.0.119/bin/apache-tomcat-9.0.119.tar.gz -O tomcat.tar.gz && \
     tar -xf tomcat.tar.gz -C /tmp/tomcat --strip-components=1
 
