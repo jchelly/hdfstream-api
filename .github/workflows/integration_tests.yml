@@ -178,9 +178,14 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install hdfstream client module
+      - name: Install python modules
         run: |
-          pip install hdfstream
+          pip install hdfstream numpy h5py
+
+      - name: Run slicing test
+        working-directory: ./integration_tests
+        run: |
+          python3 ./slicing_test.py http://localhost:8080/hdfstream EAGLE/ ../EAGLE/ 6 30
 
       - name: Stop hdfstream service
         uses: ./.github/actions/stop-hdfstream
