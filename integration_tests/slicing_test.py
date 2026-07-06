@@ -97,10 +97,8 @@ def slicing_test(process_nr, server, virtual_base_dir, filesystem_base_dir, dura
                 # Read the same data with h5py
                 h5py_data = h5file_check[datasetname][offset_to_read:offset_to_read+size_to_read,...]
 
-                # Report if values match
-                if np.all(slice_data==h5py_data):
-                    print(filename, datasetname, size_to_read, offset_to_read," OK")
-                else:
+                # Report if values don't match
+                if not np.all(slice_data==h5py_data):
                     raise RuntimeError("Values do not match!")
 
         # Close the real HDF5 file
