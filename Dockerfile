@@ -9,7 +9,7 @@
 #
 # Build dependencies:
 #
-# Here we use an Ubuntu 26.04 (Resolute) image with the java JDK installed.
+# Here we start from an Ubuntu 26.04 image so HDF5 1.14 is in the repo
 #
 FROM ubuntu:26.04 AS builder
 
@@ -28,6 +28,12 @@ RUN apt-get update && apt-get install -y \
     libhdf5-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Download and extract Tomcat
+RUN apt-get update && apt-get install -y wget && \
+    mkdir -p /tmp/tomcat && \
+    wget https://downloads.apache.org/tomcat/tomcat-9/v9.0.119/bin/apache-tomcat-9.0.119.tar.gz -O tomcat.tar.gz && \
+    tar -xf tomcat.tar.gz -C /tmp/tomcat --strip-components=1
+
 # Copy over and build the hdfstream-api source code
 COPY . /hdfstream-api
 RUN cd /hdfstream-api \
@@ -37,18 +43,6 @@ RUN cd /hdfstream-api \
     && make \
     && make test \
     && make install
-
-#
-# Download and extract Tomcat
-#
-FROM ubuntu:26.04 AS fetcher
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get install -y wget && \
-    mkdir -p /tmp/tomcat && \
-    wget https://downloads.apache.org/tomcat/tomcat-9/v9.0.119/bin/apache-tomcat-9.0.119.tar.gz -O tomcat.tar.gz && \
-    tar -xf tomcat.tar.gz -C /tmp/tomcat --strip-components=1
 
 #
 # Set up the final image
@@ -73,8 +67,8 @@ RUN apt-get update && apt-get install -y \
     libmsgpack-c-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the extracted Tomcat files from the fetcher stage
-COPY --from=fetcher /tmp/tomcat $CATALINA_HOME
+# Copy the extracted Tomcat files from the builder stage
+COPY --from=builder /tmp/tomcat $CATALINA_HOME
 
 # Remove default webapps
 RUN rm -rf ${CATALINA_HOME}/webapps/*
