@@ -15,34 +15,7 @@ import multiprocessing as mp
 import hdfstream
 import h5py
 
-
-def get_filenames(directory, path=""):
-    """
-    Recursively extract all filenames from a RemoteDirectory.
-    """
-    # Store files in this directory
-    result = []
-    for filename in directory.files:
-        result.append(path+filename)
-
-    # Search subdirectories
-    for dir_name, dir_obj in directory.directories.items():
-        result += get_filenames(dir_obj, path=path+dir_name+"/")
-
-    return result
-
-
-def get_datasets(group, path=""):
-    """
-    Recursively extract all datasets in a RemoteGroup
-    """
-    result = []
-    for name, obj in group.items():
-        if isinstance(obj, hdfstream.RemoteDataset):
-            result.append(path+name)
-        else:
-            result += get_datasets(obj, path=path+name+"/")
-    return result
+from utils import get_filenames, get_datasets
 
 
 def slicing_test(process_nr, server, virtual_base_dir, filesystem_base_dir, duration):

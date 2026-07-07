@@ -8,55 +8,7 @@ import multiprocessing as mp
 import h5py
 import hdfstream
 
-
-def get_remote_datasets(group, path=""):
-    """
-    Recursively extract all datasets in a RemoteGroup
-    """
-    result = []
-    for name, obj in group.items():
-        if isinstance(obj, hdfstream.RemoteDataset):
-            result.append(path+name)
-        else:
-            result += get_remote_datasets(obj, path=path+name+"/")
-    return result
-
-
-def get_remote_groups(group, path=""):
-    """
-    Recursively extract all sub-groups in a RemoteGroup
-    """
-    result = []
-    for name, obj in group.items():
-        if isinstance(obj, hdfstream.RemoteGroup):
-            result.append(path+name)
-            result += get_remote_groups(obj, path=path+name+"/")
-    return result
-
-
-def get_local_datasets(group, path=""):
-    """
-    Recursively extract all datasets in a h5py.Group
-    """
-    result = []
-    for name, obj in group.items():
-        if isinstance(obj, h5py.Dataset):
-            result.append(path+name)
-        else:
-            result += get_local_datasets(obj, path=path+name+"/")
-    return sorted(result)
-
-
-def get_local_groups(group, path=""):
-    """
-    Recursively extract all sub-groups in a h5py.Group
-    """
-    result = []
-    for name, obj in group.items():
-        if isinstance(obj, h5py.Group):
-            result.append(path+name)
-            result += get_local_groups(obj, path=path+name+"/")
-    return sorted(result)
+from utils import get_datasets, get_groups
 
 
 def compare_metadata(local_root, remote_root):
@@ -73,16 +25,16 @@ def compare_metadata(local_root, remote_root):
     assert not isinstance(local_root, hdfstream.RemoteGroup)
 
     # Check that we have the same set of groups
-    local_groups = get_local_groups(local_root)
-    remote_groups = get_remote_groups(remote_root)
+    local_groups = get_groups(local_root)
+    remote_groups = get_groups(remote_root)
     if local_groups != remote_groups:
         raise RuntimeError("Group names do not match!")
 
     print(f"{len(local_groups)} groups match")
 
     # Check that we have the same datasets
-    local_datasets = get_local_datasets(local_root)
-    remote_datasets = get_remote_datasets(remote_root)
+    local_datasets = get_datasets(local_root)
+    remote_datasets = get_datasets(remote_root)
     if local_datasets != remote_datasets:
         raise RuntimeError("Dataset names do not match!")
 
@@ -132,7 +84,7 @@ def test_file_metadata(server, process_nr, virtual_name, real_name, rng):
 
     # Get list of groups in the file
     remote_root = hdfstream.open(server, virtual_name)["/"]
-    group_names = get_remote_groups(remote_root)
+    group_names = get_groups(remote_root)
 
     # Open the local file
     local_root = h5py.File(real_name, "r")
