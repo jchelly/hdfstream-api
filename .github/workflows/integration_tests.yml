@@ -197,7 +197,7 @@ jobs:
       - name: Run metadata test
         working-directory: ./integration_tests
         run: |
-          python3 ./metadata_test.py http://localhost:8080/hdfstream 6
+          python3 ./metadata_test.py http://localhost:8080/hdfstream EAGLE/ ../EAGLE/ 6 20
 
       - name: Stop hdfstream service
         uses: ./.github/actions/stop-hdfstream

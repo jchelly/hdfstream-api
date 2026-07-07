@@ -8,7 +8,7 @@ import multiprocessing as mp
 import h5py
 import hdfstream
 
-from utils import get_datasets, get_groups
+from utils import get_datasets, get_groups, get_filenames
 
 
 def compare_metadata(local_root, remote_root):
@@ -103,30 +103,33 @@ def test_file_metadata(server, process_nr, virtual_name, real_name, rng):
     compare_metadata(local_root, remote_root)
 
 
-def test_eagle_snapshot_metadata(server, process_nr):
+def test_eagle_snapshot_metadata(server, virtual_base_dir, filesystem_base_dir, process_nr, nr_reps):
     """
-    Run the metadata test on files in an EAGLE snapshot
+    Run the metadata test on files in the specified directories
     """
-    virtual_names = "EAGLE/Fiducial_models/RefL0012N0188/snapshot_028_z000p000/snap_028_z000p000.{file_nr}.hdf5"
-    virtual_names = [virtual_names.format(file_nr=file_nr) for file_nr in range(16)]
-    real_names = "../EAGLE/Fiducial_models/RefL0012N0188/snapshot_028_z000p000/snap_028_z000p000.{file_nr}.hdf5"
-    real_names = [real_names.format(file_nr=file_nr) for file_nr in range(16)]
+
+    # Get directory listing from the server
+    root = hdfstream.RemoteDirectory(server, virtual_base_dir)
+    filenames = get_filenames(root)
+
+    # Make lists of real and virtual filenames
+    virtual_names = [virtual_base_dir+"/"+filename for filename in filenames]
+    real_names    = [filesystem_base_dir+"/"+filename for filename in filenames]
 
     # Initialize the random number generator in a repeatable way
     rng = np.random.default_rng(seed=process_nr)
 
-    # Compare random files from the snapshot between h5py and hdfstream
-    nr_reps = 20
+    # Compare random files between h5py and hdfstream
     for _ in range(nr_reps):
         i = rng.integers(len(virtual_names))
         test_file_metadata(server, process_nr, virtual_names[i], real_names[i], rng)
 
 
-def run_metadata_test(server, nr_processes):
+def run_metadata_test(server, virtual_base_dir, filesystem_base_dir, nr_processes, nr_reps):
     """
     Run multiple instances of the metadata test in parallel
     """
-    args = [(server, i) for i in range(nr_processes)]
+    args = [(server, virtual_base_dir, filesystem_base_dir, i, nr_reps) for i in range(nr_processes)]
     with mp.Pool(nr_processes) as p:
         p.starmap(test_eagle_snapshot_metadata, args)
     print("Metadata test done.")
@@ -138,8 +141,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Test downloading HDF5 metadata")
     parser.add_argument("server", type=str, help="Address of the server (e.g. 'https://localhost:8443/hdfstream')")
+    parser.add_argument("virtual_base_dir", type=str, help="Virtual path to the directory to use")
+    parser.add_argument("filesystem_base_dir", type=str, help="Real path to the directory to use")
     parser.add_argument("nr_processes", type=int, help="Number of parallel processes sending requests")
+    parser.add_argument("nr_reps", type=int, help="Number of times to run the test on each process")
     args = parser.parse_args()
 
     # Run the test
-    run_metadata_test(args.server, args.nr_processes)
+    run_metadata_test(args.server, args.virtual_base_dir, args.filesystem_base_dir, args.nr_processes, args.nr_reps)
