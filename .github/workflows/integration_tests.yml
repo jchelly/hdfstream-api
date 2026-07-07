@@ -209,6 +209,11 @@ jobs:
         run: |
           python3 ./file_download_test.py http://localhost:8080/hdfstream EAGLE/Fiducial_models/RefL0012N0188 ../EAGLE/Fiducial_models/RefL0012N0188 6
 
+      - name: Run bad requests test
+        working-directory: ./integration_tests
+        run: |
+          python3 ./bad_requests_test.py http://localhost:8080/hdfstream EAGLE/ ../EAGLE/ 6 30
+
       - name: Stop hdfstream service
         uses: ./.github/actions/stop-hdfstream
         if: always()
