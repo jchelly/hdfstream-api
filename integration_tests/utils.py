@@ -26,9 +26,9 @@ def get_datasets(group, path=""):
     """
     result = []
     for name, obj in group.items():
-        if isinstance(obj, hdfstream.RemoteDataset):
+        if isinstance(obj, hdfstream.RemoteDataset, h5py.Dataset):
             result.append(path+name)
-        else:
+        elif isinstance(obj, (hdfstream.RemoteGroup, h5py.Group)):
             result += get_datasets(obj, path=path+name+"/")
     return result
 
