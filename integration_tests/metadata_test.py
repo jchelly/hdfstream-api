@@ -157,7 +157,7 @@ def test_eagle_snapshot_metadata(server, process_nr):
     """
     virtual_names = "EAGLE/Fiducial_models/RefL0012N0188/snapshot_028_z000p000/snap_028_z000p000.{file_nr}.hdf5"
     virtual_names = [virtual_names.format(file_nr=file_nr) for file_nr in range(16)]
-    real_names = "./EAGLE/Fiducial_models/RefL0012N0188/snapshot_028_z000p000/snap_028_z000p000.{file_nr}.hdf5"
+    real_names = "../EAGLE/Fiducial_models/RefL0012N0188/snapshot_028_z000p000/snap_028_z000p000.{file_nr}.hdf5"
     real_names = [real_names.format(file_nr=file_nr) for file_nr in range(16)]
 
     # Initialize the random number generator in a repeatable way
