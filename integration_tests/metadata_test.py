@@ -131,7 +131,7 @@ def test_file_metadata(server, process_nr, virtual_name, real_name, rng):
     """
 
     # Get list of groups in the file
-    remote_root = hdfstream.open(server, virtual_name)
+    remote_root = hdfstream.open(server, virtual_name)["/"]
     group_names = get_remote_groups(remote_root)
 
     # Open the local file
