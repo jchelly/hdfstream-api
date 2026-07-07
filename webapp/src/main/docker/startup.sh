@@ -12,4 +12,4 @@ fi
 python3 /opt/hdfstream/scan_directory.py /opt/hdfstream/data/ "${prefix}" /opt/hdfstream/config.csv
 
 # Start the service. Use exec so that shutdown signal from docker reaches tomcat.
-exec /usr/local/tomcat/bin/catalina.sh run
+exec /opt/tomcat/bin/catalina.sh run

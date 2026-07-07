@@ -1,0 +1,220 @@
+name: Run integration tests
+
+on:
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build-server:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build server image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          tags: hdfstream-api:test
+          outputs: type=docker,dest=/tmp/hdfstream-api-test.tar
+
+      - name: Upload Server Image Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hdfstream-server-image
+          path: /tmp/hdfstream-api-test.tar
+          retention-days: 1
+
+  swiftsimio-tests:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    needs: build-server
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download server image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hdfstream-server-image
+          path: /tmp
+
+      - name: Load server image
+        run: docker load --input /tmp/hdfstream-api-test.tar
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.12"
+
+      - name: Install hdfstream client module
+        run: |
+          pip install hdfstream
+
+      - name: Clone swiftsimio module
+        uses: actions/checkout@v4
+        with:
+          repository: SWIFTSIM/swiftsimio
+          path: downstream/swiftsimio
+          ref: master
+
+      - name: Install swiftsimio module
+        run: |
+          pip install "./downstream/swiftsimio[dev]"
+
+      - name: Preload swiftsimio test data files
+        working-directory: ./downstream/swiftsimio
+        run: |
+          python -c "from tests.conftest import preload_test_data; preload_test_data()"
+
+      - name: Start hdfstream service with swiftsimio test data mounted
+        uses: ./.github/actions/start-hdfstream
+        with:
+          data-dir: ./downstream/swiftsimio/test_data
+          virtual-prefix: test_data
+          image: hdfstream-api:test
+
+      - name: Test swiftsimio with pytest
+        working-directory: ./downstream/swiftsimio
+        run: |
+          pytest --hdfstream-server=http://localhost:8080/hdfstream
+
+      - name: Stop hdfstream service
+        uses: ./.github/actions/stop-hdfstream
+        if: always()
+
+  lightconeio-tests:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    needs: build-server
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download server image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hdfstream-server-image
+          path: /tmp
+
+      - name: Load server image
+        run: docker load --input /tmp/hdfstream-api-test.tar
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.12"
+
+      - name: Install hdfstream client module
+        run: |
+          pip install hdfstream
+
+      - name: Clone lightcone_io module with test data
+        uses: actions/checkout@v4
+        with:
+          repository: jchelly/LightconeIO
+          path: downstream/lightcone_io
+          ref: master
+
+      - name: Install lightcone_io module
+        run: |
+          pip install ./downstream/lightcone_io
+
+      - name: Start hdfstream service with lightcone_io test data mounted
+        uses: ./.github/actions/start-hdfstream
+        with:
+          data-dir: ./downstream/lightcone_io/tests/data
+          virtual-prefix: tests/data
+          image: hdfstream-api:test
+
+      - name: Test lightcone_io with pytest
+        working-directory: ./downstream/lightcone_io
+        run: |
+          pytest --hdfstream-server=http://localhost:8080/hdfstream
+
+      - name: Stop hdfstream service
+        uses: ./.github/actions/stop-hdfstream
+        if: always()
+
+  eagle-tests:
+    runs-on: ubuntu-latest
+    needs: build-server
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        id: data-cache
+        with:
+          path: EAGLE
+          key: eagle-data-v1
+
+      - name: Download EAGLE snapshots
+        if: steps.data-cache.outputs.cache-hit != 'true'
+        run: |
+          set -o pipefail
+          wget --progress=dot:giga "https://dataweb.cosma.dur.ac.uk:8443/hdfstream/download/EAGLE/Fiducial_models/RefL0012N0188/snapshot_026_z000p183" -O - | tar xf -
+          wget --progress=dot:giga "https://dataweb.cosma.dur.ac.uk:8443/hdfstream/download/EAGLE/Fiducial_models/RefL0012N0188/snapshot_027_z000p101" -O - | tar xf -
+          wget --progress=dot:giga "https://dataweb.cosma.dur.ac.uk:8443/hdfstream/download/EAGLE/Fiducial_models/RefL0012N0188/snapshot_028_z000p000" -O - | tar xf -
+
+      - name: Download server image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hdfstream-server-image
+          path: /tmp
+
+      - name: Load server image
+        run: docker load --input /tmp/hdfstream-api-test.tar
+
+      - name: Start hdfstream service with EAGLE test data mounted
+        uses: ./.github/actions/start-hdfstream
+        with:
+          data-dir: ./EAGLE
+          virtual-prefix: EAGLE
+          image: hdfstream-api:test
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.12"
+
+      - name: Install python modules
+        run: |
+          pip install hdfstream numpy h5py
+
+      - name: Run connection test
+        working-directory: ./integration_tests
+        run: |
+          python3 -c "import hdfstream; root = hdfstream.open('http://localhost:8080/hdfstream', 'EAGLE')"
+
+      - name: Run slicing test
+        working-directory: ./integration_tests
+        run: |
+          python3 ./slicing_test.py http://localhost:8080/hdfstream EAGLE/ ../EAGLE/ 6 30
+
+      - name: Run metadata test
+        working-directory: ./integration_tests
+        run: |
+          python3 ./metadata_test.py http://localhost:8080/hdfstream EAGLE/ ../EAGLE/ 6 20
+
+      - name: Run tar download test
+        working-directory: ./integration_tests
+        run: |
+          python3 ./tar_download_test.py http://localhost:8080/hdfstream EAGLE/Fiducial_models/RefL0012N0188 ../EAGLE/Fiducial_models/RefL0012N0188 6
+
+      - name: Run file download test
+        working-directory: ./integration_tests
+        run: |
+          python3 ./file_download_test.py http://localhost:8080/hdfstream EAGLE/Fiducial_models/RefL0012N0188 ../EAGLE/Fiducial_models/RefL0012N0188 6
+
+      - name: Run bad requests test
+        working-directory: ./integration_tests
+        run: |
+          python3 ./bad_requests_test.py http://localhost:8080/hdfstream EAGLE/ ../EAGLE/ 6 30
+
+      - name: Stop hdfstream service
+        uses: ./.github/actions/stop-hdfstream
+        if: always()

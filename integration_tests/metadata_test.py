@@ -1,0 +1,151 @@
+#!/bin/env python
+#
+# Test downloading HDF5 file structure information
+#
+
+import numpy as np
+import multiprocessing as mp
+import h5py
+import hdfstream
+
+from utils import get_datasets, get_groups, get_filenames
+
+
+def compare_metadata(local_root, remote_root):
+    """
+    Check that we get the same metadata from hdfstream and h5py.
+
+    local_root  - the h5py.Group to read
+    remote_root - the hdfstream.RemoteGroup to read
+
+    These objects should refer to the same underlying file.
+    """
+
+    assert isinstance(remote_root, hdfstream.RemoteGroup)
+    assert not isinstance(local_root, hdfstream.RemoteGroup)
+
+    # Check that we have the same set of groups
+    local_groups = get_groups(local_root)
+    remote_groups = get_groups(remote_root)
+    if local_groups != remote_groups:
+        raise RuntimeError("Group names do not match!")
+
+    print(f"{len(local_groups)} groups match")
+
+    # Check that we have the same datasets
+    local_datasets = get_datasets(local_root)
+    remote_datasets = get_datasets(remote_root)
+    if local_datasets != remote_datasets:
+        raise RuntimeError("Dataset names do not match!")
+
+    # Check dataset shapes
+    for name in local_datasets:
+        local_shape = local_root[name].shape
+        remote_shape = remote_root[name].shape
+        if local_shape != remote_shape:
+            raise RuntimeError("Dataset shapes do not match!")
+
+    # Check dataset types
+    for name in local_datasets:
+        local_dtype = local_root[name].dtype
+        remote_dtype = remote_root[name].dtype
+        if local_dtype.kind != remote_dtype.kind:
+            raise RuntimeError("Data type kinds do not match!")
+        if local_dtype.itemsize != remote_dtype.itemsize:
+            raise RuntimeError("Data type sizes do not match!")
+
+    print(f"{len(local_datasets)} datasets match")
+
+    # Check attributes
+    nr_attrs = 0
+    for name in local_datasets + local_groups:
+        local_attrs = local_root[name].attrs
+        remote_attrs = remote_root[name].attrs
+        # Check we have the same attribute names
+        if sorted(list(local_attrs)) != sorted(list(remote_attrs)):
+            raise RuntimeError("Attribute names do not match!")
+        # Check attribute values
+        for attr_name in local_attrs:
+            local_attr = np.asarray(local_attrs[attr_name])
+            remote_attr = np.asarray(remote_attrs[attr_name])
+            if local_attr.shape != remote_attr.shape:
+                raise RuntimeError("Attribute shapes do not match!")
+            if np.any(local_attr != remote_attr):
+                raise RuntimeError("Attribute values do not match!")
+        nr_attrs += len(local_attrs)
+
+    print(f"{nr_attrs} attributes match")
+
+
+def test_file_metadata(server, process_nr, virtual_name, real_name, rng):
+    """
+    Run metadata test on a single file
+    """
+
+    # Get list of groups in the file
+    remote_root = hdfstream.open(server, virtual_name)["/"]
+    group_names = get_groups(remote_root)
+
+    # Open the local file
+    local_root = h5py.File(real_name, "r")
+
+    # Run test on subgroups
+    nr_groups = 10
+    for group_nr in range(nr_groups):
+
+        # Pick a random subgroup to test
+        group_name = group_names[rng.integers(len(group_names))]
+
+        # Check metadata agrees
+        compare_metadata(local_root[group_name], remote_root[group_name])
+
+    # Run test using the root group
+    compare_metadata(local_root, remote_root)
+
+
+def test_eagle_snapshot_metadata(server, virtual_base_dir, filesystem_base_dir, process_nr, nr_reps):
+    """
+    Run the metadata test on files in the specified directories
+    """
+
+    # Get directory listing from the server
+    root = hdfstream.RemoteDirectory(server, virtual_base_dir)
+    filenames = get_filenames(root)
+
+    # Make lists of real and virtual filenames
+    virtual_names = [virtual_base_dir+"/"+filename for filename in filenames]
+    real_names    = [filesystem_base_dir+"/"+filename for filename in filenames]
+
+    # Initialize the random number generator in a repeatable way
+    rng = np.random.default_rng(seed=process_nr)
+
+    # Compare random files between h5py and hdfstream
+    for _ in range(nr_reps):
+        i = rng.integers(len(virtual_names))
+        test_file_metadata(server, process_nr, virtual_names[i], real_names[i], rng)
+
+
+def run_metadata_test(server, virtual_base_dir, filesystem_base_dir, nr_processes, nr_reps):
+    """
+    Run multiple instances of the metadata test in parallel
+    """
+    args = [(server, virtual_base_dir, filesystem_base_dir, i, nr_reps) for i in range(nr_processes)]
+    with mp.Pool(nr_processes) as p:
+        p.starmap(test_eagle_snapshot_metadata, args)
+    print("Metadata test done.")
+
+
+if __name__ == "__main__":
+
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Test downloading HDF5 metadata")
+    parser.add_argument("server", type=str, help="Address of the server (e.g. 'https://localhost:8443/hdfstream')")
+    parser.add_argument("virtual_base_dir", type=str, help="Virtual path to the directory to use")
+    parser.add_argument("filesystem_base_dir", type=str, help="Real path to the directory to use")
+    parser.add_argument("nr_processes", type=int, help="Number of parallel processes sending requests")
+    parser.add_argument("nr_reps", type=int, help="Number of times to run the test on each process")
+    args = parser.parse_args()
+
+    # Run the test
+    run_metadata_test(args.server, args.virtual_base_dir, args.filesystem_base_dir, args.nr_processes, args.nr_reps)
