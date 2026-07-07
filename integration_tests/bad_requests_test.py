@@ -133,7 +133,7 @@ def pick_test_datasets(server, virtual_base_dir):
     return test_datasets
 
 
-def bad_requests_test(server, test_datasets, process_nr, duration):
+def bad_requests_test(server, test_datasets, process_nr, duration, verbose):
     """
     Repeatedly request slices of random datasets from the list
     """
@@ -165,17 +165,21 @@ def bad_requests_test(server, test_datasets, process_nr, duration):
         try:
             data = request_slice(connection.session, server, filename, dataset, start, count, rng)
         except IOError as e:
-            print(f"Request {req_nr} failed, {str(e).strip()}")
+            if(verbose):
+                print(f"Request {req_nr} failed, {str(e).strip()}")
         else:
             if data is not None:
-                print(f"Request {req_nr} OK")
+                if(verbose):
+                    print(f"Request {req_nr} OK")
             else:
-                print(f"Request {req_nr} OK, but download aborted")
+                if(verbose):
+                    print(f"Request {req_nr} OK, but download aborted")
 
         req_nr += 1
+    print(f"Process {process_nr} send {req_nr} requests")
 
 
-def run_bad_requests_test(server, virtual_base_dir, filesystem_base_dir, nr_processes, duration):
+def run_bad_requests_test(server, virtual_base_dir, filesystem_base_dir, nr_processes, duration, verbose):
     """
     Run the bad requests test on multiple processes in parallel
     """
@@ -184,7 +188,7 @@ def run_bad_requests_test(server, virtual_base_dir, filesystem_base_dir, nr_proc
     test_datasets = pick_test_datasets(server, virtual_base_dir)
 
     print("Running tests")
-    args = [(server, test_datasets, i, duration) for i in range(nr_processes)]
+    args = [(server, test_datasets, i, duration, verbose) for i in range(nr_processes)]
     with mp.Pool(nr_processes) as p:
         p.starmap(bad_requests_test, args)
     print("Done.")
@@ -200,9 +204,10 @@ if __name__ == "__main__":
     parser.add_argument("filesystem_base_dir", type=str, help="Real path to the directory to use")
     parser.add_argument("nr_processes", type=int, help="Number of parallel processes sending requests")
     parser.add_argument("duration", type=int, help="Duration of the test in seconds")
+    parser.add_argument("--verbose", action="store_true", help="Show result of every request")
 
     args = parser.parse_args()
 
     # Run the test
     run_bad_requests_test(args.server, args.virtual_base_dir, args.filesystem_base_dir,
-                          args.nr_processes, args.duration)
+                          args.nr_processes, args.duration, args.verbose)
