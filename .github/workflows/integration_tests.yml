@@ -22,7 +22,7 @@ jobs:
           outputs: type=docker,dest=/tmp/hdfstream-api-test.tar
 
       - name: Upload Server Image Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: hdfstream-server-image
           path: /tmp/hdfstream-api-test.tar
