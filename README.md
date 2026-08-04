@@ -288,14 +288,14 @@ requests. Alternatively, it can be specified using nested arrays of
 integers.
 
 This type of slice specifier consists of a msgpack array with one
-element for each dimension in the datase. For each dimension we have a
+element for each dimension in the dataset. For each dimension we have a
 two element array containing a `[start, count]` pair. If `start` and
 `count` are integers then the server will read elements
 `start:start+count` in that dimension.
 
 For example, to read the x, y, z coordinates of particles [10:15]
-(inclusive) from a 2D coordinates dataset with dimensions `[N,3]`, the
-slice specifier would be
+(i.e.those with indexes 10, 11, 12, 13 and 14) from a 2D coordinates
+dataset with dimensions `[N,3]`, the slice specifier would be
 
 ```
 [[10, 5], [0, 3]]
@@ -323,21 +323,21 @@ non-contiguous indexes in the first dimension by setting `count=1`.
 
 ## Documentation
 
-Documentation can be stored in the virtual directory structure along with the
-simulation data. The server does not distinguish between documentation files
-and data files.
+Short documentation strings can be associated with files and
+directories. These are displayed in the web interface.
 
-The client-side web interface identifies documentation to be displayed
-inline using a naming convention. If a virtual directory contains a
-file `description.md` then the contents are rendered as markdown on
-the directory listing page.  If a virtual directory contains a file
-`labels.msgpack` then the file is interpreted as a msgpack map which
-contains brief descriptions to be displayed alongside the file and
-directory names.
+Directories in the service configuration file have a virtual path,
+which is the path presented to users, and a real path. If set, the
+real path should be the location of a messagepack encoded file
+which contains a map with up to two entries:
 
-These special files are not displayed in directory listings in the web
-interface but will be included in tar file downloads and can be read using
-the python module.
+  * `description` should be a string with a short description of this directory
+     which will be shown on the directory listing page
+  * `labels` should be a map where the keys are the names of files or
+     subdirectories in this directory and the values are short descriptions to
+     display alongside the directory entries
+
+These strings are interpreted as markdown by the web interface.
 
 ## Docker container
 
