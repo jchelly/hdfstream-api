@@ -22,12 +22,18 @@ public class RequestCounter {
 
     private long MAX_DAYS_RETENTION = 30;
     private long lastPurge = -1;
+    private long firstDay = -1;
 
     public RequestCounter() {
         for(int i=0; i<3; i+=1) {
             nrRequests.add(new ConcurrentHashMap<Long,LongAdder>());
             nrBytes.add(new ConcurrentHashMap<Long,LongAdder>());
         }
+        firstDay = currentDay();
+    }
+
+    public long uptime() {
+        return currentDay() - firstDay;
     }
 
     public void purgeUserList() {
