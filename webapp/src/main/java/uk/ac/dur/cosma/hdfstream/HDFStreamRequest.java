@@ -17,6 +17,7 @@ import uk.ac.dur.cosma.virtual_directory.CheckRole;
 import uk.ac.dur.cosma.virtual_directory.DirectoryMetadata;
 import org.msgpack.core.MessagePacker;
 import org.msgpack.core.MessagePack;
+import org.apache.commons.io.output.CountingOutputStream;
 
 import uk.ac.dur.cosma.libhdfstream.*;
 
@@ -278,17 +279,24 @@ public class HDFStreamRequest {
 	return;
     }
 
-    public void streamResponse(HDFStream hs, OutputStream out, int buffer_size, boolean write_body) throws IOException, HDFStreamRequestException {
+    public long streamResponse(HDFStream hs, OutputStream out, int buffer_size, boolean write_body) throws IOException, HDFStreamRequestException {
+
+        // Will count number of bytes written
+        CountingOutputStream cout = new CountingOutputStream(out);
 
         if(file == null) {
             // Stream directory listing in msgpack format
-            if(write_body)streamDirectory(out);
+            if(write_body)streamDirectory(cout);
         } else if(object == null) {
             // Stream file metadata in msgpack format
-            if(write_body)streamFile(out);
+            if(write_body)streamFile(cout);
         } else {
             // Stream a HDF5 object in msgpack format. Path must be a HDF5 file in this case.
-            streamObject(hs, out, buffer_size, write_body);
+            streamObject(hs, cout, buffer_size, write_body);
         }
+
+        // Return the byte count
+        cout.flush();
+        return cout.getByteCount();
     }
 }

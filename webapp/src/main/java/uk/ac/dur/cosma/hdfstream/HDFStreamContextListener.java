@@ -85,6 +85,9 @@ public class HDFStreamContextListener implements ServletContextListener{
         /* Create the request cache */
         CacheInfo ci = new CacheInfo(max_cached_response_size, max_response_cache_size);
 	context.setAttribute("cache_info", ci);
+
+        /* Initialize request counter */
+	context.setAttribute("request_counter", new RequestCounter());
     }
 
     public void contextDestroyed(ServletContextEvent contextEvent) {
