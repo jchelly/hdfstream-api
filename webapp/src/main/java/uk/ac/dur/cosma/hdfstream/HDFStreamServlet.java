@@ -182,15 +182,20 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
         RequestCounter requestCounter = (RequestCounter) context.getAttribute("request_counter");
 
         // Send the response body
+        long bytes_written = -1;
         crc.acquire(identifier);
         try {
             ServletOutputStream out = response.getOutputStream();
-            hreq.streamAndLogResponse(hs, out, buffer_size, is_get, requestCounter);
+            bytes_written = hreq.streamResponse(hs, out, buffer_size, is_get);
         } catch (HDFStreamRequestException e) {
             sendMsgpackError(response, e.getStatusCode(), e.getErrorMessage());
+            return;
         } finally {
             crc.release(identifier);
         }
+
+        // Log the request (unless it was just a head request)
+        if(is_get)requestCounter.logRequest(RequestCounter.MSGPACK, bytes_written);
         return;
     }
 
@@ -326,15 +331,20 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
         RequestCounter requestCounter = (RequestCounter) context.getAttribute("request_counter");
 
         // Send the response body
+        long bytes_written = -1;
         crc.acquire(identifier);
         try {
             ServletOutputStream out = response.getOutputStream();
-            hreq.streamAndLogResponse(hs, out, buffer_size, true, requestCounter);
+            bytes_written = hreq.streamResponse(hs, out, buffer_size, true);
         } catch (HDFStreamRequestException e) {
             sendMsgpackError(response, e.getStatusCode(), e.getErrorMessage());
+            return;
         } finally {
             crc.release(identifier);
         }
+
+        // Log the request
+        requestCounter.logRequest(RequestCounter.MSGPACK, bytes_written);
         return;
     }
 }

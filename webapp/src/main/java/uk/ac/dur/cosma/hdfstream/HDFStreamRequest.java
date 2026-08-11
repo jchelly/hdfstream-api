@@ -279,25 +279,24 @@ public class HDFStreamRequest {
 	return;
     }
 
-    public void streamResponse(HDFStream hs, OutputStream out, int buffer_size, boolean write_body) throws IOException, HDFStreamRequestException {
+    public long streamResponse(HDFStream hs, OutputStream out, int buffer_size, boolean write_body) throws IOException, HDFStreamRequestException {
+
+        // Will count number of bytes written
+        CountingOutputStream cout = new CountingOutputStream(out);
 
         if(file == null) {
             // Stream directory listing in msgpack format
-            if(write_body)streamDirectory(out);
+            if(write_body)streamDirectory(cout);
         } else if(object == null) {
             // Stream file metadata in msgpack format
-            if(write_body)streamFile(out);
+            if(write_body)streamFile(cout);
         } else {
             // Stream a HDF5 object in msgpack format. Path must be a HDF5 file in this case.
-            streamObject(hs, out, buffer_size, write_body);
+            streamObject(hs, cout, buffer_size, write_body);
         }
-    }
 
-    public void streamAndLogResponse(HDFStream hs, OutputStream out, int buffer_size, boolean write_body,
-                                     RequestCounter requestCounter) throws IOException, HDFStreamRequestException {
-        CountingOutputStream cout = new CountingOutputStream(out);
-        streamResponse(hs, cout, buffer_size, write_body);
+        // Return the byte count
         cout.flush();
-        requestCounter.logRequest(RequestCounter.MSGPACK, cout.getByteCount());
+        return cout.getByteCount();
     }
 }
