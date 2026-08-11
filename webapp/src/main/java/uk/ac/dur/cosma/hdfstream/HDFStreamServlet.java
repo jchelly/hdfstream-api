@@ -195,7 +195,7 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
         }
 
         // Log the request (unless it was just a head request)
-        if(is_get)requestCounter.logRequest(RequestCounter.MSGPACK, bytes_written);
+        if(is_get)requestCounter.logRequest(RequestCounter.MSGPACK, bytes_written, identifier);
         return;
     }
 
@@ -344,7 +344,7 @@ public class HDFStreamServlet extends HttpServlet implements Servlet {
         }
 
         // Log the request
-        requestCounter.logRequest(RequestCounter.MSGPACK, bytes_written);
+        requestCounter.logRequest(RequestCounter.MSGPACK, bytes_written, identifier);
         return;
     }
 }

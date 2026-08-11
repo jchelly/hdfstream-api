@@ -60,6 +60,11 @@ public class RequestCounter {
         purgeUserList();
     }
 
+    public void logRequest(int kind, long size, String username) {
+        logRequest(kind, size);
+        logUser(username);
+    }
+
     /*
       Get the number of requests in the last nrDays days.
       nrDays=1 gives today's requests only.
