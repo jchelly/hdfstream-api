@@ -21,7 +21,7 @@ public class RequestCounter {
     private final ConcurrentHashMap<Long, Set> uniqueUsers = new ConcurrentHashMap<Long, Set>();
 
     private long MAX_DAYS_RETENTION = 30;
-    private long lastPurge = -1;
+    private volatile long lastPurge = -1;
     private long firstDay = -1;
 
     public RequestCounter() {
@@ -40,8 +40,8 @@ public class RequestCounter {
         long now = currentDay();
         if(lastPurge==now)
             return;
-        uniqueUsers.keySet().removeIf(day -> day < (now - MAX_DAYS_RETENTION));
         lastPurge = now;
+        uniqueUsers.keySet().removeIf(day -> day < (now - MAX_DAYS_RETENTION));
     }
 
     private long currentDay() {
