@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.Collections;
 
 
@@ -19,11 +20,22 @@ public class RequestCounter {
     private final ArrayList<ConcurrentHashMap<Long,LongAdder>> nrBytes = new ArrayList<ConcurrentHashMap<Long,LongAdder>>();
     private final ConcurrentHashMap<Long, Set> uniqueUsers = new ConcurrentHashMap<Long, Set>();
 
+    private long MAX_DAYS_RETENTION = 30;
+    private long lastPurge = -1;
+
     public RequestCounter() {
         for(int i=0; i<3; i+=1) {
             nrRequests.add(new ConcurrentHashMap<Long,LongAdder>());
             nrBytes.add(new ConcurrentHashMap<Long,LongAdder>());
         }
+    }
+
+    public void purgeUserList() {
+        long now = currentDay();
+        if(lastPurge==now)
+            return;
+        uniqueUsers.keySet().removeIf(day -> day < (now - MAX_DAYS_RETENTION));
+        lastPurge = now;
     }
 
     private long currentDay() {
@@ -39,8 +51,13 @@ public class RequestCounter {
     public void logUser(String username) {
         long now = currentDay();
         uniqueUsers.computeIfAbsent(now, k -> Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>())).add(username);
+        purgeUserList();
     }
 
+    /*
+      Get the number of requests in the last nrDays days.
+      nrDays=1 gives today's requests only.
+     */
     public long getCount(int kind, int nrDays) {
         long now = currentDay();
         long cutoff = now - nrDays + 1;
@@ -61,13 +78,20 @@ public class RequestCounter {
         return getBytes(kind, 36500);
     }
 
-    public int getUserCount(int daysAgo) {
-        Set<String> users = uniqueUsers.get(currentDay()-daysAgo);
-        if(users == null) {
-            // No recorded requests on this day
-            return 0;
-        } else {
-            return users.size();
+    /*
+      Get the number of unique users in the last nrDays days.
+      nrDays=1 gives today's users only.
+     */
+    public int getUniqueUsers(int nrDays) {
+
+        Set<String> allUsers = new HashSet();
+        long now = currentDay();
+        for(long i=now-nrDays+1; i<=now; i+=1) {
+            Set<String> usersToday = uniqueUsers.get(i);
+            if(usersToday != null) {
+                allUsers.addAll(usersToday);
+            }
         }
+        return allUsers.size();
     }
 }
