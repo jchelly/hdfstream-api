@@ -12,7 +12,7 @@
 #define HDFSTREAM_EXECUTABLE "${CMAKE_INSTALL_PREFIX}/bin/hdfstream_reader"
 
 /* Maximum size of the stream buffer (bytes) */
-#define HDFSTREAM_MAX_BUFFER_SIZE (64*1024*1024)
+#define HDFSTREAM_MAX_BUFFER_SIZE ${MAX_BUFFER_SIZE}
 
 struct hdfstream {
   char *executable;
