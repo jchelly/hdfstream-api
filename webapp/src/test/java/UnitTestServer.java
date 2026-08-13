@@ -83,7 +83,7 @@ public class UnitTestServer {
         context.addParameter("max_open_files", "10");
         context.addParameter("max_open_datasets", "10");
         context.addParameter("directory_config", config_file);
-        context.addParameter("buffer_size", "102400");
+        context.addParameter("buffer_size", "32768");
         context.addParameter("max_hdf5_name_length", "8192");
         context.addParameter("file_cache_check_interval", "10");
         context.addParameter("file_cache_expiry_interval", "60");
