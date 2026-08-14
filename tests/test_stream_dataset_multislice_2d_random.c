@@ -24,11 +24,13 @@ static void stream_multiple_slices(struct hdfstream *hs, char *filename, char *d
   struct ndarray arr = receive_ndarray_slices(hs, filename, datasetname, nr_slices, rank, start, count, buffer_size);
 
   /* Determine if we have a large enough max buffer size to store at least one element in the first dimension */
-  size_t required_buffer_size = sizeof(int);
-  for(int i=1; i<rank; i+=1) {
-    required_buffer_size *= count[i];
+  if(nr_slices > 0) {
+    size_t required_buffer_size = sizeof(int);
+    for(int i=1; i<rank; i+=1) {
+      required_buffer_size *= count[i];
+    }
+    if(required_buffer_size > HDFSTREAM_MAX_BUFFER_SIZE)succeeds = false;
   }
-  if(required_buffer_size > HDFSTREAM_MAX_BUFFER_SIZE)succeeds = false;
 
   /* Check if the return code matches our expectation of whether this case should work */
   verify((arr.status==0) == succeeds);
