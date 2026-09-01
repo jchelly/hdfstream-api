@@ -5,7 +5,7 @@
 #include <semaphore.h>
 
 #define ALIGNMENT 1024
-#define NR_BUFFERS 3
+#define NR_BUFFERS ${NR_BUFFERS}
 
 #define BUFFER_STATUS_OK      0
 #define BUFFER_STATUS_END     1

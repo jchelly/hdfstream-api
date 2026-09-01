@@ -16,6 +16,10 @@ else()
   set(HDFSTREAM_CONFIG "${CMAKE_BINARY_DIR}/webapp/src/main/example/")
 endif()
 
+# Specify maximum shared memory buffer size and number of buffers
+set(MAX_BUFFER_SIZE 2097152 CACHE STRING "Maximum size of the read buffer in bytes")
+set(NR_BUFFERS           32 CACHE STRING "Number of buffers in the shared ring buffer")
+
 # Specify where to write example data
 set(EXAMPLE_DATA_DIR "${CMAKE_BINARY_DIR}/data/" CACHE PATH "Where to write example data files")
 

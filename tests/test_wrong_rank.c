@@ -43,6 +43,9 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+  /* Compute minimum buffer size needed for this to work */
+  size_t buffer_size_needed = sizeof(int)*dims[1]*dims[2];
+
   /* Try reading with various (mostly wrong) numbers of dimensions */
   hsize_t start[] = {0,  0,  0,  0,  0,  0,  0,  0,  0,  0};
   hsize_t count[] = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10};
@@ -51,10 +54,15 @@ int main(int argc, char *argv[]) {
     /* Try to read the data - should only work if we used the right rank */
     size_t buffer_size = 1024;
     struct ndarray res = receive_ndarray(hs, filename, datasetname, try_rank, start, count, buffer_size);
-    verify((res.status == 0) == (try_rank == rank));
 
+    /* Determine whether this should have worked */
+    bool succeeds = (try_rank == rank);
+    assert(buffer_size > buffer_size_needed);
+    if(buffer_size_needed > HDFSTREAM_MAX_BUFFER_SIZE)succeeds = false;
+
+    /* Check the result */
+    verify((res.status == 0) == succeeds);
     if(res.status == 0) {
-      /* Check the result is correct */
       verify(res.rank==rank);
       int *ptr = (int *) res.data;
       for(int i=0; i<rank; i+=1)

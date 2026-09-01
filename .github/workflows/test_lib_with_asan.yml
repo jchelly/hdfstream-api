@@ -10,6 +10,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        nr_buffers: [3, 7, 16, 32]
+        max_buffer_size: [327, 1024, 32768]
+
     steps:
     - uses: actions/checkout@v7
 
@@ -35,7 +40,7 @@ jobs:
       run: mkdir build
 
     - name: Configure
-      run: cmake .. -DBUILD_WEB_APP=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-fsanitize=address -Wall -Wextra -Werror" -DCMAKE_PREFIX_PATH="${CONDA}"
+      run: cmake .. -DBUILD_WEB_APP=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-fsanitize=address -Wall -Wextra -Werror" -DCMAKE_PREFIX_PATH="${CONDA}" -DNR_BUFFERS=${{ matrix.nr_buffers }} -DMAX_BUFFER_SIZE=${{ matrix.max_buffer_size }}
       working-directory: build
 
     - name: Build

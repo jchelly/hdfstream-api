@@ -55,6 +55,7 @@ int main(int argc, char *argv[]) {
   buffer_size = dims[0]*sizeof(int)*2;
   stream = hdfstream_dataset_slice_open(hs, filename, datasetname,
 					rank, start, count, buffer_size);
+  verify(stream != NULL);
   int status;
   char *buffer = malloc(buffer_size);
   hdfstream_read_chunk(stream, buffer, &status);

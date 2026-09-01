@@ -2,8 +2,11 @@ include_directories(${HDF5_INCLUDE_DIRS})
 include_directories(../util ../hdf5 .)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-# Generate header with executable install location
+# Generate header with executable install location and max buffer size
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/hdfstream.h.in ${CMAKE_CURRENT_BINARY_DIR}/hdfstream.h)
+
+# Generate header with number of buffers in the shared ring buffer
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/shared_data.h.in ${CMAKE_CURRENT_BINARY_DIR}/shared_data.h)
 
 # HDF5 streaming reader library
 add_library(hdfstream SHARED hdfstream.c shared_data.c reader_data.c ../util/process_pool.c ../util/worker_process.c ../util/verify.c ../hdf5/file_cache.c ../hdf5/dataset_cache.c ../util/ordered_map.c ../util/linked_list.c ../util/avltree.c ../util/shared_memory.c)

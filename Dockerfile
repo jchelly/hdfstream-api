@@ -38,7 +38,7 @@ COPY . /hdfstream-api
 RUN cd /hdfstream-api \
     && mkdir build \
     && cd build \
-    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCONFIG_DIR=../webapp/src/main/docker/ \
+    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCONFIG_DIR=../webapp/src/main/docker/ -DMAX_BUFFER_SIZE=32768 -DNR_BUFFERS=64 \
     && make \
     && make test \
     && make install
