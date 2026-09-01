@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y \
 
 # Download and extract Tomcat
 RUN mkdir -p /tmp/tomcat && \
-    wget https://downloads.apache.org/tomcat/tomcat-9/v9.0.119/bin/apache-tomcat-9.0.119.tar.gz -O tomcat.tar.gz && \
+    wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.120/bin/apache-tomcat-9.0.120.tar.gz -O tomcat.tar.gz && \
     tar -xf tomcat.tar.gz -C /tmp/tomcat --strip-components=1
 
 # Copy over and build the hdfstream-api source code
