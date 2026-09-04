@@ -122,7 +122,7 @@
       <plugin>
         <!-- The Surefire plugin runs the unit tests in ./src/test/java/ -->
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.5.6</version>
+        <version>3.6.0</version>
         <!-- Set location of libhdfstream_jni.so built by cmake -->
         <configuration>
           <argLine>-Djava.library.path=${project.build.directory}/../../jni/</argLine>
