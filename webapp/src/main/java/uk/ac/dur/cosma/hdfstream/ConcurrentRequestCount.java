@@ -1,5 +1,6 @@
 package uk.ac.dur.cosma.hdfstream;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,13 +13,22 @@ import java.util.concurrent.Semaphore;
 */
 public class ConcurrentRequestCount {
 
-    ConcurrentHashMap<String, Semaphore> user;
-    int max_requests;
+    private ConcurrentHashMap<String, Semaphore> user;
+    private int max_requests;
+    private int nr_parts;
 
-    public ConcurrentRequestCount(int max_requests) {
+    public static String splitName(String name, int n) {
+        if(n < 1)return name;
+        String[] parts = name.split("\\.");
+        n = Math.min(n, parts.length);
+        return String.join(".", Arrays.copyOf(parts, n));
+    }
+
+    public ConcurrentRequestCount(int max_requests, int nr_parts) {
 
         /* Record number of concurrent requests allowed */
         this.max_requests = max_requests;
+        this.nr_parts = nr_parts;
 
         /* Create an empty map of {username : semaphore} pairs */
         user = new ConcurrentHashMap<String, Semaphore>();
@@ -28,6 +38,9 @@ public class ConcurrentRequestCount {
 
         /* Empty string name indicates not authenticated */
         String name = (username != null) ? username : "";
+
+        /* Only use the first n components of the name */
+        name = splitName(name, nr_parts);
 
         /* max_requests=0 indicates that no limit should be applied */
         if(max_requests==0)return;
@@ -43,6 +56,9 @@ public class ConcurrentRequestCount {
 
         /* Empty string name indicates not authenticated */
         String name = (username != null) ? username : "";
+
+        /* Only use the first n components of the name */
+        name = splitName(name, nr_parts);
 
         /* max_requests=0 indicates that no limit should be applied */
         if(max_requests==0)return;
