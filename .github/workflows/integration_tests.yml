@@ -46,7 +46,7 @@ jobs:
         run: docker load --input /tmp/hdfstream-api-test.tar
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -104,7 +104,7 @@ jobs:
         run: docker load --input /tmp/hdfstream-api-test.tar
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -177,7 +177,7 @@ jobs:
           image: hdfstream-api:test
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
