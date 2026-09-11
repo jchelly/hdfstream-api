@@ -137,6 +137,12 @@
     <param-value>6</param-value>
   </context-param>
 
+  <!-- Limit concurrent requests based on prefix -->
+  <context-param>
+    <param-name>user_name_components</param-name>
+    <param-value>3</param-value>
+  </context-param>
+
   <!-- Interval between checks for expired file cache entries (seconds, 0=never check) -->
   <context-param>
     <param-name>file_cache_check_interval</param-name>

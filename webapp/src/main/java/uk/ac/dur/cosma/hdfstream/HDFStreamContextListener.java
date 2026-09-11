@@ -45,6 +45,7 @@ public class HDFStreamContextListener implements ServletContextListener{
         int file_cache_check_interval = Integer.valueOf(context.getInitParameter("file_cache_check_interval"));
         int file_cache_expiry_interval = Integer.valueOf(context.getInitParameter("file_cache_expiry_interval"));
         int max_requests_per_user = Integer.valueOf(context.getInitParameter("max_requests_per_user"));
+        int user_name_components = Integer.valueOf(context.getInitParameter("user_name_components"));
         int external_config = Integer.valueOf(context.getInitParameter("external_config"));
         int max_cached_response_size = Integer.valueOf(context.getInitParameter("max_cached_response_size"));
         long max_response_cache_size = Long.valueOf(context.getInitParameter("max_response_cache_size"));
@@ -79,7 +80,7 @@ public class HDFStreamContextListener implements ServletContextListener{
         context.setAttribute("config", config);
 
         /* Set up object to limit concurrent requests per user */
-        ConcurrentRequestCount crc = new ConcurrentRequestCount(max_requests_per_user);
+        ConcurrentRequestCount crc = new ConcurrentRequestCount(max_requests_per_user, user_name_components);
 	context.setAttribute("concurrent_request_count", crc);
 
         /* Create the request cache */
