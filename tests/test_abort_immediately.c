@@ -55,12 +55,14 @@ int main(int argc, char *argv[]) {
   buffer_size = dims[0]*sizeof(int)*2;
   stream = hdfstream_dataset_slice_open(hs, filename, datasetname,
 					rank, start, count, buffer_size);
+  verify(stream != NULL);
   hdfstream_close_stream(stream);
 
   /* Repeat with a buffer smaller than the data */
   buffer_size = 1024;
   stream = hdfstream_dataset_slice_open(hs, filename, datasetname,
 					rank, start, count, buffer_size);
+  verify(stream != NULL);
   hdfstream_close_stream(stream);
 
   /* Now check that we can still read a dataset successfully */

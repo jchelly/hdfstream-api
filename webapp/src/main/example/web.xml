@@ -112,7 +112,7 @@
   <!-- Size in bytes of serialization buffer -->
   <context-param>
     <param-name>buffer_size</param-name>
-    <param-value>33554432</param-value>
+    <param-value>1048576</param-value>
   </context-param>
 
   <!-- Location of the directory configuration file(s) -->

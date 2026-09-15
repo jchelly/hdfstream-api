@@ -112,7 +112,7 @@
   <!-- Size in bytes of serialization buffer (reduced to fit docker's default 64MB shared mem limit) -->
   <context-param>
     <param-name>buffer_size</param-name>
-    <param-value>1048576</param-value>
+    <param-value>32768</param-value>
   </context-param>
 
   <!-- Location of the directory configuration file(s) -->

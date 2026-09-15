@@ -124,7 +124,7 @@ struct data_stream *hdfstream_dataset_multi_slice_open(struct hdfstream *hs, con
   if((nr_slices < 1) || (nr_slices > HDFSTREAM_MAX_SLICES))return NULL;
   if(!start)return NULL;
   if(!count)return NULL;
-  if((buffer_size==0) || (buffer_size>HDFSTREAM_MAX_BUFFER_SIZE))return NULL;
+  if(buffer_size==0)return NULL;
 
   /* Assign a worker process to do the read */
   struct callback_data cbd;
@@ -209,7 +209,7 @@ struct data_stream *hdfstream_object_open(struct hdfstream *hs, const char *file
   if(!file_name)return NULL;
   if(!object_name)return NULL;
   if(max_depth < 0)return NULL;
-  if((buffer_size==0) || (buffer_size>HDFSTREAM_MAX_BUFFER_SIZE))return NULL;
+  if(buffer_size==0)return NULL;
 
   /* Assign a worker process to do the read */
   struct callback_data cbd;
