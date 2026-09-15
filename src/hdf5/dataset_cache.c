@@ -4,6 +4,7 @@
 #include <hdf5.h>
 
 #include "dataset_cache.h"
+#include "chunk_cache_params.h"
 
 /* Comparison function for dataset names */
 static int cmpfunc(const void *val1, const void *val2) {
@@ -72,8 +73,7 @@ hid_t dataset_cache_open_dataset(struct dataset_cache *ds_cache, const char *nam
   /* Not cached. Try to open the dataset */
 #ifndef SHADOW_CACHE
   hid_t dapl_id = H5Pcreate(H5P_DATASET_ACCESS);
-  const size_t chunk_cache_bytes = 64*1024*1024;
-  H5Pset_chunk_cache(dapl_id, H5D_CHUNK_CACHE_NSLOTS_DEFAULT, chunk_cache_bytes, H5D_CHUNK_CACHE_W0_DEFAULT);
+  H5Pset_chunk_cache(dapl_id, CHUNK_CACHE_RDCC_NSLOTS , CHUNK_CACHE_RDCC_NBYTES , CHUNK_CACHE_RDCC_W0 );
   hid_t dataset_id = H5Dopen(ds_cache->file_id, name, dapl_id);
   H5Pclose(dapl_id);
   if(dataset_id < 0)return dataset_id;

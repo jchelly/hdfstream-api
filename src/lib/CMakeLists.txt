@@ -8,6 +8,9 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/hdfstream.h.in ${CMAKE_CURRENT_BINARY
 # Generate header with number of buffers in the shared ring buffer
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/shared_data.h.in ${CMAKE_CURRENT_BINARY_DIR}/shared_data.h)
 
+# Generate header with chunk cache parameters
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/chunk_cache_params.h.in ${CMAKE_CURRENT_BINARY_DIR}/chunk_cache_params.h)
+
 # HDF5 streaming reader library
 add_library(hdfstream SHARED hdfstream.c shared_data.c reader_data.c ../util/process_pool.c ../util/worker_process.c ../util/verify.c ../hdf5/file_cache.c ../hdf5/dataset_cache.c ../util/ordered_map.c ../util/linked_list.c ../util/avltree.c ../util/shared_memory.c)
 set_target_properties(hdfstream PROPERTIES VERSION ${CMAKE_PROJECT_VERSION} SOVERSION 1)

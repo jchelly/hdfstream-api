@@ -20,6 +20,11 @@ endif()
 set(MAX_BUFFER_SIZE 2097152 CACHE STRING "Maximum size of the read buffer in bytes")
 set(NR_BUFFERS           32 CACHE STRING "Number of buffers in the shared ring buffer")
 
+# Specify HDF5 chunk buffer parameters
+set(CHUNK_CACHE_RDCC_NSLOTS 8191    CACHE STRING "HDF5 chunk cache rdcc_nslots parameter")
+set(CHUNK_CACHE_RDCC_NBYTES 8388608 CACHE STRING "HDF5 chunk cache rdcc_nbytes parameter")
+set(CHUNK_CACHE_RDCC_W0     0.75    CACHE STRING "HDF5 chunk cache rdcc_w0 parameter")
+
 # Specify where to write example data
 set(EXAMPLE_DATA_DIR "${CMAKE_BINARY_DIR}/data/" CACHE PATH "Where to write example data files")
 
