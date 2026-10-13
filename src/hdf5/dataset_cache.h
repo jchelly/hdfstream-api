@@ -28,4 +28,7 @@ struct dataset_cache_entry *dataset_cache_open_dataset(struct dataset_cache *ds_
 /* Deallocate a cache */
 void dataset_cache_free(struct dataset_cache *ds_cache);
 
+/* Initialize a static cache entry struct */
+void dataset_cache_entry_init(struct dataset_cache_entry *dce, hid_t dataset_id);
+
 #endif

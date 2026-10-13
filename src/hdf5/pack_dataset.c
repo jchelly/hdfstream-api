@@ -30,7 +30,7 @@
   Setting nr_slices=0 is not allowed because we would have no way to decide
   on the shape of the result.
 */
-int pack_dataset_multi_slice_with_max_size(hid_t dataset_id, const int rank,
+int pack_dataset_multi_slice_with_max_size(struct dataset_cache_entry *dce, const int rank,
                                            const int nr_slices, const hsize_t *starts,
                                            const hsize_t *counts, const size_t buffer_size,
                                            msgpack_packer pk, const long long max_size) {
@@ -42,6 +42,9 @@ int pack_dataset_multi_slice_with_max_size(hid_t dataset_id, const int rank,
   hid_t mem_type_id = -1;
   char *buffer = NULL;
   int need_reclaim = 0;
+
+  /* Get the dataset ID */
+  hid_t dataset_id = dce->dataset_id;
 
   /* Don't allow zero slices */
   if(nr_slices < 1)goto cleanup;
@@ -180,13 +183,16 @@ int pack_dataset_multi_slice_with_max_size(hid_t dataset_id, const int rank,
 
   Returns <0 on failure, 0 on success.
 */
-int pack_dataset(hid_t dataset_id, msgpack_packer pk, size_t data_size_limit, size_t buffer_size) {
+int pack_dataset(struct dataset_cache_entry *dce, msgpack_packer pk, size_t data_size_limit, size_t buffer_size) {
 
   int result = -1;
   hid_t dspace_id = -1;
   hid_t file_type_id = -1;
   hid_t mem_type_id = -1;
   char *buffer = NULL;
+
+  /* Get the dataset ID */
+  hid_t dataset_id = dce->dataset_id;
 
   /* Get dataset dimensions */
   dspace_id = H5Dget_space(dataset_id);

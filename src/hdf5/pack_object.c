@@ -5,6 +5,7 @@
 #include "pack_group.h"
 #include "pack_dataset.h"
 #include "pack_unknown.h"
+#include "dataset_cache.h"
 #include "verify.h"
 
 int pack_object_recursive(hid_t loc_id, const char *name, msgpack_packer pk, int depth,
@@ -12,6 +13,7 @@ int pack_object_recursive(hid_t loc_id, const char *name, msgpack_packer pk, int
 
   int result = -1;
   hid_t obj_id = -1;
+  struct dataset_cach_entry dce;
 
   /* Open the specified HDF5 object */
   obj_id = H5Oopen(loc_id, name, H5P_DEFAULT);
@@ -30,7 +32,8 @@ int pack_object_recursive(hid_t loc_id, const char *name, msgpack_packer pk, int
       check(pack_group_recursive(obj_id, pk, depth, max_depth, data_size_limit, buffer_size));
     break;
   case H5I_DATASET:
-    check(pack_dataset(obj_id, pk, data_size_limit, buffer_size));
+    dataset_cache_entry_init(&dce, obj_id);
+    check(pack_dataset(&dce, pk, data_size_limit, buffer_size));
     break;
   default:
     check(pack_unknown(pk));

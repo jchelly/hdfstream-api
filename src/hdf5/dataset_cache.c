@@ -27,6 +27,12 @@ static struct dataset_cache_entry *dataset_cache_entry_new(hid_t dataset_id, con
   return entry;
 }
 
+/* Initialize a temporary, nameless cache entry */
+void dataset_cache_entry_init(struct dataset_cache_entry *dce, hid_t dataset_id) {
+  dce->dataset_id = dataset_id;
+  dce->name = NULL;
+}
+
 /* Deallocate a cache entry */
 static void dataset_cache_entry_free(struct dataset_cache_entry *entry) {
   free(entry->name);

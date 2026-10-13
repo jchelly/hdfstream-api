@@ -95,7 +95,7 @@ static void do_read_dataset(void) {
   msgpack_packer_init(&pk, &cb, msgpack_chunkbuffer_write);
 
   /* Pack the dataset */
-  if(pack_dataset_multi_slice(dce->dataset_id, rank, nr_slices, start, count, buffer_size, pk) == 0)
+  if(pack_dataset_multi_slice(dce, rank, nr_slices, start, count, buffer_size, pk) == 0)
     result = 0;
   else
     result = -1;
