@@ -13,7 +13,7 @@ int pack_object_recursive(hid_t loc_id, const char *name, msgpack_packer pk, int
 
   int result = -1;
   hid_t obj_id = -1;
-  struct dataset_cach_entry dce;
+  struct dataset_cache_entry dce;
 
   /* Open the specified HDF5 object */
   obj_id = H5Oopen(loc_id, name, H5P_DEFAULT);

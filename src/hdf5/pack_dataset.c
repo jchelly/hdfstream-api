@@ -260,7 +260,7 @@ int pack_dataset(struct dataset_cache_entry *dce, msgpack_packer pk, size_t data
     }
     check(msgpack_pack_str(&pk, 4));
     check(msgpack_pack_str_body(&pk, "data", 4));
-    check(pack_dataset_slice(dataset_id, rank, start, count, buffer_size, pk));
+    check(pack_dataset_slice(dce, rank, start, count, buffer_size, pk));
   }
 
   /* Success */

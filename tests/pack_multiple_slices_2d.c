@@ -22,10 +22,14 @@ void pack_multiple_slices_2d(hid_t dataset_id, int rank, int nx, int ny, int nr_
 
   /* Pack a slice of the dataset to the buffer */
   int result;
-  if(max_size == 0)
-    result = pack_dataset_multi_slice(dataset_id, rank, nr_slices, start, count, buffer_size, *pk);
-  else
-    result = pack_dataset_multi_slice_with_max_size(dataset_id, rank, nr_slices, start, count, buffer_size, *pk, max_size);
+  struct dataset_cache_entry dce;
+  if(max_size == 0) {
+    dataset_cache_entry_init(&dce, dataset_id);
+    result = pack_dataset_multi_slice(&dce, rank, nr_slices, start, count, buffer_size, *pk);
+  } else {
+    dataset_cache_entry_init(&dce, dataset_id);
+    result = pack_dataset_multi_slice_with_max_size(&dce, rank, nr_slices, start, count, buffer_size, *pk, max_size);
+  }
 
   /* Check if the return code matches our expectation of whether this case should work */
   verify((result==0) == succeeds);

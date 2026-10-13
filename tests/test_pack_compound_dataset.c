@@ -56,7 +56,9 @@ int main(int argc, char *argv[]) {
   hsize_t count[] = {nr_elements};
   msgpack_sbuffer *buffer = msgpack_sbuffer_new();
   msgpack_packer *pk = msgpack_packer_new(buffer, msgpack_sbuffer_write);
-  verify(pack_dataset_slice(dataset_id, /*rank=*/ 1, start, count, /*buffer_size=*/ 1024, *pk) == 0);
+  struct dataset_cache_entry dce;
+  dataset_cache_entry_init(&dce, dataset_id);
+  verify(pack_dataset_slice(&dce, /*rank=*/ 1, start, count, /*buffer_size=*/ 1024, *pk) == 0);
 
   /* Now deserialize the data from the buffer */
   msgpack_unpacked msg;
