@@ -39,7 +39,9 @@ int main(int argc, char *argv[]) {
   /* Pack a slice of the dataset to the buffer */
   hsize_t start[1] = {0};
   hsize_t count[1] = {0};
-  verify(pack_dataset_slice(dataset_id, /*rank=*/ 0, start, count, /*buffer_size=*/ 1024, *pk) == 0);
+  struct dataset_cache_entry dce;
+  dataset_cache_entry_init(&dce, dataset_id);
+  verify(pack_dataset_slice(&dce, /*rank=*/ 0, start, count, /*buffer_size=*/ 1024, *pk) == 0);
 
   /* Now unpack the data */
   msgpack_unpacked msg;

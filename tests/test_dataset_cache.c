@@ -8,6 +8,12 @@
 #include "file_cache.h"
 
 
+static hid_t open_dataset(struct file_cache_entry *file, char *datasetname) {
+  struct dataset_cache_entry *dce = file_cache_open_dataset(file, datasetname);
+  return dce->dataset_id;
+}
+
+
 int main(int argc, char *argv[]) {
 
   (void) argc;
@@ -44,7 +50,7 @@ int main(int argc, char *argv[]) {
   hid_t dataset_ids[nr_datasets];
   for(int i=0; i<MAX_OPEN_DATASETS; i+=1) {
     snprintf(datasetname, 500, "Dataset_%04d", i);
-    dataset_ids[i] = file_cache_open_dataset(file, datasetname);
+    dataset_ids[i] = open_dataset(file, datasetname);
     verify(dataset_ids[i]>=0);
     /* Check we opened the right dataset by reading its value */
     int j;
@@ -55,7 +61,7 @@ int main(int argc, char *argv[]) {
   /* Opening any of these datasets should return the same dataset handle again */
   for(int i=0; i<MAX_OPEN_DATASETS; i+=1) {
     snprintf(datasetname, 500, "Dataset_%04d", i);
-    hid_t dataset_id = file_cache_open_dataset(file, datasetname);
+    hid_t dataset_id = open_dataset(file, datasetname);
     verify(dataset_id == dataset_ids[i]);
     /* Check we opened the right dataset by reading its value */
     int j;
@@ -65,12 +71,12 @@ int main(int argc, char *argv[]) {
 
   /* Open one more dataset so that dataset 0 should get evicted from the cache */
   snprintf(datasetname, 500, "Dataset_%04d", MAX_OPEN_DATASETS);
-  hid_t dataset_id = file_cache_open_dataset(file, datasetname);
+  hid_t dataset_id = open_dataset(file, datasetname);
   verify(dataset_id>=0);
 
   /* Reopen dataset 0 and verify that we get a new dataset handle */
   snprintf(datasetname, 500, "Dataset_%04d", 0);
-  dataset_id = file_cache_open_dataset(file, datasetname);
+  dataset_id = open_dataset(file, datasetname);
   verify(dataset_id != dataset_ids[0]);
 
   /* Now try opening datasets at random and making sure we get the right one */
@@ -79,7 +85,7 @@ int main(int argc, char *argv[]) {
   for(int rep=0; rep<nr_rep; rep+=1) {
     int i = rand() % nr_datasets;
     snprintf(datasetname, 500, "Dataset_%04d", i);
-    dataset_id = file_cache_open_dataset(file, datasetname);
+    dataset_id = open_dataset(file, datasetname);
     verify(dataset_id>=0);
     /* Check we opened the right dataset by reading its value */
     int j;

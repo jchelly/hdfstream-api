@@ -6,7 +6,6 @@
 #include <hdf5.h>
 
 #include "verify.h"
-#include "pack_dataset.h"
 #include "create_test_file.h"
 #include "decode_ndarray.h"
 #include "hdfstream.h"

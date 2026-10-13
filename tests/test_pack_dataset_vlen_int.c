@@ -50,7 +50,9 @@ int main(int argc, char *argv[]) {
 
   /* Pack the dataset contents to a file */
   size_t buffer_size = 128; /* Unrealistically small so we write multiple chunks */
-  verify(pack_dataset(dataset_id, pk, /* data_size_limit = */ SIZE_MAX, buffer_size) == 0);
+  struct dataset_cache_entry dce;
+  dataset_cache_entry_init(&dce, dataset_id);
+  verify(pack_dataset(&dce, pk, /* data_size_limit = */ SIZE_MAX, buffer_size) == 0);
   fclose(fd);
 
   H5Dclose(dataset_id);

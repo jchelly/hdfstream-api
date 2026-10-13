@@ -58,7 +58,9 @@ int main(int argc, char *argv[]) {
     msgpack_packer *pk = msgpack_packer_new(buffer, msgpack_sbuffer_write);
 
     /* Pack a slice of the dataset to the buffer. Buffer must hold data for at least one row. */
-    verify(pack_dataset_slice(dataset_id, /*rank=*/ 2, start, count, /*buffer_size=*/ 10*ny*sizeof(int), *pk) == 0);
+    struct dataset_cache_entry dce;
+    dataset_cache_entry_init(&dce, dataset_id);
+    verify(pack_dataset_slice(&dce, /*rank=*/ 2, start, count, /*buffer_size=*/ 10*ny*sizeof(int), *pk) == 0);
 
     /* Now unpack the data */
     msgpack_unpacked msg;

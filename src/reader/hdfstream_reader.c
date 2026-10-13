@@ -67,15 +67,20 @@ static void do_read_dataset(void) {
   }
 
   /* Open the dataset */
-  hid_t dataset_id = file_cache_open_dataset(file, datasetname);
+  struct dataset_cache_entry *dce = file_cache_open_dataset(file, datasetname);
+
+  /* Update cache stats */
   srd->nr_file_cache_hits = fc->nr_cache_hits;
   srd->nr_file_cache_misses = fc->nr_cache_misses;
-  if(dataset_id >= 0) {
-    status |= RESULT_DATASET_OPENED;
-  } else {
+
+  if(dce == NULL) {
+    /* Catch the case where opening the dataset failed */
     worker_send(sizeof(int), &status);
     goto cleanup;
   }
+
+  /* Record that the dataset was opened */
+  status |= RESULT_DATASET_OPENED;
 
   /* Report whether we opened the file and dataset */
   worker_send(sizeof(int), &status);
@@ -90,7 +95,7 @@ static void do_read_dataset(void) {
   msgpack_packer_init(&pk, &cb, msgpack_chunkbuffer_write);
 
   /* Pack the dataset */
-  if(pack_dataset_multi_slice(dataset_id, rank, nr_slices, start, count, buffer_size, pk) == 0)
+  if(pack_dataset_multi_slice(dce, rank, nr_slices, start, count, buffer_size, pk) == 0)
     result = 0;
   else
     result = -1;

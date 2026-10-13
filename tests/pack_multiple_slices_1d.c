@@ -8,6 +8,7 @@
 #include "pack_dataset.h"
 #include "decode_ndarray.h"
 #include "pack_multiple_slices_1d.h"
+#include "dataset_cache.h"
 
 
 void pack_multiple_slices_1d(hid_t dataset_id, int rank, int nr_slices, hsize_t *start, hsize_t *count, bool succeeds,
@@ -19,10 +20,13 @@ void pack_multiple_slices_1d(hid_t dataset_id, int rank, int nr_slices, hsize_t 
 
   /* Pack a slice of the dataset to the buffer */
   int result;
+  struct dataset_cache_entry dce;
   if(max_size > 0) {
-    result = pack_dataset_multi_slice_with_max_size(dataset_id, rank, nr_slices, start, count, buffer_size, *pk, max_size);
+    dataset_cache_entry_init(&dce, dataset_id);
+    result = pack_dataset_multi_slice_with_max_size(&dce, rank, nr_slices, start, count, buffer_size, *pk, max_size);
   } else {
-    result = pack_dataset_multi_slice(dataset_id, rank, nr_slices, start, count, buffer_size, *pk);
+    dataset_cache_entry_init(&dce, dataset_id);
+    result = pack_dataset_multi_slice(&dce, rank, nr_slices, start, count, buffer_size, *pk);
   }
   verify((result==0) == succeeds);
 
