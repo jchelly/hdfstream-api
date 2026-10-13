@@ -16,7 +16,7 @@ static struct dataset_cache_entry *dataset_cache_entry_new(hid_t dataset_id, con
 
   struct dataset_cache_entry *entry = malloc(sizeof(struct dataset_cache_entry));
 
-  /* Store the file name */
+  /* Store the dataset name */
   size_t len = strlen(name);
   entry->name = malloc((len+1)*sizeof(char));
   strcpy(entry->name, name);
