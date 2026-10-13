@@ -124,7 +124,7 @@ struct file_cache_entry *file_cache_open_file(struct file_cache *fc, const char 
 }
 
 
-hid_t file_cache_open_dataset(struct file_cache_entry *file, const char *name) {
+struct dataset_cache_entry *file_cache_open_dataset(struct file_cache_entry *file, const char *name) {
   return dataset_cache_open_dataset(file->ds_cache, name);
 }
 

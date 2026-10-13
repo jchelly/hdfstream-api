@@ -27,7 +27,7 @@ struct file_cache_entry {
 
 struct file_cache *file_cache_new(const int max_open_files, const int max_open_datasets);
 struct file_cache_entry *file_cache_open_file(struct file_cache *fc, const char *name);
-hid_t file_cache_open_dataset(struct file_cache_entry *file, const char *name);
+struct dataset_cache_entry *file_cache_open_dataset(struct file_cache_entry *file, const char *name);
 void file_cache_free(struct file_cache *fc);
 
 void file_cache_query(struct file_cache *fc, const char *file_name, const char *dataset_name, int *have_file, int *have_dataset);

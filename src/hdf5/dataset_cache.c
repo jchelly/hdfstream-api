@@ -59,15 +59,15 @@ void dataset_cache_free(struct dataset_cache *ds_cache) {
 }
 
 /* Open a new dataset */
-hid_t dataset_cache_open_dataset(struct dataset_cache *ds_cache, const char *name) {
+struct dataset_cache_entry *dataset_cache_open_dataset(struct dataset_cache *ds_cache, const char *name) {
 
   /* Check if this dataset is already open */
   struct dataset_cache_entry *entry = ordered_map_lookup(ds_cache->map, name);
   if(entry) {
-    /* Dataset is cached. Move to start of list and return cached ID */
+    /* Dataset is cached. Move to start of list and return a pointer to the entry */
     assert(strcmp(entry->name, name)==0);
     ordered_map_make_item_head(ds_cache->map, name);
-    return entry->dataset_id;
+    return entry;
   }
 
   /* Not cached. Try to open the dataset */
@@ -76,9 +76,9 @@ hid_t dataset_cache_open_dataset(struct dataset_cache *ds_cache, const char *nam
   H5Pset_chunk_cache(dapl_id, CHUNK_CACHE_RDCC_NSLOTS , CHUNK_CACHE_RDCC_NBYTES , CHUNK_CACHE_RDCC_W0 );
   hid_t dataset_id = H5Dopen(ds_cache->file_id, name, dapl_id);
   H5Pclose(dapl_id);
-  if(dataset_id < 0)return dataset_id;
+  if(dataset_id < 0)return NULL; /* Failed to open the dataset */
 #else
-  hid_t dataset_id = 0;
+  hid_t dataset_id = 0; /* Dummy dataset ID for the cache entry */
 #endif
 
   /* If we already have the max number of entries, will need to close last dataset in list */
@@ -95,5 +95,5 @@ hid_t dataset_cache_open_dataset(struct dataset_cache *ds_cache, const char *nam
   struct dataset_cache_entry *new_entry = dataset_cache_entry_new(dataset_id, name);
   ordered_map_add_item_head(ds_cache->map, new_entry->name, new_entry);
 
-  return dataset_id;
+  return new_entry;
 }

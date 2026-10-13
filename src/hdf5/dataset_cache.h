@@ -23,7 +23,7 @@ struct dataset_cache_entry {
 struct dataset_cache *dataset_cache_new(hid_t file_id, const int max_open_datasets);
 
 /* Open a new dataset */
-hid_t dataset_cache_open_dataset(struct dataset_cache *ds_cache, const char *name);
+struct dataset_cache_entry *dataset_cache_open_dataset(struct dataset_cache *ds_cache, const char *name);
 
 /* Deallocate a cache */
 void dataset_cache_free(struct dataset_cache *ds_cache);
