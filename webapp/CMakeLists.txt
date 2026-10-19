@@ -22,6 +22,7 @@ set(WEBAPP_SOURCES
   ./src/main/java/uk/ac/dur/cosma/hdfstream/CacheInfo.java
   ./src/main/java/uk/ac/dur/cosma/hdfstream/CacheKey.java
   ./src/main/java/uk/ac/dur/cosma/hdfstream/StreamCopier.java
+  ./src/main/java/uk/ac/dur/cosma/hdfstream/RequestCounter.java
   ./src/main/webapp/RefL0012N0188_stars.png
   ./src/main/webapp/WEB-INF/error.jsp
   ./src/main/webapp/WEB-INF/status.jsp
@@ -63,6 +64,7 @@ set(WEBAPP_SOURCES
   ./src/test/java/UnitTestRealm.java
   ./src/test/java/UnitTestServer.java
   ./src/test/java/TestStreamCopier.java
+  ./src/test/java/TestRequestCounter.java
 )
 
 # Build the web application with maven

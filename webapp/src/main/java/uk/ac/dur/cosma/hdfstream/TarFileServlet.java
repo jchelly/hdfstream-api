@@ -119,6 +119,9 @@ public class TarFileServlet extends HttpServlet implements Servlet {
             return;
         }
 
+        // Find the request count
+        RequestCounter requestCounter = (RequestCounter) context.getAttribute("request_counter");
+
         // Get file or directory from the request
         VirtualPathInfo path_info = null;
         try {
@@ -135,6 +138,7 @@ public class TarFileServlet extends HttpServlet implements Servlet {
 
             // Stream a raw data file
             streamFile(request, response, is_get, file, basename);
+            requestCounter.logRequest(RequestCounter.FILE, file.length);
 
         } else if (directory != null){
 
@@ -166,6 +170,8 @@ public class TarFileServlet extends HttpServlet implements Servlet {
             // Write the tar file to the response
             ServletOutputStream output = response.getOutputStream();
             tar_file.write(output);
+            requestCounter.logRequest(RequestCounter.DIRECTORY, tar_file.nr_bytes);
+
         } else {
             // resolvePath should have thrown an exception in this case
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "File and directory objects are null");

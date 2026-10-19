@@ -17,9 +17,17 @@
     <p>
       <c:out value="${status_message}"/>
     </p>
-    <p>
-      Total configured data: <c:out value="${total_size}"/>
-    </p>
+    <ul>
+      <li>Service has been up for <c:out value="${requestCounter.uptime()}"/> days</li>
+      <li>Total configured data: <c:out value="${total_size}"/></li>
+    </ul>
+    <h3>Usage in the last 7 days</h3>
+    <ul>
+      <li>Unique users/IPs: <c:out value="${requestCounter.getUniqueUsers(7)}"/></li>
+      <li>File requests: <c:out value="${requestCounter.getBytes(0, 7)}"/> bytes in <c:out value="${requestCounter.getCount(0,7)}"/> requests</li>
+      <li>Directory requests: <c:out value="${requestCounter.getBytes(1, 7)}"/> bytes in <c:out value="${requestCounter.getCount(1,7)}"/> requests</li>
+      <li>Msgpack requests: <c:out value="${requestCounter.getBytes(2, 7)}"/> bytes in <c:out value="${requestCounter.getCount(2,7)}"/> requests</li>
+    </ul>
     <h3>Process pool</h3>
     <p>
       Number of reader processes: <c:out value="${nr_processes}" />
