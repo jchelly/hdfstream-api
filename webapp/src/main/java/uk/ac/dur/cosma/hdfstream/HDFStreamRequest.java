@@ -243,7 +243,7 @@ public class HDFStreamRequest {
 
             // In this case we're returning a whole object, possibly recursively. Only the object name is compulsory
             // and we shouldn't be here if it wasn't specified. Make a cache key for this request.
-            CacheKey cache_key = new CacheKey(file.filesystem_path, object, max_depth, data_size_limit);
+            CacheKey cache_key = new CacheKey(file, object, max_depth, data_size_limit);
 
             // Return a cached response if we can
             byte[] cached_data = cache_info.request_cache.getIfPresent(cache_key);
