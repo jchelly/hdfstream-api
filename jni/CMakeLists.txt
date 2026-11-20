@@ -14,6 +14,7 @@ install_jar(HDFStream DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 # Build the native library which will be loaded from java code
 add_library(hdfstream_jni SHARED HDFStream.c DataStream.c)
+target_compile_definitions(hdfstream_jni PRIVATE _POSIX_C_SOURCE=200809L)
 target_link_libraries(hdfstream_jni JNI::JNI hdfstream-headers hdfstream)
 install(TARGETS hdfstream_jni DESTINATION ${CMAKE_INSTALL_LIBDIR})
 set_target_properties(hdfstream_jni PROPERTIES VERSION ${CMAKE_PROJECT_VERSION} SOVERSION 1)

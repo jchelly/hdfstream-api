@@ -1,4 +1,3 @@
-#define _POSIX_C_SOURCE 200809L
 #include "pack_soft_link.h"
 #include <string.h>
 #include <hdf5.h>
