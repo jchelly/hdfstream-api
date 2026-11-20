@@ -1,7 +1,6 @@
 #ifndef __WORKER_PROCESS_H
 #define __WORKER_PROCESS_H
 
-#define _POSIX_C_SOURCE 200809L
 #include <semaphore.h>
 
 struct worker_process;
