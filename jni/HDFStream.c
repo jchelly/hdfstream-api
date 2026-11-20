@@ -31,7 +31,7 @@ JNIEXPORT jlong JNICALL Java_uk_ac_dur_cosma_libhdfstream_HDFStream_c_1new_1with
   const char *c_path = (*env)->GetStringUTFChars(env, executable, NULL);
   struct hdfstream *hs = hdfstream_new_with_executable((int) nr_processes, c_path, (int) max_open_files, (int) max_open_datasets,
                                                        (jint) file_cache_check_interval, (jint) file_cache_expiry_interval);
-  (*env)->ReleaseStringUTFChars(env, executable, c_path);
+  if(c_path)(*env)->ReleaseStringUTFChars(env, executable, c_path);
 
   return (jlong) ((intptr_t) hs);
 }
@@ -67,10 +67,16 @@ JNIEXPORT jlong JNICALL Java_uk_ac_dur_cosma_libhdfstream_HDFStream_c_1open_1sli
   jlong result = 0;
   hsize_t *c_start = NULL;
   hsize_t *c_count = NULL;
+  const char *c_file_name = NULL;
+  const char *c_dataset_name = NULL;
+  jlong *start_data = NULL;
+  jlong *count_data = NULL;
 
   /* Extract file and dataset names */
-  const char *c_file_name = (*env)->GetStringUTFChars(env, file_name, NULL);
-  const char *c_dataset_name = (*env)->GetStringUTFChars(env, dataset_name, NULL);
+  c_file_name = (*env)->GetStringUTFChars(env, file_name, NULL);
+  if(c_file_name == NULL)goto cleanup;
+  c_dataset_name = (*env)->GetStringUTFChars(env, dataset_name, NULL);
+  if(c_dataset_name == NULL)goto cleanup;
 
   /* Get pointer to the hdfstream */
   struct hdfstream *hs = (struct hdfstream *) ((intptr_t) ptr);
@@ -91,20 +97,22 @@ JNIEXPORT jlong JNICALL Java_uk_ac_dur_cosma_libhdfstream_HDFStream_c_1open_1sli
   /* Offset in each dimension */
   jsize start_len = (*env)->GetArrayLength(env, start);
   if(start_len != arr_len)goto cleanup;
-  jlong *start_data = (*env)->GetLongArrayElements(env, start, 0);
+  start_data = (*env)->GetLongArrayElements(env, start, 0);
+  if(start_data==NULL)goto cleanup;
   c_start = malloc(sizeof(hsize_t)*arr_len);
+  if(c_start == NULL)goto cleanup;
   for(jsize i=0; i<arr_len; i+=1)
     c_start[i] = start_data[i];
-  (*env)->ReleaseLongArrayElements(env, start, start_data, 0);
 
   /* Number of elements in each dimension */
   jsize count_len = (*env)->GetArrayLength(env, count);
   if(count_len != arr_len)goto cleanup;
-  jlong *count_data = (*env)->GetLongArrayElements(env, count, 0);
+  count_data = (*env)->GetLongArrayElements(env, count, 0);
+  if(count_data==NULL)goto cleanup;
   c_count = malloc(sizeof(hsize_t)*arr_len);
+  if(c_count == NULL)goto cleanup;
   for(jsize i=0; i<arr_len; i+=1)
     c_count[i] = count_data[i];
-  (*env)->ReleaseLongArrayElements(env, count, count_data, 0);
 
   /* Buffer size */
   size_t c_buffer_size = (size_t) buffer_size;
@@ -119,12 +127,13 @@ JNIEXPORT jlong JNICALL Java_uk_ac_dur_cosma_libhdfstream_HDFStream_c_1open_1sli
   result = (jlong) ((intptr_t) stream);
 
  cleanup:
-  (*env)->ReleaseStringUTFChars(env, file_name, c_file_name);
-  (*env)->ReleaseStringUTFChars(env, dataset_name, c_dataset_name);
+  if(c_file_name)(*env)->ReleaseStringUTFChars(env, file_name, c_file_name);
+  if(c_dataset_name)(*env)->ReleaseStringUTFChars(env, dataset_name, c_dataset_name);
   if(c_start)free(c_start);
   if(c_count)free(c_count);
+  if(start_data)(*env)->ReleaseLongArrayElements(env, start, start_data, 0);
+  if(count_data)(*env)->ReleaseLongArrayElements(env, count, count_data, 0);
   return result;
-
 }
 
 
@@ -133,13 +142,17 @@ JNIEXPORT jlong JNICALL Java_uk_ac_dur_cosma_libhdfstream_HDFStream_c_1open_1obj
                                                                                     jint max_depth, jlong buffer_size, jlong data_size_limit) {
   (void) thisObj;
   jlong result = 0;
+  const char *c_file_name = NULL;
+  const char *c_object_name = NULL;
 
   /* Get pointer to the hdfstream */
   struct hdfstream *hs = (struct hdfstream *) ((intptr_t) ptr);
 
-  /* Extract file and dataset names */
-  const char *c_file_name = (*env)->GetStringUTFChars(env, file_name, NULL);
-  const char *c_object_name = (*env)->GetStringUTFChars(env, object_name, NULL);
+  /* Extract file and object names */
+  c_file_name = (*env)->GetStringUTFChars(env, file_name, NULL);
+  if(c_file_name == NULL)goto cleanup;
+  c_object_name = (*env)->GetStringUTFChars(env, object_name, NULL);
+  if(c_object_name == NULL)goto cleanup;
 
   /* Buffer size */
   size_t c_buffer_size = (size_t) buffer_size;
@@ -154,8 +167,8 @@ JNIEXPORT jlong JNICALL Java_uk_ac_dur_cosma_libhdfstream_HDFStream_c_1open_1obj
   result = (jlong) ((intptr_t) stream);
 
  cleanup:
-  (*env)->ReleaseStringUTFChars(env, file_name, c_file_name);
-  (*env)->ReleaseStringUTFChars(env, object_name, c_object_name);
+  if(c_file_name)(*env)->ReleaseStringUTFChars(env, file_name, c_file_name);
+  if(c_object_name)(*env)->ReleaseStringUTFChars(env, object_name, c_object_name);
   return result;
 }
 
@@ -172,8 +185,10 @@ JNIEXPORT void JNICALL Java_uk_ac_dur_cosma_libhdfstream_HDFStream_c_1cache_1inf
 
   /* Copy to the output array */
   jint *fields_data = (*env)->GetIntArrayElements(env, fields, 0);
-  fields_data[0] = ci.process_state;
-  fields_data[1] = ci.nr_file_cache_hits;
-  fields_data[2] = ci.nr_file_cache_misses;
-  (*env)->ReleaseIntArrayElements(env, fields, fields_data, 0);
+  if(fields_data) {
+    fields_data[0] = ci.process_state;
+    fields_data[1] = ci.nr_file_cache_hits;
+    fields_data[2] = ci.nr_file_cache_misses;
+    (*env)->ReleaseIntArrayElements(env, fields, fields_data, 0);
+  }
 }
