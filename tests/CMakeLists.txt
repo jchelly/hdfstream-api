@@ -1,5 +1,6 @@
 include_directories(${HDF5_INCLUDE_DIRS} ${CMAKE_BINARY_DIR}/src/lib ../src/lib ../src/hdf5 ../src/util)
 link_directories(${HDF5_LIBRARY_DIRS})
+add_compile_definitions(_POSIX_C_SOURCE=200809L)
 
 # Directory for tmp files
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tmp)

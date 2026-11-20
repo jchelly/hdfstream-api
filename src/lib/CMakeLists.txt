@@ -17,7 +17,9 @@ set_target_properties(hdfstream PROPERTIES VERSION ${CMAKE_PROJECT_VERSION} SOVE
 
 # The library maintains a shadow copy of the reader process caches to help select the best process
 # to carry out each request. This is implemented by using the same code with the HDF5 calls disabled.
-target_compile_definitions(hdfstream PRIVATE SHADOW_CACHE)
+target_compile_definitions(hdfstream
+  PRIVATE SHADOW_CACHE
+  PRIVATE _POSIX_C_SOURCE=200809L)
 
 target_link_libraries(hdfstream ${CMAKE_THREAD_LIBS_INIT} rt)
 install(TARGETS hdfstream DESTINATION ${CMAKE_INSTALL_LIBDIR})
