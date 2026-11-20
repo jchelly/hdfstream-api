@@ -99,6 +99,7 @@ foreach(TEST_NAME
     wrong_dataset
     out_of_bounds
     wrong_rank
+    wrong_rank_scalar
     dataset_1d_int
     dataset_1d_int_repeat
     dataset_2d_int
