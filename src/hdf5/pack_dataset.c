@@ -46,6 +46,9 @@ int pack_dataset_multi_slice_with_max_size(hid_t dataset_id, const int rank,
   /* Don't allow zero slices */
   if(nr_slices < 1)goto cleanup;
 
+  /* Don't allow too many slices */
+  if(nr_slices > HDFSTREAM_MAX_SLICES)goto cleanup;
+
   /* Get data type in the file */
   file_type_id = H5Dget_type(dataset_id);
 
@@ -56,6 +59,14 @@ int pack_dataset_multi_slice_with_max_size(hid_t dataset_id, const int rank,
   /* Get dataspace in the file */
   file_space_id = H5Dget_space(dataset_id);
   if(file_space_id < 0)goto cleanup;
+
+  /* Get dataset size in the file */
+  hsize_t file_dims[HDFSTREAM_MAX_DIMS];
+  int file_rank = H5Sget_simple_extent_ndims(file_space_id);
+  if(file_rank < 0)goto cleanup;
+  if(file_rank > HDFSTREAM_MAX_DIMS)goto cleanup;
+  if(file_rank != rank)goto cleanup;
+  if(H5Sget_simple_extent_dims(file_space_id, file_dims, NULL) < 0)goto cleanup;
 
   /* Get the size of the memory data type */
   size_t element_size = H5Tget_size(mem_type_id);
@@ -77,10 +88,6 @@ int pack_dataset_multi_slice_with_max_size(hid_t dataset_id, const int rank,
     elements_per_buffer = buffer_size / (nr_elements*element_size);
     if(elements_per_buffer < 1)goto cleanup; /* Can't buffer even one element, but we have >0 to encode */
   }
-
-  /* Get dataset size in the file */
-  hsize_t file_dims[HDFSTREAM_MAX_DIMS];
-  if(H5Sget_simple_extent_dims(file_space_id, file_dims, NULL) < 0)goto cleanup;
 
   /* Initialize the slice object. This also bounds checks the slices */
   struct multislice ms;
@@ -192,6 +199,7 @@ int pack_dataset(hid_t dataset_id, msgpack_packer pk, size_t data_size_limit, si
   dspace_id = H5Dget_space(dataset_id);
   if(dspace_id < 0)goto cleanup;
   int rank = H5Sget_simple_extent_ndims(dspace_id);
+  if(rank < 0)goto cleanup;
   if(rank > HDFSTREAM_MAX_DIMS)goto cleanup;
   hsize_t dims[HDFSTREAM_MAX_DIMS];
   if(H5Sget_simple_extent_dims(dspace_id, dims, NULL) < 0)goto cleanup;
